@@ -80,6 +80,7 @@ stericsson	ST-Ericsson
 synaptics	Synaptics Inc.
 ti	Texas Instruments
 toshiba	Toshiba Corporation
+v3	V3 Semiconductor
 via	VIA Technologies, Inc.
 wlf	Wolfson Microelectronics
 wm	Wondermedia Technologies, Inc.
