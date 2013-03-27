@@ -82,8 +82,6 @@ static void check_cpu_stall(struct rcu_ctrlblk *rcp)
 		rcp->jiffies_stall = jiffies + rcu_jiffies_till_stall_check();
 }
 
-static void check_cpu_stall_preempt(void);
-
 static void reset_cpu_stall_ticks(struct rcu_ctrlblk *rcp)
 {
 	rcp->ticks_this_gp = 0;
@@ -95,7 +93,6 @@ static void check_cpu_stalls(void)
 {
 	RCU_TRACE(check_cpu_stall(&rcu_bh_ctrlblk));
 	RCU_TRACE(check_cpu_stall(&rcu_sched_ctrlblk));
-	RCU_TRACE(check_cpu_stall_preempt());
 }
 
 #ifdef CONFIG_DEBUG_LOCK_ALLOC
@@ -177,9 +174,5 @@ module_exit(rcutiny_trace_cleanup);
 MODULE_AUTHOR("Paul E. McKenney");
 MODULE_DESCRIPTION("Read-Copy Update tracing for tiny implementation");
 MODULE_LICENSE("GPL");
-
-static void check_cpu_stall_preempt(void)
-{
-}
 
 #endif /* #ifdef CONFIG_RCU_TRACE */
