@@ -871,14 +871,6 @@ static void show_tiny_preempt_stats(struct seq_file *m)
 
 #endif /* #ifdef CONFIG_RCU_TRACE */
 
-/*
- * Because preemptible RCU does not exist, it never has any callbacks
- * to process.
- */
-static void rcu_preempt_process_callbacks(void)
-{
-}
-
 #endif /* #else #ifdef CONFIG_TINY_PREEMPT_RCU */
 
 #ifdef CONFIG_RCU_BOOST
