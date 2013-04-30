@@ -135,7 +135,7 @@ static inline void arch_timer_evtstrm_enable(int divider)
 #endif
 }
 
-static inline u64 arch_counter_get_cntvct(void)
+static inline u64 arch_counter_get_cntvct_cp15(void)
 {
 	u64 cval;
 
