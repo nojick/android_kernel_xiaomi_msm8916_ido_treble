@@ -10,6 +10,7 @@
 #include "btree.h"
 #include "debug.h"
 #include "request.h"
+#include "writeback.h"
 
 #include <linux/cgroup.h>
 #include <linux/module.h>
@@ -1049,7 +1050,6 @@ static void request_write(struct cached_dev *dc, struct search *s)
 
 		closure_bio_submit(bio, cl, s->d);
 	} else {
-		bch_writeback_add(dc, bio_sectors(bio));
 		s->op.cache_bio = bio;
 
 		if (bio->bi_rw & REQ_FLUSH) {
