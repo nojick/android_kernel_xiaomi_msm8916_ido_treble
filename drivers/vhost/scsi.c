@@ -446,7 +446,19 @@ static u32 tcm_vhost_tpg_get_inst_index(struct se_portal_group *se_tpg)
 
 static void tcm_vhost_release_cmd(struct se_cmd *se_cmd)
 {
-	return;
+	struct tcm_vhost_cmd *tv_cmd = container_of(se_cmd,
+				struct tcm_vhost_cmd, tvc_se_cmd);
+
+	if (tv_cmd->tvc_sgl_count) {
+		u32 i;
+		for (i = 0; i < tv_cmd->tvc_sgl_count; i++)
+			put_page(sg_page(&tv_cmd->tvc_sgl[i]));
+
+		kfree(tv_cmd->tvc_sgl);
+        }
+
+	tcm_vhost_put_inflight(tv_cmd->inflight);
+	kfree(tv_cmd);
 }
 
 static int tcm_vhost_shutdown_session(struct se_session *se_sess)
@@ -559,17 +571,11 @@ static void vhost_scsi_free_cmd(struct tcm_vhost_cmd *tv_cmd)
 	/* TODO locking against target/backend threads? */
 	transport_generic_free_cmd(se_cmd, 0);
 
-	if (tv_cmd->tvc_sgl_count) {
-		u32 i;
-		for (i = 0; i < tv_cmd->tvc_sgl_count; i++)
-			put_page(sg_page(&tv_cmd->tvc_sgl[i]));
+}
 
-		kfree(tv_cmd->tvc_sgl);
-	}
-
-	tcm_vhost_put_inflight(tv_cmd->inflight);
-
-	kfree(tv_cmd);
+static int vhost_scsi_check_stop_free(struct se_cmd *se_cmd)
+{
+	return target_put_sess_cmd(se_cmd->se_sess, se_cmd);
 }
 
 static void tcm_vhost_do_evt_work(struct vhost_scsi *vs,
@@ -2049,6 +2055,7 @@ static struct target_core_fabric_ops tcm_vhost_ops = {
 	.tpg_release_fabric_acl		= tcm_vhost_release_fabric_acl,
 	.tpg_get_inst_index		= tcm_vhost_tpg_get_inst_index,
 	.release_cmd			= tcm_vhost_release_cmd,
+	.check_stop_free		= vhost_scsi_check_stop_free,
 	.shutdown_session		= tcm_vhost_shutdown_session,
 	.close_session			= tcm_vhost_close_session,
 	.sess_get_index			= tcm_vhost_sess_get_index,
