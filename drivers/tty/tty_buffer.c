@@ -76,8 +76,6 @@ static struct tty_buffer *tty_buffer_alloc(struct tty_port *port, size_t size)
 	p->next = NULL;
 	p->commit = 0;
 	p->read = 0;
-	p->char_buf_ptr = (char *)(p->data);
-	p->flag_buf_ptr = (unsigned char *)p->char_buf_ptr + size;
 	port->buf.memory_used += size;
 	return p;
 }
@@ -270,8 +268,8 @@ int tty_insert_flip_string_fixed_flag(struct tty_port *port,
 		if (unlikely(space == 0)) {
 			break;
 		}
-		memcpy(tb->char_buf_ptr + tb->used, chars, space);
-		memset(tb->flag_buf_ptr + tb->used, flag, space);
+		memcpy(char_buf_ptr(tb, tb->used), chars, space);
+		memset(flag_buf_ptr(tb, tb->used), flag, space);
 		tb->used += space;
 		copied += space;
 		chars += space;
@@ -308,8 +306,8 @@ int tty_insert_flip_string_flags(struct tty_port *port,
 		if (unlikely(space == 0)) {
 			break;
 		}
-		memcpy(tb->char_buf_ptr + tb->used, chars, space);
-		memcpy(tb->flag_buf_ptr + tb->used, flags, space);
+		memcpy(char_buf_ptr(tb, tb->used), chars, space);
+		memcpy(flag_buf_ptr(tb, tb->used), flags, space);
 		tb->used += space;
 		copied += space;
 		chars += space;
@@ -369,8 +367,8 @@ int tty_prepare_flip_string(struct tty_port *port, unsigned char **chars,
 	int space = tty_buffer_request_room(port, size);
 	if (likely(space)) {
 		struct tty_buffer *tb = port->buf.tail;
-		*chars = tb->char_buf_ptr + tb->used;
-		memset(tb->flag_buf_ptr + tb->used, TTY_NORMAL, space);
+		*chars = char_buf_ptr(tb, tb->used);
+		memset(flag_buf_ptr(tb, tb->used), TTY_NORMAL, space);
 		tb->used += space;
 	}
 	return space;
@@ -399,8 +397,8 @@ int tty_prepare_flip_string_flags(struct tty_port *port,
 	int space = tty_buffer_request_room(port, size);
 	if (likely(space)) {
 		struct tty_buffer *tb = port->buf.tail;
-		*chars = tb->char_buf_ptr + tb->used;
-		*flags = tb->flag_buf_ptr + tb->used;
+		*chars = char_buf_ptr(tb, tb->used);
+		*flags = flag_buf_ptr(tb, tb->used);
 		tb->used += space;
 	}
 	return space;
@@ -412,8 +410,8 @@ static int
 receive_buf(struct tty_struct *tty, struct tty_buffer *head, int count)
 {
 	struct tty_ldisc *disc = tty->ldisc;
-	char 	      *p = head->char_buf_ptr + head->read;
-	unsigned char *f = head->flag_buf_ptr + head->read;
+	unsigned char *p = char_buf_ptr(head, head->read);
+	char	      *f = flag_buf_ptr(head, head->read);
 
 	if (disc->ops->receive_buf2)
 		count = disc->ops->receive_buf2(tty, p, f, count);
