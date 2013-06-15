@@ -67,6 +67,7 @@ static inline char *flag_buf_ptr(struct tty_buffer *b, int ofs)
 struct tty_bufhead {
 	struct work_struct work;
 	struct mutex flush_mutex;
+	unsigned int flushpending:1;
 	struct tty_buffer sentinel;
 	struct tty_buffer *head;	/* Queue head */
 	struct tty_buffer *tail;	/* Active buffer */
@@ -212,8 +213,6 @@ struct tty_port {
 	wait_queue_head_t	close_wait;	/* Close waiters */
 	wait_queue_head_t	delta_msr_wait;	/* Modem status change */
 	unsigned long		flags;		/* TTY flags ASY_*/
-	unsigned long		iflags;		/* TTYP_ internal flags */
-#define TTYP_FLUSHPENDING		2  /* Queued buffer flush pending */
 	unsigned char		console:1,	/* port is a console */
 				low_latency:1;	/* direct buffer flush */
 	struct mutex		mutex;		/* Locking */
