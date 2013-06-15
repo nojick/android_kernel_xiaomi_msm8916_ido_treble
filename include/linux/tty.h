@@ -10,6 +10,7 @@
 #include <linux/mutex.h>
 #include <linux/tty_flags.h>
 #include <uapi/linux/tty.h>
+#include <linux/llist.h>
 
 
 
@@ -29,7 +30,10 @@
 #define __DISABLED_CHAR '\0'
 
 struct tty_buffer {
-	struct tty_buffer *next;
+	union {
+		struct tty_buffer *next;
+		struct llist_node free;
+	};
 	int used;
 	int size;
 	int commit;
@@ -64,7 +68,7 @@ struct tty_bufhead {
 	spinlock_t lock;
 	struct tty_buffer *head;	/* Queue head */
 	struct tty_buffer *tail;	/* Active buffer */
-	struct tty_buffer *free;	/* Free queue head */
+	struct llist_head free;		/* Free queue head */
 	int memory_used;		/* Buffer space used excluding
 								free queue */
 };
