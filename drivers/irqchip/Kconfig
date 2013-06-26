@@ -2,6 +2,10 @@ config IRQCHIP
 	def_bool y
 	depends on OF_IRQ
 
+config GIC_SECURE
+	bool
+	depends on ARM_GIC
+
 config ARM_GIC
 	bool
 	select IRQ_DOMAIN
@@ -11,9 +15,10 @@ config ARM_GIC
 config GIC_NON_BANKED
 	bool
 
-config GIC_SECURE
+config ARM_NVIC
 	bool
-	depends on ARM_GIC
+	select IRQ_DOMAIN
+	select GENERIC_IRQ_CHIP
 
 config ARM_VIC
 	bool
