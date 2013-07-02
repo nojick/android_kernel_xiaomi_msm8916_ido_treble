@@ -42,7 +42,7 @@ static void *__dma_alloc_coherent(struct device *dev, size_t size,
 	if (IS_ENABLED(CONFIG_ZONE_DMA32) &&
 	    dev->coherent_dma_mask <= DMA_BIT_MASK(32))
 		flags |= GFP_DMA32;
-	if (IS_ENABLED(CONFIG_CMA)) {
+	if (IS_ENABLED(CONFIG_DMA_CMA)) {
 		struct page *page;
 
 		size = PAGE_ALIGN(size);
@@ -67,7 +67,7 @@ static void __dma_free_coherent(struct device *dev, size_t size,
 		return;
 	}
 
-	if (IS_ENABLED(CONFIG_CMA)) {
+	if (IS_ENABLED(CONFIG_DMA_CMA)) {
 		phys_addr_t paddr = dma_to_phys(dev, dma_handle);
 
 		dma_release_from_contiguous(dev,
