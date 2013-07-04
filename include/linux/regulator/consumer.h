@@ -528,8 +528,11 @@ static inline int regulator_list_corner_voltage(struct regulator *regulator,
 static inline int regulator_set_voltage_tol(struct regulator *regulator,
 					    int new_uV, int tol_uV)
 {
-	return regulator_set_voltage(regulator,
-				     new_uV - tol_uV, new_uV + tol_uV);
+	if (regulator_set_voltage(regulator, new_uV, new_uV + tol_uV) == 0)
+		return 0;
+	else
+		return regulator_set_voltage(regulator,
+					     new_uV - tol_uV, new_uV + tol_uV);
 }
 
 static inline int regulator_is_supported_voltage_tol(struct regulator *regulator,
