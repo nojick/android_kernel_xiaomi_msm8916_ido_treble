@@ -566,12 +566,6 @@ static void cputime_adjust(struct task_cputime *curr,
 {
 	cputime_t rtime, stime, utime;
 
-	if (vtime_accounting_enabled()) {
-		*ut = curr->utime;
-		*st = curr->stime;
-		return;
-	}
-
 	/*
 	 * Tick based cputime accounting depend on random scheduling
 	 * timeslices of a task to be interrupted or not by the timer.
