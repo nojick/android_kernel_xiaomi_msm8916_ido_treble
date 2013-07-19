@@ -75,7 +75,7 @@ static unsigned long super_cache_scan(struct shrinker *shrink,
 	if (!grab_super_passive(sb))
 		return SHRINK_STOP;
 
-	if (sb->s_op && sb->s_op->nr_cached_objects)
+	if (sb->s_op->nr_cached_objects)
 		fs_objects = sb->s_op->nr_cached_objects(sb);
 
 	inodes = list_lru_count(&sb->s_inode_lru);
