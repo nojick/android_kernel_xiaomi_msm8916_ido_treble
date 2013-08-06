@@ -284,13 +284,10 @@ struct acpi_device_wakeup {
 };
 
 struct acpi_device_physical_node {
-	u8 node_id;
+	unsigned int node_id;
 	struct list_head node;
 	struct device *dev;
 };
-
-/* set maximum of physical nodes to 32 for expansibility */
-#define ACPI_MAX_PHYSICAL_NODE	32
 
 /* Device */
 struct acpi_device {
@@ -312,10 +309,8 @@ struct acpi_device {
 	void *driver_data;
 	struct device dev;
 	enum acpi_bus_removal_type removal_type;	/* indicate for different removal type */
-	u8 physical_node_count;
 	struct list_head physical_node_list;
 	struct mutex physical_node_lock;
-	DECLARE_BITMAP(physical_node_id_bitmap, ACPI_MAX_PHYSICAL_NODE);
 	struct list_head power_dependent;
 	void (*remove)(struct acpi_device *);
 };
