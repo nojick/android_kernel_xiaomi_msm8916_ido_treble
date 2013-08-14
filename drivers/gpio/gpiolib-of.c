@@ -210,8 +210,8 @@ static void of_gpiochip_add_pin_range(struct gpio_chip *chip)
 	group_names = of_find_property(np, group_names_propname, NULL);
 
 	for (;; index++) {
-		ret = of_parse_phandle_with_args(np, "gpio-ranges",
-				"#gpio-range-cells", index, &pinspec);
+		ret = of_parse_phandle_with_fixed_args(np, "gpio-ranges", 3,
+				index, &pinspec);
 		if (ret)
 			break;
 
