@@ -61,13 +61,6 @@
 
 #include "rcu.h"
 
-/*
- * Strings used in tracepoints need to be exported via the
- * tracing system such that tools like perf and trace-cmd can
- * translate the string address pointers to actual text.
- */
-#define TPS(x)	tracepoint_string(x)
-
 MODULE_ALIAS("rcutree");
 #ifdef MODULE_PARAM_PREFIX
 #undef MODULE_PARAM_PREFIX
