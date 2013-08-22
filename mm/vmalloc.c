@@ -335,8 +335,6 @@ static void calc_total_vmalloc_size(void) { }
 #endif
 EXPORT_SYMBOL(is_vmalloc_addr);
 
-
-
 static struct vmap_area *__find_vmap_area(unsigned long addr)
 {
 	struct rb_node *n = vmap_area_root.rb_node;
@@ -1283,7 +1281,6 @@ void __init vmalloc_init(void)
 	}
 
 	vmap_area_pcpu_hole = VMALLOC_END;
-
 	calc_total_vmalloc_size();
 	vmap_initialized = true;
 }
@@ -2723,6 +2720,9 @@ static int s_show(struct seq_file *m, void *p)
 
 	if (v->flags & VM_VPAGES)
 		seq_puts(m, " vpages");
+
+	if (v->flags & VM_LOWMEM)
+		seq_puts(m, " lowmem");
 
 	show_numa_info(m, v);
 	seq_putc(m, '\n');
