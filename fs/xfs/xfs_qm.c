@@ -752,6 +752,7 @@ xfs_qm_destroy_quotainfo(
 	ASSERT(qi != NULL);
 
 	unregister_shrinker(&qi->qi_shrinker);
+	list_lru_destroy(&qi->qi_lru);
 
 	if (qi->qi_uquotaip) {
 		IRELE(qi->qi_uquotaip);
