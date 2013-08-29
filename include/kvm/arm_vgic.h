@@ -25,7 +25,7 @@
 #include <linux/spinlock.h>
 #include <linux/types.h>
 
-#define VGIC_NR_IRQS		128
+#define VGIC_NR_IRQS		256
 #define VGIC_NR_SGIS		16
 #define VGIC_NR_PPIS		16
 #define VGIC_NR_PRIVATE_IRQS	(VGIC_NR_SGIS + VGIC_NR_PPIS)
