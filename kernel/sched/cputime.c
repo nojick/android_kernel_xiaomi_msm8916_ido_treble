@@ -560,8 +560,6 @@ static void cputime_adjust(struct task_cputime *curr,
 {
 	cputime_t rtime, stime, utime;
 
-	stime = curr->stime;
-	total = stime + curr->utime;
 
 	/*
 	 * Tick based cputime accounting depend on random scheduling
