@@ -484,6 +484,7 @@ static int ioctx_add_table(struct kioctx *ctx, struct mm_struct *mm)
 	struct aio_ring *ring;
 
 	spin_lock(&mm->ioctx_lock);
+	rcu_read_lock();
 	table = rcu_dereference(mm->ioctx_table);
 
 	while (1) {
@@ -492,6 +493,7 @@ static int ioctx_add_table(struct kioctx *ctx, struct mm_struct *mm)
 				if (!table->table[i]) {
 					ctx->id = i;
 					table->table[i] = ctx;
+					rcu_read_unlock();
 					spin_unlock(&mm->ioctx_lock);
 
 					ring = kmap_atomic(ctx->ring_pages[0]);
@@ -502,6 +504,7 @@ static int ioctx_add_table(struct kioctx *ctx, struct mm_struct *mm)
 
 		new_nr = (table ? table->nr : 1) * 4;
 
+		rcu_read_unlock();
 		spin_unlock(&mm->ioctx_lock);
 
 		table = kzalloc(sizeof(*table) + sizeof(struct kioctx *) *
@@ -512,6 +515,7 @@ static int ioctx_add_table(struct kioctx *ctx, struct mm_struct *mm)
 		table->nr = new_nr;
 
 		spin_lock(&mm->ioctx_lock);
+		rcu_read_lock();
 		old = rcu_dereference(mm->ioctx_table);
 
 		if (!old) {
@@ -636,10 +640,12 @@ static void kill_ioctx(struct mm_struct *mm, struct kioctx *ctx)
 		struct kioctx_table *table;
 
 		spin_lock(&mm->ioctx_lock);
+		rcu_read_lock();
 		table = rcu_dereference(mm->ioctx_table);
 
 		WARN_ON(ctx != table->table[ctx->id]);
 		table->table[ctx->id] = NULL;
+		rcu_read_unlock();
 		spin_unlock(&mm->ioctx_lock);
 
 		/* percpu_ref_kill() will do the necessary call_rcu() */
