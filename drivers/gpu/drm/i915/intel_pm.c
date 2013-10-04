@@ -4121,9 +4121,176 @@ bool intel_using_power_well(struct drm_device *dev)
 
 	if (IS_HASWELL(dev))
 		return I915_READ(HSW_PWR_WELL_DRIVER) ==
-		       (HSW_PWR_WELL_ENABLE | HSW_PWR_WELL_STATE);
-	else
-		return true;
+		     (HSW_PWR_WELL_ENABLE_REQUEST | HSW_PWR_WELL_STATE_ENABLED);
+	default:
+		BUG();
+	}
+}
+
+static void __intel_set_power_well(struct drm_device *dev, bool enable)
+{
+	struct drm_i915_private *dev_priv = dev->dev_private;
+	bool is_enabled, enable_requested;
+	uint32_t tmp;
+
+	tmp = I915_READ(HSW_PWR_WELL_DRIVER);
+	is_enabled = tmp & HSW_PWR_WELL_STATE_ENABLED;
+	enable_requested = tmp & HSW_PWR_WELL_ENABLE_REQUEST;
+
+	if (enable) {
+		if (!enable_requested)
+			I915_WRITE(HSW_PWR_WELL_DRIVER,
+				   HSW_PWR_WELL_ENABLE_REQUEST);
+
+		if (!is_enabled) {
+			DRM_DEBUG_KMS("Enabling power well\n");
+			if (wait_for((I915_READ(HSW_PWR_WELL_DRIVER) &
+				      HSW_PWR_WELL_STATE_ENABLED), 20))
+				DRM_ERROR("Timeout enabling power well\n");
+		}
+	} else {
+		if (enable_requested) {
+			unsigned long irqflags;
+			enum pipe p;
+
+			I915_WRITE(HSW_PWR_WELL_DRIVER, 0);
+			POSTING_READ(HSW_PWR_WELL_DRIVER);
+			DRM_DEBUG_KMS("Requesting to disable the power well\n");
+
+			/*
+			 * After this, the registers on the pipes that are part
+			 * of the power well will become zero, so we have to
+			 * adjust our counters according to that.
+			 *
+			 * FIXME: Should we do this in general in
+			 * drm_vblank_post_modeset?
+			 */
+			spin_lock_irqsave(&dev->vbl_lock, irqflags);
+			for_each_pipe(p)
+				if (p != PIPE_A)
+					dev->vblank[p].last = 0;
+			spin_unlock_irqrestore(&dev->vbl_lock, irqflags);
+		}
+	}
+}
+
+static void __intel_power_well_get(struct i915_power_well *power_well)
+{
+	if (!power_well->count++)
+		__intel_set_power_well(power_well->device, true);
+}
+
+static void __intel_power_well_put(struct i915_power_well *power_well)
+{
+	WARN_ON(!power_well->count);
+	if (!--power_well->count)
+		__intel_set_power_well(power_well->device, false);
+}
+
+void intel_display_power_get(struct drm_device *dev,
+			     enum intel_display_power_domain domain)
+{
+	struct drm_i915_private *dev_priv = dev->dev_private;
+	struct i915_power_well *power_well = &dev_priv->power_well;
+
+	if (!HAS_POWER_WELL(dev))
+		return;
+
+	switch (domain) {
+	case POWER_DOMAIN_PIPE_A:
+	case POWER_DOMAIN_TRANSCODER_EDP:
+		return;
+	case POWER_DOMAIN_VGA:
+	case POWER_DOMAIN_PIPE_B:
+	case POWER_DOMAIN_PIPE_C:
+	case POWER_DOMAIN_PIPE_A_PANEL_FITTER:
+	case POWER_DOMAIN_PIPE_B_PANEL_FITTER:
+	case POWER_DOMAIN_PIPE_C_PANEL_FITTER:
+	case POWER_DOMAIN_TRANSCODER_A:
+	case POWER_DOMAIN_TRANSCODER_B:
+	case POWER_DOMAIN_TRANSCODER_C:
+		spin_lock_irq(&power_well->lock);
+		__intel_power_well_get(power_well);
+		spin_unlock_irq(&power_well->lock);
+		return;
+	default:
+		BUG();
+	}
+}
+
+void intel_display_power_put(struct drm_device *dev,
+			     enum intel_display_power_domain domain)
+{
+	struct drm_i915_private *dev_priv = dev->dev_private;
+	struct i915_power_well *power_well = &dev_priv->power_well;
+
+	if (!HAS_POWER_WELL(dev))
+		return;
+
+	switch (domain) {
+	case POWER_DOMAIN_PIPE_A:
+	case POWER_DOMAIN_TRANSCODER_EDP:
+		return;
+	case POWER_DOMAIN_VGA:
+	case POWER_DOMAIN_PIPE_B:
+	case POWER_DOMAIN_PIPE_C:
+	case POWER_DOMAIN_PIPE_A_PANEL_FITTER:
+	case POWER_DOMAIN_PIPE_B_PANEL_FITTER:
+	case POWER_DOMAIN_PIPE_C_PANEL_FITTER:
+	case POWER_DOMAIN_TRANSCODER_A:
+	case POWER_DOMAIN_TRANSCODER_B:
+	case POWER_DOMAIN_TRANSCODER_C:
+		spin_lock_irq(&power_well->lock);
+		__intel_power_well_put(power_well);
+		spin_unlock_irq(&power_well->lock);
+		return;
+	default:
+		BUG();
+	}
+}
+
+static struct i915_power_well *hsw_pwr;
+
+/* Display audio driver power well request */
+void i915_request_power_well(void)
+{
+	if (WARN_ON(!hsw_pwr))
+		return;
+
+	spin_lock_irq(&hsw_pwr->lock);
+	__intel_power_well_get(hsw_pwr);
+	spin_unlock_irq(&hsw_pwr->lock);
+}
+EXPORT_SYMBOL_GPL(i915_request_power_well);
+
+/* Display audio driver power well release */
+void i915_release_power_well(void)
+{
+	if (WARN_ON(!hsw_pwr))
+		return;
+
+	spin_lock_irq(&hsw_pwr->lock);
+	__intel_power_well_put(hsw_pwr);
+	spin_unlock_irq(&hsw_pwr->lock);
+}
+EXPORT_SYMBOL_GPL(i915_release_power_well);
+
+int i915_init_power_well(struct drm_device *dev)
+{
+	struct drm_i915_private *dev_priv = dev->dev_private;
+
+	hsw_pwr = &dev_priv->power_well;
+
+	hsw_pwr->device = dev;
+	spin_lock_init(&hsw_pwr->lock);
+	hsw_pwr->count = 0;
+
+	return 0;
+}
+
+void i915_remove_power_well(struct drm_device *dev)
+{
+	hsw_pwr = NULL;
 }
 
 void intel_set_power_well(struct drm_device *dev, bool enable)
