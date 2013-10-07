@@ -654,3 +654,111 @@ void kvmppc_decrementer_func(unsigned long data)
 	kvmppc_core_queue_dec(vcpu);
 	kvm_vcpu_kick(vcpu);
 }
+
+struct kvm_vcpu *kvmppc_core_vcpu_create(struct kvm *kvm, unsigned int id)
+{
+	return kvmppc_ops->vcpu_create(kvm, id);
+}
+
+void kvmppc_core_vcpu_free(struct kvm_vcpu *vcpu)
+{
+	kvmppc_ops->vcpu_free(vcpu);
+}
+
+int kvmppc_core_check_requests(struct kvm_vcpu *vcpu)
+{
+	return kvmppc_ops->check_requests(vcpu);
+}
+
+int kvm_vm_ioctl_get_dirty_log(struct kvm *kvm, struct kvm_dirty_log *log)
+{
+	return kvmppc_ops->get_dirty_log(kvm, log);
+}
+
+void kvmppc_core_free_memslot(struct kvm *kvm, struct kvm_memory_slot *free,
+			      struct kvm_memory_slot *dont)
+{
+	kvmppc_ops->free_memslot(free, dont);
+}
+
+int kvmppc_core_create_memslot(struct kvm *kvm, struct kvm_memory_slot *slot,
+			       unsigned long npages)
+{
+	return kvmppc_ops->create_memslot(slot, npages);
+}
+
+void kvmppc_core_flush_memslot(struct kvm *kvm, struct kvm_memory_slot *memslot)
+{
+	kvmppc_ops->flush_memslot(kvm, memslot);
+}
+
+int kvmppc_core_prepare_memory_region(struct kvm *kvm,
+				struct kvm_memory_slot *memslot,
+				struct kvm_userspace_memory_region *mem)
+{
+	return kvmppc_ops->prepare_memory_region(kvm, memslot, mem);
+}
+
+void kvmppc_core_commit_memory_region(struct kvm *kvm,
+				struct kvm_userspace_memory_region *mem,
+				const struct kvm_memory_slot *old)
+{
+	kvmppc_ops->commit_memory_region(kvm, mem, old);
+}
+
+int kvm_unmap_hva(struct kvm *kvm, unsigned long hva)
+{
+	return kvmppc_ops->unmap_hva(kvm, hva);
+}
+EXPORT_SYMBOL_GPL(kvm_unmap_hva);
+
+int kvm_unmap_hva_range(struct kvm *kvm, unsigned long start, unsigned long end)
+{
+	return kvmppc_ops->unmap_hva_range(kvm, start, end);
+}
+
+int kvm_age_hva(struct kvm *kvm, unsigned long hva)
+{
+	return kvmppc_ops->age_hva(kvm, hva);
+}
+
+int kvm_test_age_hva(struct kvm *kvm, unsigned long hva)
+{
+	return kvmppc_ops->test_age_hva(kvm, hva);
+}
+
+void kvm_set_spte_hva(struct kvm *kvm, unsigned long hva, pte_t pte)
+{
+	kvmppc_ops->set_spte_hva(kvm, hva, pte);
+}
+
+void kvmppc_mmu_destroy(struct kvm_vcpu *vcpu)
+{
+	kvmppc_ops->mmu_destroy(vcpu);
+}
+
+int kvmppc_core_init_vm(struct kvm *kvm)
+{
+
+#ifdef CONFIG_PPC64
+	INIT_LIST_HEAD(&kvm->arch.spapr_tce_tables);
+	INIT_LIST_HEAD(&kvm->arch.rtas_tokens);
+#endif
+
+	return kvmppc_ops->init_vm(kvm);
+}
+
+void kvmppc_core_destroy_vm(struct kvm *kvm)
+{
+	kvmppc_ops->destroy_vm(kvm);
+
+#ifdef CONFIG_PPC64
+	kvmppc_rtas_tokens_free(kvm);
+	WARN_ON(!list_empty(&kvm->arch.spapr_tce_tables));
+#endif
+}
+
+int kvmppc_core_check_processor_compat(void)
+{
+	return kvmppc_ops->check_processor_compat();
+}
