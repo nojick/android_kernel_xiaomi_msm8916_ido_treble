@@ -1415,8 +1415,7 @@ int kvm_arch_vcpu_ioctl_get_sregs(struct kvm_vcpu *vcpu,
 
 	get_sregs_base(vcpu, sregs);
 	get_sregs_arch206(vcpu, sregs);
-	kvmppc_core_get_sregs(vcpu, sregs);
-	return 0;
+	return vcpu->kvm->arch.kvm_ops->get_sregs(vcpu, sregs);
 }
 
 int kvm_arch_vcpu_ioctl_set_sregs(struct kvm_vcpu *vcpu,
@@ -1434,8 +1433,7 @@ int kvm_arch_vcpu_ioctl_set_sregs(struct kvm_vcpu *vcpu,
 	ret = set_sregs_arch206(vcpu, sregs);
 	if (ret < 0)
 		return ret;
-
-	return kvmppc_core_set_sregs(vcpu, sregs);
+	return vcpu->kvm->arch.kvm_ops->set_sregs(vcpu, sregs);
 }
 
 int kvm_vcpu_ioctl_get_one_reg(struct kvm_vcpu *vcpu, struct kvm_one_reg *reg)
@@ -1485,7 +1483,7 @@ int kvm_vcpu_ioctl_get_one_reg(struct kvm_vcpu *vcpu, struct kvm_one_reg *reg)
 		val = get_reg_val(reg->id, vcpu->arch.vrsave);
 		break;
 	default:
-		r = kvmppc_get_one_reg(vcpu, reg->id, &val);
+		r = vcpu->kvm->arch.kvm_ops->get_one_reg(vcpu, reg->id, &val);
 		break;
 	}
 
@@ -1561,7 +1559,7 @@ int kvm_vcpu_ioctl_set_one_reg(struct kvm_vcpu *vcpu, struct kvm_one_reg *reg)
 		vcpu->arch.vrsave = set_reg_val(reg->id, val);
 		break;
 	default:
-		r = kvmppc_set_one_reg(vcpu, reg->id, &val);
+		r = vcpu->kvm->arch.kvm_ops->set_one_reg(vcpu, reg->id, &val);
 		break;
 	}
 
@@ -1689,6 +1687,44 @@ void kvmppc_booke_vcpu_put(struct kvm_vcpu *vcpu)
 {
 	current->thread.kvm_vcpu = NULL;
 	vcpu->cpu = -1;
+
+	/* Clear pending debug event in DBSR */
+	kvmppc_clear_dbsr();
+}
+
+void kvmppc_mmu_destroy(struct kvm_vcpu *vcpu)
+{
+	vcpu->kvm->arch.kvm_ops->mmu_destroy(vcpu);
+}
+
+int kvmppc_core_init_vm(struct kvm *kvm)
+{
+	return kvm->arch.kvm_ops->init_vm(kvm);
+}
+
+struct kvm_vcpu *kvmppc_core_vcpu_create(struct kvm *kvm, unsigned int id)
+{
+	return kvm->arch.kvm_ops->vcpu_create(kvm, id);
+}
+
+void kvmppc_core_vcpu_free(struct kvm_vcpu *vcpu)
+{
+	vcpu->kvm->arch.kvm_ops->vcpu_free(vcpu);
+}
+
+void kvmppc_core_destroy_vm(struct kvm *kvm)
+{
+	kvm->arch.kvm_ops->destroy_vm(kvm);
+}
+
+void kvmppc_core_vcpu_load(struct kvm_vcpu *vcpu, int cpu)
+{
+	vcpu->kvm->arch.kvm_ops->vcpu_load(vcpu, cpu);
+}
+
+void kvmppc_core_vcpu_put(struct kvm_vcpu *vcpu)
+{
+	vcpu->kvm->arch.kvm_ops->vcpu_put(vcpu);
 }
 
 int __init kvmppc_booke_init(void)

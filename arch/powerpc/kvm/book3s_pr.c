@@ -1324,28 +1324,82 @@ void kvmppc_core_destroy_vm(struct kvm *kvm)
 	}
 }
 
-static int kvmppc_book3s_init(void)
+static int kvmppc_core_check_processor_compat_pr(void)
+{
+	/* we are always compatible */
+	return 0;
+}
+
+static long kvm_arch_vm_ioctl_pr(struct file *filp,
+				 unsigned int ioctl, unsigned long arg)
+{
+	return -ENOTTY;
+}
+
+static struct kvmppc_ops kvm_ops_pr = {
+	.is_hv_enabled = false,
+	.get_sregs = kvm_arch_vcpu_ioctl_get_sregs_pr,
+	.set_sregs = kvm_arch_vcpu_ioctl_set_sregs_pr,
+	.get_one_reg = kvmppc_get_one_reg_pr,
+	.set_one_reg = kvmppc_set_one_reg_pr,
+	.vcpu_load   = kvmppc_core_vcpu_load_pr,
+	.vcpu_put    = kvmppc_core_vcpu_put_pr,
+	.set_msr     = kvmppc_set_msr_pr,
+	.vcpu_run    = kvmppc_vcpu_run_pr,
+	.vcpu_create = kvmppc_core_vcpu_create_pr,
+	.vcpu_free   = kvmppc_core_vcpu_free_pr,
+	.check_requests = kvmppc_core_check_requests_pr,
+	.get_dirty_log = kvm_vm_ioctl_get_dirty_log_pr,
+	.flush_memslot = kvmppc_core_flush_memslot_pr,
+	.prepare_memory_region = kvmppc_core_prepare_memory_region_pr,
+	.commit_memory_region = kvmppc_core_commit_memory_region_pr,
+	.unmap_hva = kvm_unmap_hva_pr,
+	.unmap_hva_range = kvm_unmap_hva_range_pr,
+	.age_hva  = kvm_age_hva_pr,
+	.test_age_hva = kvm_test_age_hva_pr,
+	.set_spte_hva = kvm_set_spte_hva_pr,
+	.mmu_destroy  = kvmppc_mmu_destroy_pr,
+	.free_memslot = kvmppc_core_free_memslot_pr,
+	.create_memslot = kvmppc_core_create_memslot_pr,
+	.init_vm = kvmppc_core_init_vm_pr,
+	.destroy_vm = kvmppc_core_destroy_vm_pr,
+	.get_smmu_info = kvm_vm_ioctl_get_smmu_info_pr,
+	.emulate_op = kvmppc_core_emulate_op_pr,
+	.emulate_mtspr = kvmppc_core_emulate_mtspr_pr,
+	.emulate_mfspr = kvmppc_core_emulate_mfspr_pr,
+	.fast_vcpu_kick = kvm_vcpu_kick,
+	.arch_vm_ioctl  = kvm_arch_vm_ioctl_pr,
+};
+
+
+int kvmppc_book3s_init_pr(void)
 {
 	int r;
 
-	r = kvm_init(NULL, sizeof(struct kvmppc_vcpu_book3s), 0,
-		     THIS_MODULE);
-
-	if (r)
+	r = kvmppc_core_check_processor_compat_pr();
+	if (r < 0)
 		return r;
 
-	r = kvmppc_mmu_hpte_sysinit();
+	kvm_ops_pr.owner = THIS_MODULE;
+	kvmppc_pr_ops = &kvm_ops_pr;
 
+	r = kvmppc_mmu_hpte_sysinit();
 	return r;
 }
 
-static void kvmppc_book3s_exit(void)
+void kvmppc_book3s_exit_pr(void)
 {
+	kvmppc_pr_ops = NULL;
 	kvmppc_mmu_hpte_sysexit();
-	kvm_exit();
 }
+
+/*
+ * We only support separate modules for book3s 64
+ */
+#ifdef CONFIG_PPC_BOOK3S_64
 
 module_init(kvmppc_book3s_init_pr);
 module_exit(kvmppc_book3s_exit_pr);
 
 MODULE_LICENSE("GPL");
+#endif

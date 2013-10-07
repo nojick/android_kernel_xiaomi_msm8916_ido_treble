@@ -2001,23 +2001,120 @@ int kvmppc_core_emulate_mfspr(struct kvm_vcpu *vcpu, int sprn, ulong *spr_val)
 	return EMULATE_FAIL;
 }
 
-static int kvmppc_book3s_hv_init(void)
+static int kvmppc_core_check_processor_compat_hv(void)
+{
+	if (!cpu_has_feature(CPU_FTR_HVMODE))
+		return -EIO;
+	return 0;
+}
+
+static long kvm_arch_vm_ioctl_hv(struct file *filp,
+				 unsigned int ioctl, unsigned long arg)
+{
+	struct kvm *kvm __maybe_unused = filp->private_data;
+	void __user *argp = (void __user *)arg;
+	long r;
+
+	switch (ioctl) {
+
+	case KVM_ALLOCATE_RMA: {
+		struct kvm_allocate_rma rma;
+		struct kvm *kvm = filp->private_data;
+
+		r = kvm_vm_ioctl_allocate_rma(kvm, &rma);
+		if (r >= 0 && copy_to_user(argp, &rma, sizeof(rma)))
+			r = -EFAULT;
+		break;
+	}
+
+	case KVM_PPC_ALLOCATE_HTAB: {
+		u32 htab_order;
+
+		r = -EFAULT;
+		if (get_user(htab_order, (u32 __user *)argp))
+			break;
+		r = kvmppc_alloc_reset_hpt(kvm, &htab_order);
+		if (r)
+			break;
+		r = -EFAULT;
+		if (put_user(htab_order, (u32 __user *)argp))
+			break;
+		r = 0;
+		break;
+	}
+
+	case KVM_PPC_GET_HTAB_FD: {
+		struct kvm_get_htab_fd ghf;
+
+		r = -EFAULT;
+		if (copy_from_user(&ghf, argp, sizeof(ghf)))
+			break;
+		r = kvm_vm_ioctl_get_htab_fd(kvm, &ghf);
+		break;
+	}
+
+	default:
+		r = -ENOTTY;
+	}
+
+	return r;
+}
+
+static struct kvmppc_ops kvm_ops_hv = {
+	.is_hv_enabled = true,
+	.get_sregs = kvm_arch_vcpu_ioctl_get_sregs_hv,
+	.set_sregs = kvm_arch_vcpu_ioctl_set_sregs_hv,
+	.get_one_reg = kvmppc_get_one_reg_hv,
+	.set_one_reg = kvmppc_set_one_reg_hv,
+	.vcpu_load   = kvmppc_core_vcpu_load_hv,
+	.vcpu_put    = kvmppc_core_vcpu_put_hv,
+	.set_msr     = kvmppc_set_msr_hv,
+	.vcpu_run    = kvmppc_vcpu_run_hv,
+	.vcpu_create = kvmppc_core_vcpu_create_hv,
+	.vcpu_free   = kvmppc_core_vcpu_free_hv,
+	.check_requests = kvmppc_core_check_requests_hv,
+	.get_dirty_log  = kvm_vm_ioctl_get_dirty_log_hv,
+	.flush_memslot  = kvmppc_core_flush_memslot_hv,
+	.prepare_memory_region = kvmppc_core_prepare_memory_region_hv,
+	.commit_memory_region  = kvmppc_core_commit_memory_region_hv,
+	.unmap_hva = kvm_unmap_hva_hv,
+	.unmap_hva_range = kvm_unmap_hva_range_hv,
+	.age_hva  = kvm_age_hva_hv,
+	.test_age_hva = kvm_test_age_hva_hv,
+	.set_spte_hva = kvm_set_spte_hva_hv,
+	.mmu_destroy  = kvmppc_mmu_destroy_hv,
+	.free_memslot = kvmppc_core_free_memslot_hv,
+	.create_memslot = kvmppc_core_create_memslot_hv,
+	.init_vm =  kvmppc_core_init_vm_hv,
+	.destroy_vm = kvmppc_core_destroy_vm_hv,
+	.get_smmu_info = kvm_vm_ioctl_get_smmu_info_hv,
+	.emulate_op = kvmppc_core_emulate_op_hv,
+	.emulate_mtspr = kvmppc_core_emulate_mtspr_hv,
+	.emulate_mfspr = kvmppc_core_emulate_mfspr_hv,
+	.fast_vcpu_kick = kvmppc_fast_vcpu_kick_hv,
+	.arch_vm_ioctl  = kvm_arch_vm_ioctl_hv,
+};
+
+static int kvmppc_book3s_init_hv(void)
 {
 	int r;
-
-	r = kvm_init(NULL, sizeof(struct kvm_vcpu), 0, THIS_MODULE);
-
-	if (r)
+	/*
+	 * FIXME!! Do we need to check on all cpus ?
+	 */
+	r = kvmppc_core_check_processor_compat_hv();
+	if (r < 0)
 		return r;
 
-	r = kvmppc_mmu_hv_init();
+	kvm_ops_hv.owner = THIS_MODULE;
+	kvmppc_hv_ops = &kvm_ops_hv;
 
+	r = kvmppc_mmu_hv_init();
 	return r;
 }
 
 static void kvmppc_book3s_hv_exit(void)
 {
-	kvm_exit();
+	kvmppc_hv_ops = NULL;
 }
 
 module_init(kvmppc_book3s_init_hv);
