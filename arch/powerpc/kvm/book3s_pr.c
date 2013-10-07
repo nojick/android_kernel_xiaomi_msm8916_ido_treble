@@ -40,6 +40,7 @@
 #include <linux/sched.h>
 #include <linux/vmalloc.h>
 #include <linux/highmem.h>
+#include <linux/module.h>
 
 #include "trace.h"
 
@@ -778,7 +779,7 @@ program_interrupt:
 			ulong cmd = kvmppc_get_gpr(vcpu, 3);
 			int i;
 
-#ifdef CONFIG_KVM_BOOK3S_64_PR
+#ifdef CONFIG_PPC_BOOK3S_64
 			if (kvmppc_h_pr(vcpu, cmd) == EMULATE_DONE) {
 				r = RESUME_GUEST;
 				break;
@@ -1344,5 +1345,7 @@ static void kvmppc_book3s_exit(void)
 	kvm_exit();
 }
 
-module_init(kvmppc_book3s_init);
-module_exit(kvmppc_book3s_exit);
+module_init(kvmppc_book3s_init_pr);
+module_exit(kvmppc_book3s_exit_pr);
+
+MODULE_LICENSE("GPL");

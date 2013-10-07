@@ -52,6 +52,7 @@
 #include <linux/vmalloc.h>
 #include <linux/highmem.h>
 #include <linux/hugetlb.h>
+#include <linux/module.h>
 
 /* #define EXIT_DEBUG */
 /* #define EXIT_DEBUG_SIMPLE */
@@ -2019,5 +2020,6 @@ static void kvmppc_book3s_hv_exit(void)
 	kvm_exit();
 }
 
-module_init(kvmppc_book3s_hv_init);
-module_exit(kvmppc_book3s_hv_exit);
+module_init(kvmppc_book3s_init_hv);
+module_exit(kvmppc_book3s_exit_hv);
+MODULE_LICENSE("GPL");
