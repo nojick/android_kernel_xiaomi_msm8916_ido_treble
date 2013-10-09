@@ -2701,6 +2701,9 @@ L:	linux-tegra@vger.kernel.org
 T:	git git://gitorious.org/thierryreding/linux.git
 S:	Maintained
 F:	drivers/gpu/drm/tegra/
+F:	drivers/gpu/host1x/
+F:	include/linux/host1x.h
+F:	include/uapi/drm/tegra_drm.h
 F:	Documentation/devicetree/bindings/gpu/nvidia,tegra20-host1x.txt
 
 DSBR100 USB FM RADIO DRIVER
