@@ -30,6 +30,7 @@
 #include <linux/wait.h>
 #include <linux/blockgroup_lock.h>
 #include <linux/percpu_counter.h>
+#include <linux/ratelimit.h>
 #include <crypto/hash.h>
 #include <linux/falloc.h>
 #ifdef __KERNEL__
@@ -1405,6 +1406,11 @@ struct ext4_sb_info {
 	unsigned long s_es_last_sorted;
 	struct percpu_counter s_extent_cache_cnt;
 	spinlock_t s_es_lru_lock ____cacheline_aligned_in_smp;
+
+	/* Ratelimit ext4 messages. */
+	struct ratelimit_state s_err_ratelimit_state;
+	struct ratelimit_state s_warning_ratelimit_state;
+	struct ratelimit_state s_msg_ratelimit_state;
 };
 
 static inline struct ext4_sb_info *EXT4_SB(struct super_block *sb)
