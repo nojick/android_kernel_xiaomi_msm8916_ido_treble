@@ -5,6 +5,7 @@
 
 struct device;
 struct gpio_desc;
+struct seq_file;
 
 #ifdef CONFIG_GPIOLIB
 
