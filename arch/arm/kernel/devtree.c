@@ -18,6 +18,7 @@
 #include <linux/of_fdt.h>
 #include <linux/of_irq.h>
 #include <linux/of_platform.h>
+#include <linux/smp.h>
 
 #include <asm/cputype.h>
 #include <asm/setup.h>
@@ -30,6 +31,60 @@ void * __init early_init_dt_alloc_memory_arch(u64 size, u64 align)
 {
 	return memblock_virt_alloc(size, align);
 }
+
+void __init arm_dt_memblock_reserve(void)
+{
+	u64 *reserve_map, base, size;
+
+	if (!initial_boot_params)
+		return;
+
+	/* Reserve the dtb region */
+	memblock_reserve(virt_to_phys(initial_boot_params),
+			 be32_to_cpu(initial_boot_params->totalsize));
+
+	/*
+	 * Process the reserve map.  This will probably overlap the initrd
+	 * and dtb locations which are already reserved, but overlaping
+	 * doesn't hurt anything
+	 */
+	reserve_map = ((void*)initial_boot_params) +
+			be32_to_cpu(initial_boot_params->off_mem_rsvmap);
+	while (1) {
+		base = be64_to_cpup(reserve_map++);
+		size = be64_to_cpup(reserve_map++);
+		if (!size)
+			break;
+		memblock_reserve(base, size);
+	}
+}
+
+#ifdef CONFIG_SMP
+extern struct of_cpu_method __cpu_method_of_table_begin[];
+extern struct of_cpu_method __cpu_method_of_table_end[];
+
+static int __init set_smp_ops_by_method(struct device_node *node)
+{
+	const char *method;
+	struct of_cpu_method *m = __cpu_method_of_table_begin;
+
+	if (of_property_read_string(node, "enable-method", &method))
+		return 0;
+
+	for (; m < __cpu_method_of_table_end; m++)
+		if (!strcmp(m->method, method)) {
+			smp_set_ops(m->ops);
+			return 1;
+		}
+
+	return 0;
+}
+#else
+static inline int set_smp_ops_by_method(struct device_node *node)
+{
+	return 1;
+}
+#endif
 
 /*
  * arm_dt_init_cpu_maps - Function retrieves cpu nodes from the device tree
@@ -47,6 +102,7 @@ void __init arm_dt_init_cpu_maps(void)
 	 * read as 0.
 	 */
 	struct device_node *cpu, *cpus;
+	int found_method = 0;
 	u32 i, j, cpuidx = 1;
 	u32 mpidr = is_smp() ? read_cpuid_mpidr() & MPIDR_HWID_BITMASK : 0;
 
@@ -126,7 +182,17 @@ void __init arm_dt_init_cpu_maps(void)
 		}
 
 		tmp_map[i] = hwid;
+
+		if (!found_method)
+			found_method = set_smp_ops_by_method(cpu);
 	}
+
+	/*
+	 * Fallback to an enable-method in the cpus node if nothing found in
+	 * a cpu node.
+	 */
+	if (!found_method)
+		set_smp_ops_by_method(cpus);
 
 	if (!bootcpu_valid) {
 		pr_warn("DT missing boot CPU MPIDR[23:0], fall back to default cpu_logical_map\n");
