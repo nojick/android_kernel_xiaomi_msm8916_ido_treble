@@ -6962,15 +6962,15 @@ struct btrfs_dio_private {
 static void btrfs_endio_direct_read(struct bio *bio, int err)
 {
 	struct btrfs_dio_private *dip = bio->bi_private;
-	struct bio_vec *bvec_end = bio->bi_io_vec + bio->bi_vcnt - 1;
-	struct bio_vec *bvec = bio->bi_io_vec;
+	struct bio_vec *bvec;
 	struct inode *inode = dip->inode;
 	struct btrfs_root *root = BTRFS_I(inode)->root;
 	struct bio *dio_bio;
 	u64 start;
+	int i;
 
 	start = dip->logical_offset;
-	do {
+	bio_for_each_segment_all(bvec, bio, i) {
 		if (!(BTRFS_I(inode)->flags & BTRFS_INODE_NODATASUM)) {
 			struct page *page = bvec->bv_page;
 			char *kaddr;
