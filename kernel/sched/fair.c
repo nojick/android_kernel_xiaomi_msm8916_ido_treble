@@ -7058,7 +7058,6 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 			struct sched_group *group, int load_idx,
 			int local_group, struct sg_lb_stats *sgs)
 {
-	unsigned long nr_running;
 	unsigned long load;
 	int i;
 
@@ -7070,8 +7069,6 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 		trace_sched_cpu_load(cpu_rq(i), idle_cpu(i),
 				     mostly_idle_cpu(i),
 				     power_cost_at_freq(i, 0));
-		nr_running = rq->nr_running;
-
 		/* Bias balancing toward cpus of our domain */
 		if (local_group)
 			load = target_load(i, load_idx);
@@ -7079,7 +7076,7 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 			load = source_load(i, load_idx);
 
 		sgs->group_load += load;
-		sgs->sum_nr_running += nr_running;
+		sgs->sum_nr_running += rq->nr_running;
 #ifdef CONFIG_SCHED_HMP
 		sgs->sum_nr_big_tasks += rq->nr_big_tasks;
 		sgs->sum_nr_small_tasks += rq->nr_small_tasks;
