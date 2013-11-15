@@ -1518,9 +1518,8 @@ static int init_timers_cpu(int cpu)
 			 * The APs use this path later in boot
 			 */
 			if (cpu != NR_CPUS)
-				base = kmalloc_node(sizeof(*base),
-						    GFP_KERNEL | __GFP_ZERO,
-						    cpu_to_node(cpu));
+				base = kzalloc_node(sizeof(*base), GFP_KERNEL,
+					    cpu_to_node(cpu));
 			else
 				base = kmalloc(sizeof(*base),
 					       GFP_KERNEL | __GFP_ZERO);
