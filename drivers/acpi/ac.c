@@ -35,8 +35,7 @@
 #include <linux/seq_file.h>
 #endif
 #include <linux/power_supply.h>
-#include <acpi/acpi_bus.h>
-#include <acpi/acpi_drivers.h>
+#include <linux/acpi.h>
 
 #define PREFIX "ACPI: "
 

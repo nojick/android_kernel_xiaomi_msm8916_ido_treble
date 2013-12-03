@@ -30,7 +30,6 @@
 #include <linux/sysctl.h>
 #include <linux/slab.h>
 #include <linux/acpi.h>
-#include <acpi/acpi_bus.h>
 #include <linux/completion.h>
 #include <linux/cpu.h>
 #include <linux/hyperv.h>
@@ -39,7 +38,6 @@
 #include <asm/hypervisor.h>
 #include <asm/mshyperv.h>
 #include "hyperv_vmbus.h"
-
 
 static struct acpi_device  *hv_acpi_dev;
 
