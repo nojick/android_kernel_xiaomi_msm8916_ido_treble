@@ -1799,7 +1799,7 @@ static struct gpio_chip sunxi_pinctrl_gpio_chip = {
 	.set			= sunxi_pinctrl_gpio_set,
 	.of_xlate		= sunxi_pinctrl_gpio_of_xlate,
 	.of_gpio_n_cells	= 3,
-	.can_sleep		= 0,
+	.can_sleep		= false,
 };
 
 static struct of_device_id sunxi_pinctrl_match[] = {
