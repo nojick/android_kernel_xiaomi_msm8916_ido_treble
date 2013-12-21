@@ -262,7 +262,6 @@ void __iomem *__init efi_ioremap(unsigned long phys_addr, unsigned long size,
 void __init parse_efi_setup(u64 phys_addr, u32 data_len)
 {
 	efi_setup = phys_addr + sizeof(struct setup_data);
-	efi_data_len = data_len - sizeof(struct setup_data);
 }
 
 void __init efi_runtime_mkexec(void)
