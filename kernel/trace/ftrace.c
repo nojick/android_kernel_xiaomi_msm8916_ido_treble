@@ -337,6 +337,8 @@ static void update_ftrace_function(void)
 	if (ftrace_trace_function == func)
 		return;
 
+	update_function_graph_func();
+
 	/*
 	 * If we are using the list function, it doesn't care
 	 * about the function_trace_ops.
