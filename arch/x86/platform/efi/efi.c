@@ -79,15 +79,6 @@ static int nr_efi_runtime_map;
 u64 efi_setup;		/* efi setup_data physical address */
 u32 efi_data_len;	/* efi setup_data payload length */
 
-/*
- * Returns 1 if 'facility' is enabled, 0 otherwise.
- */
-int efi_enabled(int facility)
-{
-	return test_bit(facility, &x86_efi_facility) != 0;
-}
-EXPORT_SYMBOL(efi_enabled);
-
 static bool __initdata disable_runtime = false;
 static int __init setup_noefi(char *arg)
 {
