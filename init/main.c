@@ -564,6 +564,7 @@ asmlinkage __visible void __init start_kernel(void)
 	init_timers();
 	hrtimers_init();
 	softirq_init();
+	acpi_early_init();
 	timekeeping_init();
 	time_init();
 	perf_event_init();
@@ -644,7 +645,6 @@ asmlinkage __visible void __init start_kernel(void)
 
 	check_bugs();
 
-	acpi_early_init(); /* before LAPIC and SMP init */
 	sfi_init_late();
 
 	if (efi_enabled(EFI_RUNTIME_SERVICES)) {
