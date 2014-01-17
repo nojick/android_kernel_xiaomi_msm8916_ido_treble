@@ -8193,7 +8193,7 @@ out:
  * idle_balance is called by schedule() if this_cpu is about to become
  * idle. Attempts to pull tasks from other CPUs.
  */
-void idle_balance(struct rq *this_rq)
+int idle_balance(struct rq *this_rq)
 {
 	unsigned long next_balance = jiffies + HZ;
 	struct sched_domain *sd;
@@ -8205,10 +8205,8 @@ void idle_balance(struct rq *this_rq)
 	int balance_cpu = -1;
 	struct rq *balance_rq = NULL;
 
-	this_rq->idle_stamp = rq_clock(this_rq);
-
 	if (this_rq->avg_idle < sysctl_sched_migration_cost)
-		return;
+		return 0;
 
 	/* If this CPU is not the most power-efficient idle CPU in the
 	 * lowest level domain, run load balance on behalf of that
@@ -8270,10 +8268,8 @@ void idle_balance(struct rq *this_rq)
 		interval = msecs_to_jiffies(sd->balance_interval);
 		if (time_after(next_balance, sd->last_balance + interval))
 			next_balance = sd->last_balance + interval;
-		if (pulled_task) {
-			balance_rq->idle_stamp = 0;
+		if (pulled_task)
 			break;
-		}
 	}
 	rcu_read_unlock();
 
@@ -8284,7 +8280,7 @@ void idle_balance(struct rq *this_rq)
 	 * A task could have be enqueued in the meantime
 	 */
 	if (this_rq->nr_running && !pulled_task)
-		return;
+		return 1;
 
 
 	if (balance_cpu == this_cpu &&
@@ -8298,6 +8294,8 @@ void idle_balance(struct rq *this_rq)
 
 	if (curr_cost > this_rq->max_idle_balance_cost)
 		this_rq->max_idle_balance_cost = curr_cost;
+
+	return pulled_task;
 }
 
 /*
