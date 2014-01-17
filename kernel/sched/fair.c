@@ -7356,6 +7356,13 @@ void idle_balance(struct rq *this_rq)
 		this_rq->max_idle_balance_cost = curr_cost;
 }
 
+	/*
+	 * While browsing the domains, we released the rq lock.
+	 * A task could have be enqueued in the meantime
+	 */
+	if (this_rq->nr_running && !pulled_task)
+		return;
+
 /*
  * active_load_balance_cpu_stop is run by cpu stopper. It pushes
  * running tasks off the busiest CPU onto idle CPUs. It requires at
