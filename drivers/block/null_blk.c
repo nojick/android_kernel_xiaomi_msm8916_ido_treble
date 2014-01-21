@@ -580,6 +580,11 @@ static int __init null_init(void)
 		irqmode = NULL_IRQ_NONE;
 	}
 #endif
+	if (bs > PAGE_SIZE) {
+		pr_warn("null_blk: invalid block size\n");
+		pr_warn("null_blk: defaults block size to %lu\n", PAGE_SIZE);
+		bs = PAGE_SIZE;
+	}
 
 	if (submit_queues > nr_cpu_ids)
 		submit_queues = nr_cpu_ids;
