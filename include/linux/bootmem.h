@@ -266,7 +266,7 @@ static inline void * __init memblock_virt_alloc_low(
 {
 	if (!align)
 		align = SMP_CACHE_BYTES;
-	return __alloc_bootmem_low(size, align, BOOTMEM_LOW_LIMIT);
+	return __alloc_bootmem_low(size, align, 0);
 }
 
 static inline void * __init memblock_virt_alloc_low_nopanic(
@@ -274,7 +274,7 @@ static inline void * __init memblock_virt_alloc_low_nopanic(
 {
 	if (!align)
 		align = SMP_CACHE_BYTES;
-	return __alloc_bootmem_low_nopanic(size, align, BOOTMEM_LOW_LIMIT);
+	return __alloc_bootmem_low_nopanic(size, align, 0);
 }
 
 static inline void * __init memblock_virt_alloc_from_nopanic(
