@@ -1572,7 +1572,6 @@ int pid_revalidate(struct dentry *dentry, unsigned int flags)
 		put_task_struct(task);
 		return 1;
 	}
-	d_drop(dentry);
 	return 0;
 }
 
@@ -1709,9 +1708,6 @@ out:
 	put_task_struct(task);
 
 out_notask:
-	if (status <= 0)
-		d_drop(dentry);
-
 	return status;
 }
 
