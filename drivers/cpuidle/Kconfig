@@ -36,6 +36,9 @@ config CPU_IDLE_CALXEDA
 	  Select this to enable cpuidle on Calxeda processors.
 endif
 
+config DT_IDLE_STATES
+	bool
+
 menu "ARM64 CPU Idle Drivers"
 depends on ARM64
 source "drivers/cpuidle/Kconfig.arm64"
