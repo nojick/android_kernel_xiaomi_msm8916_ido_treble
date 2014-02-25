@@ -1680,14 +1680,14 @@ static void move_unlock_mem_cgroup(struct mem_cgroup *memcg,
 void mem_cgroup_print_oom_info(struct mem_cgroup *memcg, struct task_struct *p)
 {
 	/* oom_info_lock ensures that parallel ooms do not interleave */
-	static DEFINE_SPINLOCK(oom_info_lock);
+	static DEFINE_MUTEX(oom_info_lock);
 	struct mem_cgroup *iter;
 	unsigned int i;
 
 	if (!p)
 		return;
 
-	spin_lock(&oom_info_lock);
+	mutex_lock(&oom_info_lock);
 	rcu_read_lock();
 
 	pr_info("Task in ");
@@ -1729,7 +1729,7 @@ void mem_cgroup_print_oom_info(struct mem_cgroup *memcg, struct task_struct *p)
 
 		pr_cont("\n");
 	}
-	spin_unlock(&oom_info_lock);
+	mutex_unlock(&oom_info_lock);
 }
 
 /*
