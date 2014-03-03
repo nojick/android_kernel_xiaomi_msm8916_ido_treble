@@ -705,10 +705,13 @@ static int do_dentry_open(struct file *f,
 		f->f_op = &empty_fops;
 		return 0;
 	}
+	
+	/* POSIX.1-2008/SUSv4 Section XSI 2.9.7 */
+	if (S_ISREG(inode->i_mode))
+		f->f_mode |= FMODE_ATOMIC_POS;
 
 	if (S_ISREG(inode->i_mode))
 		f->f_mode |= FMODE_SPLICE_WRITE | FMODE_SPLICE_READ;
-
 
 	f->f_op = fops_get(inode->i_fop);
 	if (unlikely(WARN_ON(!f->f_op))) {
