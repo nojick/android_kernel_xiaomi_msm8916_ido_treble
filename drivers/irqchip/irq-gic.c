@@ -1,6 +1,4 @@
 /*
- *  linux/arch/arm/common/gic.c
- *
  *  Copyright (C) 2002 ARM Limited, All Rights Reserved.
  *  Copyright (c) 2014, The Linux Foundation. All rights reserved.
  *
