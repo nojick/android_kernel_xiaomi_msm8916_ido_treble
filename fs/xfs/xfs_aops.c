@@ -1466,9 +1466,8 @@ xfs_vm_direct_IO(
 		if (ret != -EIOCBQUEUED && iocb->private)
 			goto out_destroy_ioend;
 	} else {
-		ret = __blockdev_direct_IO(rw, iocb, inode, bdev, iter->iov,
-					    offset, iter->nr_segs,
-					    xfs_get_blocks_direct,
+		ret = __blockdev_direct_IO(rw, iocb, inode, bdev, iter,
+					    offset, xfs_get_blocks_direct,
 					    NULL, NULL, 0);
 	}
 
