@@ -1320,37 +1320,21 @@ out:
 	return written ? written : error;
 }
 
-/**
- * generic_file_aio_read - generic filesystem read routine
- * @iocb:	kernel I/O control block
- * @iov:	io vector request
- * @nr_segs:	number of segments in the iovec
- * @pos:	current file position
- *
- * This is the "read()" routine for all filesystems
- * that can use the page cache directly.
- */
 ssize_t
-generic_file_aio_read(struct kiocb *iocb, const struct iovec *iov,
-		unsigned long nr_segs, loff_t pos)
+generic_file_read_iter(struct kiocb *iocb, struct iov_iter *iter)
 {
-	struct file *filp = iocb->ki_filp;
+	struct file *file = iocb->ki_filp;
 	ssize_t retval = 0;
-	size_t count;
 	loff_t *ppos = &iocb->ki_pos;
-	struct iov_iter i;
-
-	count = iov_length(iov, nr_segs);
-	iov_iter_init(&i, iov, nr_segs, count, 0);
+	loff_t pos = *ppos;
 
 	/* coalesce the iovecs and go direct-to-BIO for O_DIRECT */
-	if (filp->f_flags & O_DIRECT) {
+	if (file->f_flags & O_DIRECT) {
+		struct address_space *mapping = file->f_mapping;
+		struct inode *inode = mapping->host;
+		size_t count = iov_iter_count(iter);
 		loff_t size;
-		struct address_space *mapping;
-		struct inode *inode;
 
-		mapping = filp->f_mapping;
-		inode = mapping->host;
 		if (!count)
 			goto out; /* skip atime */
 		size = i_size_read(inode);
@@ -1358,18 +1342,13 @@ generic_file_aio_read(struct kiocb *iocb, const struct iovec *iov,
 			retval = filemap_write_and_wait_range(mapping, pos,
 					pos + count - 1);
 		if (!retval) {
-			struct iov_iter data = i;
+			struct iov_iter data = *iter;
 			retval = mapping->a_ops->direct_IO(READ, iocb, &data, pos);
 		}
 			if (retval > 0) {
 				*ppos = pos + retval;
-				count -= retval;
-			 /*
-			 * If we did a short DIO read we need to skip the
-			 * section of the iov that we've already read data into.
-			 */
-			iov_iter_advance(&i, retval);
-			}
+			iov_iter_advance(iter, retval);
+		}
 
 			/*
 			 * Btrfs can have a short DIO read if we encounter
@@ -1386,9 +1365,31 @@ generic_file_aio_read(struct kiocb *iocb, const struct iovec *iov,
 		}
 	}
 
-	retval = do_generic_file_read(filp, ppos, &i, retval);
+	retval = do_generic_file_read(file, ppos, iter, retval);
 out:
 	return retval;
+}
+EXPORT_SYMBOL(generic_file_read_iter);
+
+/**
+ * generic_file_aio_read - generic filesystem read routine
+ * @iocb:	kernel I/O control block
+ * @iov:	io vector request
+ * @nr_segs:	number of segments in the iovec
+ * @pos:	current file position
+ *
+ * This is the "read()" routine for all filesystems
+ * that can use the page cache directly.
+ */
+ssize_t
+generic_file_aio_read(struct kiocb *iocb, const struct iovec *iov,
+		unsigned long nr_segs, loff_t pos)
+{
+	size_t count = iov_length(iov, nr_segs);
+	struct iov_iter i;
+
+	iov_iter_init(&i, iov, nr_segs, count, 0);
+	return generic_file_read_iter(iocb, &i);
 }
 EXPORT_SYMBOL(generic_file_aio_read);
 
