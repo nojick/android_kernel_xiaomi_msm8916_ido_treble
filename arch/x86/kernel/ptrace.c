@@ -1519,9 +1519,7 @@ long syscall_trace_enter(struct pt_regs *regs)
 				    regs->dx, regs->si);
 #ifdef CONFIG_X86_64
 	else
-		audit_syscall_entry(AUDIT_ARCH_X86_64,
-				    regs->orig_ax,
-				    regs->di, regs->si,
+		audit_syscall_entry(regs->orig_ax, regs->di, regs->si,
 				    regs->dx, regs->r10);
 #endif
 
