@@ -38,6 +38,16 @@
 const struct dma_map_ops *dma_ops;
 EXPORT_SYMBOL(dma_ops);
 
+static pgprot_t __get_dma_pgprot(struct dma_attrs *attrs, pgprot_t prot,
+				 bool coherent)
+{
+	if (dma_get_attr(DMA_ATTR_WRITE_COMBINE, attrs))
+		return pgprot_writecombine(prot);
+	else if (!coherent)
+		return pgprot_dmacoherent(prot);
+	return prot;
+}
+
 #define DEFAULT_DMA_COHERENT_POOL_SIZE  SZ_256K
 #define NO_KERNEL_MAPPING_DUMMY 0x2222
 
@@ -291,7 +301,7 @@ static void *arm64_swiotlb_alloc_noncoherent(struct device *dev, size_t size,
 		for (i = 0; i < (size >> PAGE_SHIFT); i++)
 			map[i] = page + i;
 		coherent_ptr = vmap(map, size >> PAGE_SHIFT, VM_MAP,
-			    pgprot_dmacoherent(pgprot_default));
+			    __get_dma_pgprot(attrs, pgprot_default, false));
 		kfree(map);
 		if (!coherent_ptr)
 			goto no_map;
@@ -444,7 +454,7 @@ static int __swiotlb_mmap_noncoherent(struct device *dev,
 		void *cpu_addr, dma_addr_t dma_addr, size_t size,
 		struct dma_attrs *attrs)
 {
-	vma->vm_page_prot = pgprot_dmacoherent(vma->vm_page_prot);
+	vma->vm_page_prot = __get_dma_pgprot(attrs, vma->vm_page_prot, false);
 	return __dma_common_mmap(dev, vma, cpu_addr, dma_addr, size);
 }
 static int __swiotlb_mmap_coherent(struct device *dev,
