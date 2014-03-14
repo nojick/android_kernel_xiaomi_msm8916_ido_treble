@@ -432,6 +432,43 @@ static void arm64_swiotlb_sync_sg_for_device(struct device *dev,
 			       sg->length, dir);
 }
 
+/* vma->vm_page_prot must be set appropriately before calling this function */
+static int __dma_common_mmap(struct device *dev, struct vm_area_struct *vma,
+			     void *cpu_addr, dma_addr_t dma_addr, size_t size)
+{
+	int ret = -ENXIO;
+	unsigned long nr_vma_pages = (vma->vm_end - vma->vm_start) >>
+					PAGE_SHIFT;
+	unsigned long nr_pages = PAGE_ALIGN(size) >> PAGE_SHIFT;
+	unsigned long pfn = dma_to_phys(dev, dma_addr) >> PAGE_SHIFT;
+	unsigned long off = vma->vm_pgoff;
+	if (dma_mmap_from_coherent(dev, vma, cpu_addr, size, &ret))
+		return ret;
+	if (off < nr_pages && nr_vma_pages <= (nr_pages - off)) {
+		ret = remap_pfn_range(vma, vma->vm_start,
+				      pfn + off,
+				      vma->vm_end - vma->vm_start,
+				      vma->vm_page_prot);
+	}
+	return ret;
+}
+static int __swiotlb_mmap_noncoherent(struct device *dev,
+		struct vm_area_struct *vma,
+		void *cpu_addr, dma_addr_t dma_addr, size_t size,
+		struct dma_attrs *attrs)
+{
+	vma->vm_page_prot = pgprot_dmacoherent(vma->vm_page_prot);
+	return __dma_common_mmap(dev, vma, cpu_addr, dma_addr, size);
+}
+static int __swiotlb_mmap_coherent(struct device *dev,
+		struct vm_area_struct *vma,
+		void *cpu_addr, dma_addr_t dma_addr, size_t size,
+		struct dma_attrs *attrs)
+{
+	/* Just use whatever page_prot attributes were specified */
+	return __dma_common_mmap(dev, vma, cpu_addr, dma_addr, size);
+}
+
 static void *arm64_dma_remap(struct device *dev, void *cpu_addr,
 			dma_addr_t handle, size_t size,
 			struct dma_attrs *attrs)
@@ -481,6 +518,7 @@ static void arm64_dma_unremap(struct device *dev, void *remapped_addr,
 const struct dma_map_ops noncoherent_swiotlb_dma_ops = {
 	.alloc = arm64_swiotlb_alloc_noncoherent,
 	.free = arm64_swiotlb_free_noncoherent,
+	.mmap = __swiotlb_mmap_noncoherent,
 	.map_page = arm64_swiotlb_map_page,
 	.unmap_page = arm64_swiotlb_unmap_page,
 	.map_sg = arm64_swiotlb_map_sg_attrs,
@@ -499,6 +537,7 @@ EXPORT_SYMBOL(noncoherent_swiotlb_dma_ops);
 const struct dma_map_ops coherent_swiotlb_dma_ops = {
 	.alloc = arm64_swiotlb_alloc_coherent,
 	.free = arm64_swiotlb_free_coherent,
+	.mmap = __swiotlb_mmap_coherent,
 	.map_page = swiotlb_map_page,
 	.unmap_page = swiotlb_unmap_page,
 	.map_sg = swiotlb_map_sg_attrs,
