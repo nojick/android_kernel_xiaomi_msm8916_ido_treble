@@ -3191,10 +3191,8 @@ void scheduler_ipi(void)
 	if (tif_need_resched())
 		set_preempt_need_resched();
 
-	if (llist_empty(&this_rq()->wake_list)
-			&& !tick_nohz_full_cpu(cpu)
-			&& !got_nohz_idle_kick()
-			&& !got_boost_kick())
+	if (llist_empty(&this_rq()->wake_list) && !got_nohz_idle_kick() &&
+							!got_boost_kick())
 		return;
 
 	if (got_boost_kick()) {
@@ -3220,7 +3218,6 @@ void scheduler_ipi(void)
 	 * somewhat pessimize the simple resched case.
 	 */
 	irq_enter();
-	tick_nohz_full_check();
 	sched_ttwu_pending();
 
 	/*
