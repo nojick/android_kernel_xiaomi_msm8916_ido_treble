@@ -260,6 +260,16 @@ enum {
 	 *
 	 * - "cgroup.clone_children" is removed.
 	 *
+	 * - If mount is requested with sane_behavior but without any
+	 *   subsystem, the default unified hierarchy is mounted.
+	 *
+	 * - cpuset: tasks will be kept in empty cpusets when hotplug happens
+	 *   and take masks of ancestors with non-empty cpus/mems, instead of
+	 *   being moved to an ancestor.
+	 *
+	 * - cpuset: a task can be moved into an empty cpuset, and again it
+	 *   takes masks of ancestors.
+	 *
 	 * - memcg: use_hierarchy is on by default and the cgroup file for
 	 *   the flag is not created.
 	 *
@@ -470,6 +480,13 @@ struct cftype {
 	struct lock_class_key	lockdep_key;
 #endif
 };
+
+extern struct cgroup_root cgrp_dfl_root;
+
+static inline bool cgroup_on_dfl(const struct cgroup *cgrp)
+{
+	return cgrp->root == &cgrp_dfl_root;
+}
 
 /*
  * See the comment above CGRP_ROOT_SANE_BEHAVIOR for details.  This
