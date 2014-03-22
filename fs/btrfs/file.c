@@ -1458,7 +1458,7 @@ static ssize_t __btrfs_direct_write(struct kiocb *iocb,
 	written = generic_file_direct_write(iocb, iov, &nr_segs, pos, ppos,
 					    count, ocount);
 
-	if (written < 0 || written == count)
+	if (written < 0 || !iov_iter_count(from))
 		return written;
 
 	pos += written;
@@ -1508,12 +1508,13 @@ static ssize_t btrfs_file_aio_write(struct kiocb *iocb,
 	u64 start_pos;
 	ssize_t num_written = 0;
 	ssize_t err = 0;
-	size_t count, ocount;
+	size_t count;
 	bool sync = (file->f_flags & O_DSYNC) || IS_SYNC(file->f_mapping->host);
 
 	mutex_lock(&inode->i_mutex);
 
-	count = ocount = iov_length(iov, nr_segs);
+	count = iov_length(iov, nr_segs);
+	iov_iter_init(&i, WRITE, iov, nr_segs, count);
 
 	current->backing_dev_info = inode->i_mapping->backing_dev_info;
 	err = generic_write_checks(file, &pos, &count, S_ISBLK(inode->i_mode));
