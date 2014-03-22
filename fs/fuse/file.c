@@ -1210,8 +1210,7 @@ static ssize_t fuse_file_aio_write(struct kiocb *iocb, const struct iovec *iov,
 {
 	struct file *file = iocb->ki_filp;
 	struct address_space *mapping = file->f_mapping;
-	size_t count = 0;
-	size_t ocount = 0;
+	size_t count;
 	ssize_t written = 0;
 	ssize_t written_buffered = 0;
 	struct inode *inode = mapping->host;
@@ -1492,8 +1491,7 @@ static ssize_t __fuse_direct_write(struct fuse_io_priv *io,
 
 	res = generic_write_checks(file, ppos, &count, 0);
 	if (!res) {
-		if (iter->count > count)
-			iter->count = count;
+		iov_iter_truncate(iter, count);
 		res = fuse_direct_io(io, iter, ppos, FUSE_DIO_WRITE);
 	}
 
@@ -2778,8 +2776,7 @@ fuse_direct_IO(int rw, struct kiocb *iocb, struct iov_iter *iter,
 		if (offset >= i_size)
 			return 0;
 		count = min_t(loff_t, count, fuse_round_up(i_size - offset));
-		if (iter->count > count)
-			iter->count = count;
+		iov_iter_truncate(iter, count);
 	}
 
 	io = kmalloc(sizeof(struct fuse_io_priv), GFP_KERNEL);
