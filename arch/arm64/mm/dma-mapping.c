@@ -299,7 +299,7 @@ static void *arm64_swiotlb_alloc_noncoherent(struct device *dev, size_t size,
 		for (i = 0; i < (size >> PAGE_SHIFT); i++)
 			map[i] = page + i;
 		coherent_ptr = vmap(map, size >> PAGE_SHIFT, VM_MAP,
-			    __get_dma_pgprot(attrs, pgprot_default, false));
+			    __get_dma_pgprot(attrs, __pgprot(PROT_NORMAL_NC), false));
 		kfree(map);
 		if (!coherent_ptr)
 			goto no_map;
