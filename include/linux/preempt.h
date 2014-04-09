@@ -15,6 +15,8 @@
  */
 #define PREEMPT_NEED_RESCHED	0x80000000
 
+#define tif_need_resched() test_thread_flag(TIF_NEED_RESCHED)
+
 #include <asm/preempt.h>
 
 /*
