@@ -5391,8 +5391,6 @@ int ext4_collapse_range(struct inode *inode, loff_t offset, loff_t len)
 	loff_t new_size, ioffset;
 	int ret;
 
-	BUG_ON(offset + len > i_size_read(inode));
-
 	/* Collapse range works only on fs block size aligned offsets. */
 	if (offset & (EXT4_BLOCK_SIZE(sb) - 1) ||
 	    len & (EXT4_BLOCK_SIZE(sb) - 1))
@@ -5430,6 +5428,15 @@ int ext4_collapse_range(struct inode *inode, loff_t offset, loff_t len)
 
 	/* Take mutex lock */
 	mutex_lock(&inode->i_mutex);
+
+	/*
+	 * There is no need to overlap collapse range with EOF, in which case
+	 * it is effectively a truncate operation
+	 */
+	if (offset + len >= i_size_read(inode)) {
+		ret = -EINVAL;
+		goto out_mutex;
+	}
 
 	/* Currently just for extent based files */
 	if (!ext4_test_inode_flag(inode, EXT4_INODE_EXTENTS)) {
