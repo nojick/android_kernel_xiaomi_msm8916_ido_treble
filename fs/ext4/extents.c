@@ -5405,7 +5405,7 @@ int ext4_collapse_range(struct inode *inode, loff_t offset, loff_t len)
 	punch_stop = (offset + len) >> EXT4_BLOCK_SIZE_BITS(sb);
 
 	/* Write out all dirty pages */
-	ret = filemap_write_and_wait_range(inode->i_mapping, offset, -1);
+	ret = filemap_write_and_wait_range(inode->i_mapping, offset, LLONG_MAX);
 	if (ret)
 		return ret;
 
