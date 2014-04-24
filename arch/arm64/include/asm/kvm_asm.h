@@ -92,7 +92,7 @@
 #define c13_TID_PRIV	(TPIDR_EL1 * 2)	/* Thread ID, Privileged */
 #define c10_AMAIR	(AMAIR_EL1 * 2)	/* Aux Memory Attr Indirection Reg */
 #define c14_CNTKCTL	(CNTKCTL_EL1 * 2) /* Timer Control Register (PL1) */
-#define NR_CP15_REGS	(NR_SYS_REGS * 2)
+#define NR_COPRO_REGS	(NR_SYS_REGS * 2)
 
 #define ARM_EXCEPTION_IRQ	  0
 #define ARM_EXCEPTION_TRAP	  1
