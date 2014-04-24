@@ -27,6 +27,7 @@
 #include <asm/kvm_host.h>
 #include <asm/kvm_emulate.h>
 #include <asm/kvm_coproc.h>
+#include <asm/kvm_mmu.h>
 #include <asm/cacheflush.h>
 #include <asm/cputype.h>
 #include <trace/events/kvm.h>
@@ -160,18 +161,9 @@ static bool access_sctlr(struct kvm_vcpu *vcpu,
 	return true;
 }
 
-/*
- * We could trap ID_DFR0 and tell the guest we don't support performance
- * monitoring.  Unfortunately the patch to make the kernel check ID_DFR0 was
- * NAKed, so it will read the PMCR anyway.
- *
- * Therefore we tell the guest we have 0 counters.  Unfortunately, we
- * must always support PMCCNTR (the cycle counter): we just RAZ/WI for
- * all PM registers, which doesn't crash the guest kernel at least.
- */
-static bool pm_fake(struct kvm_vcpu *vcpu,
-		    const struct sys_reg_params *p,
-		    const struct sys_reg_desc *r)
+static bool trap_raz_wi(struct kvm_vcpu *vcpu,
+			const struct sys_reg_params *p,
+			const struct sys_reg_desc *r)
 {
 	if (p->is_write)
 		return ignore_write(vcpu, p);
@@ -198,6 +190,17 @@ static void reset_mpidr(struct kvm_vcpu *vcpu, const struct sys_reg_desc *r)
 /*
  * Architected system registers.
  * Important: Must be sorted ascending by Op0, Op1, CRn, CRm, Op2
+ *
+ * We could trap ID_DFR0 and tell the guest we don't support performance
+ * monitoring.  Unfortunately the patch to make the kernel check ID_DFR0 was
+ * NAKed, so it will read the PMCR anyway.
+ *
+ * Therefore we tell the guest we have 0 counters.  Unfortunately, we
+ * must always support PMCCNTR (the cycle counter): we just RAZ/WI for
+ * all PM registers, which doesn't crash the guest kernel at least.
+ *
+ * Same goes for the whole debug infrastructure, which probably breaks
+ * some guest functionnality. This should be fixed.
  */
 static const struct sys_reg_desc sys_reg_descs[] = {
 	/* DC ISW */
@@ -225,56 +228,56 @@ static const struct sys_reg_desc sys_reg_descs[] = {
 	  NULL, reset_mpidr, MPIDR_EL1 },
 	/* SCTLR_EL1 */
 	{ Op0(0b11), Op1(0b000), CRn(0b0001), CRm(0b0000), Op2(0b000),
-	  NULL, reset_val, SCTLR_EL1, 0x00C50078 },
+	  access_sctlr, reset_val, SCTLR_EL1, 0x00C50078 },
 	/* CPACR_EL1 */
 	{ Op0(0b11), Op1(0b000), CRn(0b0001), CRm(0b0000), Op2(0b010),
 	  NULL, reset_val, CPACR_EL1, 0 },
 	/* TTBR0_EL1 */
 	{ Op0(0b11), Op1(0b000), CRn(0b0010), CRm(0b0000), Op2(0b000),
-	  NULL, reset_unknown, TTBR0_EL1 },
+	  access_vm_reg, reset_unknown, TTBR0_EL1 },
 	/* TTBR1_EL1 */
 	{ Op0(0b11), Op1(0b000), CRn(0b0010), CRm(0b0000), Op2(0b001),
-	  NULL, reset_unknown, TTBR1_EL1 },
+	  access_vm_reg, reset_unknown, TTBR1_EL1 },
 	/* TCR_EL1 */
 	{ Op0(0b11), Op1(0b000), CRn(0b0010), CRm(0b0000), Op2(0b010),
-	  NULL, reset_val, TCR_EL1, 0 },
+	  access_vm_reg, reset_val, TCR_EL1, 0 },
 
 	/* AFSR0_EL1 */
 	{ Op0(0b11), Op1(0b000), CRn(0b0101), CRm(0b0001), Op2(0b000),
-	  NULL, reset_unknown, AFSR0_EL1 },
+	  access_vm_reg, reset_unknown, AFSR0_EL1 },
 	/* AFSR1_EL1 */
 	{ Op0(0b11), Op1(0b000), CRn(0b0101), CRm(0b0001), Op2(0b001),
-	  NULL, reset_unknown, AFSR1_EL1 },
+	  access_vm_reg, reset_unknown, AFSR1_EL1 },
 	/* ESR_EL1 */
 	{ Op0(0b11), Op1(0b000), CRn(0b0101), CRm(0b0010), Op2(0b000),
-	  NULL, reset_unknown, ESR_EL1 },
+	  access_vm_reg, reset_unknown, ESR_EL1 },
 	/* FAR_EL1 */
 	{ Op0(0b11), Op1(0b000), CRn(0b0110), CRm(0b0000), Op2(0b000),
-	  NULL, reset_unknown, FAR_EL1 },
+	  access_vm_reg, reset_unknown, FAR_EL1 },
 	/* PAR_EL1 */
 	{ Op0(0b11), Op1(0b000), CRn(0b0111), CRm(0b0100), Op2(0b000),
 	  NULL, reset_unknown, PAR_EL1 },
 
 	/* PMINTENSET_EL1 */
 	{ Op0(0b11), Op1(0b000), CRn(0b1001), CRm(0b1110), Op2(0b001),
-	  pm_fake },
+	  trap_raz_wi },
 	/* PMINTENCLR_EL1 */
 	{ Op0(0b11), Op1(0b000), CRn(0b1001), CRm(0b1110), Op2(0b010),
-	  pm_fake },
+	  trap_raz_wi },
 
 	/* MAIR_EL1 */
 	{ Op0(0b11), Op1(0b000), CRn(0b1010), CRm(0b0010), Op2(0b000),
-	  NULL, reset_unknown, MAIR_EL1 },
+	  access_vm_reg, reset_unknown, MAIR_EL1 },
 	/* AMAIR_EL1 */
 	{ Op0(0b11), Op1(0b000), CRn(0b1010), CRm(0b0011), Op2(0b000),
-	  NULL, reset_amair_el1, AMAIR_EL1 },
+	  access_vm_reg, reset_amair_el1, AMAIR_EL1 },
 
 	/* VBAR_EL1 */
 	{ Op0(0b11), Op1(0b000), CRn(0b1100), CRm(0b0000), Op2(0b000),
 	  NULL, reset_val, VBAR_EL1, 0 },
 	/* CONTEXTIDR_EL1 */
 	{ Op0(0b11), Op1(0b000), CRn(0b1101), CRm(0b0000), Op2(0b001),
-	  NULL, reset_val, CONTEXTIDR_EL1, 0 },
+	  access_vm_reg, reset_val, CONTEXTIDR_EL1, 0 },
 	/* TPIDR_EL1 */
 	{ Op0(0b11), Op1(0b000), CRn(0b1101), CRm(0b0000), Op2(0b100),
 	  NULL, reset_unknown, TPIDR_EL1 },
@@ -289,43 +292,43 @@ static const struct sys_reg_desc sys_reg_descs[] = {
 
 	/* PMCR_EL0 */
 	{ Op0(0b11), Op1(0b011), CRn(0b1001), CRm(0b1100), Op2(0b000),
-	  pm_fake },
+	  trap_raz_wi },
 	/* PMCNTENSET_EL0 */
 	{ Op0(0b11), Op1(0b011), CRn(0b1001), CRm(0b1100), Op2(0b001),
-	  pm_fake },
+	  trap_raz_wi },
 	/* PMCNTENCLR_EL0 */
 	{ Op0(0b11), Op1(0b011), CRn(0b1001), CRm(0b1100), Op2(0b010),
-	  pm_fake },
+	  trap_raz_wi },
 	/* PMOVSCLR_EL0 */
 	{ Op0(0b11), Op1(0b011), CRn(0b1001), CRm(0b1100), Op2(0b011),
-	  pm_fake },
+	  trap_raz_wi },
 	/* PMSWINC_EL0 */
 	{ Op0(0b11), Op1(0b011), CRn(0b1001), CRm(0b1100), Op2(0b100),
-	  pm_fake },
+	  trap_raz_wi },
 	/* PMSELR_EL0 */
 	{ Op0(0b11), Op1(0b011), CRn(0b1001), CRm(0b1100), Op2(0b101),
-	  pm_fake },
+	  trap_raz_wi },
 	/* PMCEID0_EL0 */
 	{ Op0(0b11), Op1(0b011), CRn(0b1001), CRm(0b1100), Op2(0b110),
-	  pm_fake },
+	  trap_raz_wi },
 	/* PMCEID1_EL0 */
 	{ Op0(0b11), Op1(0b011), CRn(0b1001), CRm(0b1100), Op2(0b111),
-	  pm_fake },
+	  trap_raz_wi },
 	/* PMCCNTR_EL0 */
 	{ Op0(0b11), Op1(0b011), CRn(0b1001), CRm(0b1101), Op2(0b000),
-	  pm_fake },
+	  trap_raz_wi },
 	/* PMXEVTYPER_EL0 */
 	{ Op0(0b11), Op1(0b011), CRn(0b1001), CRm(0b1101), Op2(0b001),
-	  pm_fake },
+	  trap_raz_wi },
 	/* PMXEVCNTR_EL0 */
 	{ Op0(0b11), Op1(0b011), CRn(0b1001), CRm(0b1101), Op2(0b010),
-	  pm_fake },
+	  trap_raz_wi },
 	/* PMUSERENR_EL0 */
 	{ Op0(0b11), Op1(0b011), CRn(0b1001), CRm(0b1110), Op2(0b000),
-	  pm_fake },
+	  trap_raz_wi },
 	/* PMOVSSET_EL0 */
 	{ Op0(0b11), Op1(0b011), CRn(0b1001), CRm(0b1110), Op2(0b011),
-	  pm_fake },
+	  trap_raz_wi },
 
 	/* TPIDR_EL0 */
 	{ Op0(0b11), Op1(0b011), CRn(0b1101), CRm(0b0000), Op2(0b010),
@@ -345,27 +348,54 @@ static const struct sys_reg_desc sys_reg_descs[] = {
 	  NULL, reset_val, FPEXC32_EL2, 0x70 },
 };
 
-/* Trapped cp15 registers */
+/*
+ * Trapped cp15 registers. TTBR0/TTBR1 get a double encoding,
+ * depending on the way they are accessed (as a 32bit or a 64bit
+ * register).
+ */
 static const struct sys_reg_desc cp15_regs[] = {
+	{ Op1( 0), CRn( 0), CRm( 2), Op2( 0), access_vm_reg, NULL, c2_TTBR0 },
+	{ Op1( 0), CRn( 1), CRm( 0), Op2( 0), access_sctlr, NULL, c1_SCTLR },
+	{ Op1( 0), CRn( 2), CRm( 0), Op2( 0), access_vm_reg, NULL, c2_TTBR0 },
+	{ Op1( 0), CRn( 2), CRm( 0), Op2( 1), access_vm_reg, NULL, c2_TTBR1 },
+	{ Op1( 0), CRn( 2), CRm( 0), Op2( 2), access_vm_reg, NULL, c2_TTBCR },
+	{ Op1( 0), CRn( 3), CRm( 0), Op2( 0), access_vm_reg, NULL, c3_DACR },
+	{ Op1( 0), CRn( 5), CRm( 0), Op2( 0), access_vm_reg, NULL, c5_DFSR },
+	{ Op1( 0), CRn( 5), CRm( 0), Op2( 1), access_vm_reg, NULL, c5_IFSR },
+	{ Op1( 0), CRn( 5), CRm( 1), Op2( 0), access_vm_reg, NULL, c5_ADFSR },
+	{ Op1( 0), CRn( 5), CRm( 1), Op2( 1), access_vm_reg, NULL, c5_AIFSR },
+	{ Op1( 0), CRn( 6), CRm( 0), Op2( 0), access_vm_reg, NULL, c6_DFAR },
+	{ Op1( 0), CRn( 6), CRm( 0), Op2( 2), access_vm_reg, NULL, c6_IFAR },
+
 	/*
 	 * DC{C,I,CI}SW operations:
 	 */
 	{ Op1( 0), CRn( 7), CRm( 6), Op2( 2), access_dcsw },
 	{ Op1( 0), CRn( 7), CRm(10), Op2( 2), access_dcsw },
 	{ Op1( 0), CRn( 7), CRm(14), Op2( 2), access_dcsw },
-	{ Op1( 0), CRn( 9), CRm(12), Op2( 0), pm_fake },
-	{ Op1( 0), CRn( 9), CRm(12), Op2( 1), pm_fake },
-	{ Op1( 0), CRn( 9), CRm(12), Op2( 2), pm_fake },
-	{ Op1( 0), CRn( 9), CRm(12), Op2( 3), pm_fake },
-	{ Op1( 0), CRn( 9), CRm(12), Op2( 5), pm_fake },
-	{ Op1( 0), CRn( 9), CRm(12), Op2( 6), pm_fake },
-	{ Op1( 0), CRn( 9), CRm(12), Op2( 7), pm_fake },
-	{ Op1( 0), CRn( 9), CRm(13), Op2( 0), pm_fake },
-	{ Op1( 0), CRn( 9), CRm(13), Op2( 1), pm_fake },
-	{ Op1( 0), CRn( 9), CRm(13), Op2( 2), pm_fake },
-	{ Op1( 0), CRn( 9), CRm(14), Op2( 0), pm_fake },
-	{ Op1( 0), CRn( 9), CRm(14), Op2( 1), pm_fake },
-	{ Op1( 0), CRn( 9), CRm(14), Op2( 2), pm_fake },
+
+	/* PMU */
+	{ Op1( 0), CRn( 9), CRm(12), Op2( 0), trap_raz_wi },
+	{ Op1( 0), CRn( 9), CRm(12), Op2( 1), trap_raz_wi },
+	{ Op1( 0), CRn( 9), CRm(12), Op2( 2), trap_raz_wi },
+	{ Op1( 0), CRn( 9), CRm(12), Op2( 3), trap_raz_wi },
+	{ Op1( 0), CRn( 9), CRm(12), Op2( 5), trap_raz_wi },
+	{ Op1( 0), CRn( 9), CRm(12), Op2( 6), trap_raz_wi },
+	{ Op1( 0), CRn( 9), CRm(12), Op2( 7), trap_raz_wi },
+	{ Op1( 0), CRn( 9), CRm(13), Op2( 0), trap_raz_wi },
+	{ Op1( 0), CRn( 9), CRm(13), Op2( 1), trap_raz_wi },
+	{ Op1( 0), CRn( 9), CRm(13), Op2( 2), trap_raz_wi },
+	{ Op1( 0), CRn( 9), CRm(14), Op2( 0), trap_raz_wi },
+	{ Op1( 0), CRn( 9), CRm(14), Op2( 1), trap_raz_wi },
+	{ Op1( 0), CRn( 9), CRm(14), Op2( 2), trap_raz_wi },
+
+	{ Op1( 0), CRn(10), CRm( 2), Op2( 0), access_vm_reg, NULL, c10_PRRR },
+	{ Op1( 0), CRn(10), CRm( 2), Op2( 1), access_vm_reg, NULL, c10_NMRR },
+	{ Op1( 0), CRn(10), CRm( 3), Op2( 0), access_vm_reg, NULL, c10_AMAIR0 },
+	{ Op1( 0), CRn(10), CRm( 3), Op2( 1), access_vm_reg, NULL, c10_AMAIR1 },
+	{ Op1( 0), CRn(13), CRm( 0), Op2( 1), access_vm_reg, NULL, c13_CID },
+
+	{ Op1( 1), CRn( 0), CRm( 2), Op2( 0), access_vm_reg, NULL, c2_TTBR1 },
 };
 
 /* Target specific emulation tables */
