@@ -426,6 +426,7 @@ static void __exception_irq_entry gic_handle_irq(struct pt_regs *regs)
 		if (likely(irqnr > 15 && irqnr < 1021)) {
 			uncached_logk(LOGK_IRQ, (void *)(uintptr_t)irqnr);
 			handle_domain_irq(gic->domain, irqnr, regs);
+			uncached_logk(LOGK_IRQ, (void *)(uintptr_t)irqnr);
 			continue;
 		}
 		if (irqnr < 16) {
@@ -434,6 +435,7 @@ static void __exception_irq_entry gic_handle_irq(struct pt_regs *regs)
 #ifdef CONFIG_SMP
 			handle_IPI(irqnr, regs);
 #endif
+			uncached_logk(LOGK_IRQ, (void *)(uintptr_t)irqnr);
 			continue;
 		}
 		break;
