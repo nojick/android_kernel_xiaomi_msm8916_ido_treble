@@ -85,6 +85,9 @@
 	push	x0, x1
 	.if	\el == 0
 	mrs	x21, sp_el0
+	get_thread_info tsk			// Ensure MDSCR_EL1.SS is clear,
+	ldr	x19, [tsk, #TI_FLAGS]		// since we can unmask debug
+	disable_step_tsk x19, x20		// exceptions when scheduling.
 	.else
 	add	x21, sp, #S_FRAME_SIZE
 	.endif
@@ -295,7 +298,7 @@ el1_da:
 	 * Data abort handling
 	 */
 	mrs	x0, far_el1
-	enable_dbg_if_not_stepping x2
+	enable_dbg
 	// re-enable interrupts if they were enabled in the aborted context
 	tbnz	x23, #7, 1f			// PSR_I_BIT
 	enable_irq
@@ -311,13 +314,14 @@ el1_sp_pc:
 	 * Stack or PC alignment exception handling
 	 */
 	mrs	x0, far_el1
-	mov	x1, x25
+	enable_dbg
 	mov	x2, sp
 	b	do_sp_pc_abort
 el1_undef:
 	/*
 	 * Undefined instruction
 	 */
+	enable_dbg
 	mov	x0, sp
 	b	do_undefinstr
 el1_dbg:
@@ -330,10 +334,11 @@ el1_dbg:
 	mrs	x0, far_el1
 	mov	x2, sp				// struct pt_regs
 	bl	do_debug_exception
-
+	enable_dbg
 	kernel_exit 1
 el1_inv:
 	// TODO: add support for undefined instructions in kernel mode
+	enable_dbg
 	mov	x0, sp
 	mov	x1, #BAD_SYNC
 	mrs	x2, esr_el1
@@ -343,7 +348,7 @@ ENDPROC(el1_sync)
 	.align	6
 el1_irq:
 	kernel_entry 1
-	enable_dbg_if_not_stepping x0
+	enable_dbg
 #ifdef CONFIG_TRACE_IRQFLAGS
 	bl	trace_hardirqs_off
 #endif
@@ -368,8 +373,7 @@ ENDPROC(el1_irq)
 #ifdef CONFIG_PREEMPT
 el1_preempt:
 	mov	x24, lr
-1:	enable_dbg
-	bl	preempt_schedule_irq		// irq en/disable is done inside
+1:	bl	preempt_schedule_irq		// irq en/disable is done inside
 	ldr	x0, [tsk, #TI_FLAGS]		// get new tasks TI_FLAGS
 	tbnz	x0, #TIF_NEED_RESCHED, 1b	// needs rescheduling?
 	ret	x24
@@ -456,11 +460,8 @@ el0_da:
 	 * Data abort handling
 	 */
 	mrs	x26, far_el1
-	disable_step x1
-	isb
-	enable_dbg
 	// enable interrupts before calling the main handler
-	enable_irq
+	enable_dbg_and_irq
 	ct_user_exit
 	bic	x0, x26, #(0xff << 56)
 	mov	x1, x25
@@ -472,11 +473,8 @@ el0_ia:
 	 * Instruction abort handling
 	 */
 	mrs	x26, far_el1
-	disable_step x1
-	isb
-	enable_dbg
 	// enable interrupts before calling the main handler
-	enable_irq
+	enable_dbg_and_irq
 	ct_user_exit
 	mov	x0, x26
 	orr	x1, x25, #1 << 24		// use reserved ISS bit for instruction aborts
@@ -487,6 +485,7 @@ el0_fpsimd_acc:
 	/*
 	 * Floating Point or Advanced SIMD access
 	 */
+	enable_dbg
 	ct_user_exit
 	mov	x0, x25
 	mov	x1, sp
@@ -496,6 +495,7 @@ el0_fpsimd_exc:
 	/*
 	 * Floating Point or Advanced SIMD exception
 	 */
+	enable_dbg
 	ct_user_exit
 	mov	x0, x25
 	mov	x1, sp
@@ -506,11 +506,8 @@ el0_sp_pc:
 	 * Stack or PC alignment exception handling
 	 */
 	mrs	x26, far_el1
-	disable_step x1
-	isb
-	enable_dbg
 	// enable interrupts before calling the main handler
-	enable_irq
+	enable_dbg_and_irq
 	mov	x0, x26
 	mov	x1, x25
 	mov	x2, sp
@@ -521,9 +518,8 @@ el0_undef:
 	 * Undefined instruction
 	 */
 	// enable interrupts before calling the main handler
+	enable_dbg_and_irq
 	ct_user_exit
-	enable_irq
-	mov	x0, sp
 	adr	lr, ret_from_exception
 	b	do_undefinstr
 el0_dbg:
@@ -533,11 +529,13 @@ el0_dbg:
 	tbnz	x24, #0, el0_inv		// EL0 only
 	ct_user_exit
 	mrs	x0, far_el1
-	disable_step x1
 	mov	x1, x25
 	mov	x2, sp
-	b	do_debug_exception
+	bl	do_debug_exception
+	enable_dbg
+	b	ret_to_user
 el0_inv:
+	enable_dbg
 	ct_user_exit
 	mov	x0, sp
 	mov	x1, #BAD_SYNC
@@ -550,8 +548,6 @@ ENDPROC(el0_sync)
 el0_irq:
 	kernel_entry 0
 el0_irq_naked:
-	disable_step x1
-	isb
 	enable_dbg
 #ifdef CONFIG_TRACE_IRQFLAGS
 	bl	trace_hardirqs_off
@@ -559,21 +555,12 @@ el0_irq_naked:
 
 	ct_user_exit
 	irq_handler
-	get_thread_info tsk
 
 #ifdef CONFIG_TRACE_IRQFLAGS
 	bl	trace_hardirqs_on
 #endif
 	b	ret_to_user
 ENDPROC(el0_irq)
-
-/*
- * This is the return code to user mode for abort handlers
- */
-ret_from_exception:
-	get_thread_info tsk
-	b	ret_to_user
-ENDPROC(ret_from_exception)
 
 /*
  * Register switch for AArch64. The callee-saved registers need to be saved
@@ -614,10 +601,7 @@ ret_fast_syscall:
 	ldr	x1, [tsk, #TI_FLAGS]
 	and	x2, x1, #_TIF_WORK_MASK
 	cbnz	x2, fast_work_pending
-	tbz	x1, #TIF_SINGLESTEP, fast_exit
-	disable_dbg
-	enable_step x2
-fast_exit:
+	enable_step_tsk x1, x2
 	kernel_exit 0, ret = 1
 
 /*
@@ -636,7 +620,6 @@ work_pending:
 	bl	do_notify_resume
 	b	ret_to_user
 work_resched:
-	enable_dbg
 	bl	schedule
 
 /*
@@ -647,9 +630,7 @@ ret_to_user:
 	ldr	x1, [tsk, #TI_FLAGS]
 	and	x2, x1, #_TIF_WORK_MASK
 	cbnz	x2, work_pending
-	tbz	x1, #TIF_SINGLESTEP, no_work_pending
-	disable_dbg
-	enable_step x2
+	enable_step_tsk x1, x2
 no_work_pending:
 	kernel_exit 0, ret = 0
 ENDPROC(ret_to_user)
@@ -676,13 +657,9 @@ el0_svc:
 	mov	sc_nr, #__NR_syscalls
 el0_svc_naked:					// compat entry point
 	stp	x0, scno, [sp, #S_ORIG_X0]	// save the original x0 and syscall number
-	disable_step x16
-	isb
-	enable_dbg
-	enable_irq
+	enable_dbg_and_irq
 	ct_user_exit 1
 
-	get_thread_info tsk
 	ldr	x16, [tsk, #TI_FLAGS]		// check for syscall hooks
 	tst	x16, #_TIF_SYSCALL_WORK
 	b.ne	__sys_trace
