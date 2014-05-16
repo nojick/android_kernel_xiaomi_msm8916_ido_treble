@@ -1540,7 +1540,7 @@ static unsigned long mem_cgroup_margin(struct mem_cgroup *memcg)
 int mem_cgroup_swappiness(struct mem_cgroup *memcg)
 {
 	/* root ? */
-	if (!css_parent(&memcg->css))
+	if (!memcg->css.parent)
 		return vm_swappiness;
 
 	return memcg->swappiness;
@@ -4902,7 +4902,7 @@ static int mem_cgroup_hierarchy_write(struct cgroup_subsys_state *css,
 {
 	int retval = 0;
 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-	struct mem_cgroup *parent_memcg = mem_cgroup_from_css(css_parent(&memcg->css));
+	struct mem_cgroup *parent_memcg = mem_cgroup_from_css(memcg->css.parent);
 
 	mutex_lock(&memcg_create_mutex);
 
@@ -5200,8 +5200,8 @@ static void memcg_get_hierarchical_limit(struct mem_cgroup *memcg,
 	if (!memcg->use_hierarchy)
 		goto out;
 
-	while (css_parent(&memcg->css)) {
-		memcg = mem_cgroup_from_css(css_parent(&memcg->css));
+	while (memcg->css.parent) {
+		memcg = mem_cgroup_from_css(memcg->css.parent);
 		if (!memcg->use_hierarchy)
 			break;
 		tmp = res_counter_read_u64(&memcg->res, RES_LIMIT);
@@ -5436,7 +5436,7 @@ static int mem_cgroup_swappiness_write(struct cgroup_subsys_state *css,
 				       struct cftype *cft, u64 val)
 {
 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-	struct mem_cgroup *parent = mem_cgroup_from_css(css_parent(&memcg->css));
+	struct mem_cgroup *parent = mem_cgroup_from_css(memcg->css.parent);
 
 	if (val > 100 || !parent)
 		return -EINVAL;
@@ -5784,7 +5784,7 @@ static int mem_cgroup_oom_control_write(struct cgroup_subsys_state *css,
 	struct cftype *cft, u64 val)
 {
 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-	struct mem_cgroup *parent = mem_cgroup_from_css(css_parent(&memcg->css));
+	struct mem_cgroup *parent = mem_cgroup_from_css(memcg->css.parent);
 
 	/* cannot set to root cgroup and only 0 and 1 are allowed */
 	if (!parent || !((val == 0) || (val == 1)))
@@ -6401,7 +6401,7 @@ static int
 mem_cgroup_css_online(struct cgroup_subsys_state *css)
 {
 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-	struct mem_cgroup *parent = mem_cgroup_from_css(css_parent(css));
+	struct mem_cgroup *parent = mem_cgroup_from_css(css->parent);
 
 	if (css->id > MEM_CGROUP_ID_MAX)
 		return -ENOSPC;
