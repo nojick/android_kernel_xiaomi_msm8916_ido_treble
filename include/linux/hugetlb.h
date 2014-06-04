@@ -368,7 +368,7 @@ static inline int hstate_index(struct hstate *h)
 	return h - hstates;
 }
 
-static inline int hugepage_migration_support(struct hstate *h)
+static inline int hugepage_migration_supported(struct hstate *h)
 {
 #ifdef CONFIG_ARCH_ENABLE_HUGEPAGE_MIGRATION
 	return huge_page_shift(h) == PMD_SHIFT;
@@ -422,7 +422,7 @@ static inline unsigned int pages_per_huge_page(struct hstate *h)
 }
 #define hstate_index_to_shift(index) 0
 #define hstate_index(h) 0
-#define hugepage_migration_support(h)	0
+#define hugepage_migration_supported(h)	0
 
 static inline pgoff_t basepage_index(struct page *page)
 {
