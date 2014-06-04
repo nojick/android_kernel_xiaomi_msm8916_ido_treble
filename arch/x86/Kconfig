@@ -1851,6 +1851,9 @@ config USE_PERCPU_NUMA_NODE_ID
 	def_bool y
 	depends on NUMA
 
+config ARCH_ENABLE_HUGEPAGE_MIGRATION
+	boolean
+
 menu "Power management and ACPI options"
 
 config ARCH_HIBERNATION_HEADER
