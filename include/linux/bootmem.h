@@ -60,9 +60,9 @@ extern void __free_pages_bootmem(struct page *page, unsigned int order);
  * Flags for reserve_bootmem (also if CONFIG_HAVE_ARCH_BOOTMEM_NODE,
  * the architecture-specific code should honor this).
  *
- * If flags is 0, then the return value is always 0 (success). If
- * flags contains BOOTMEM_EXCLUSIVE, then -EBUSY is returned if the
- * memory already was reserved.
+ * If flags is BOOTMEM_DEFAULT, then the return value is always 0 (success).
+ * If flags contains BOOTMEM_EXCLUSIVE, then -EBUSY is returned if the memory
+ * already was reserved.
  */
 #define BOOTMEM_DEFAULT		0
 #define BOOTMEM_EXCLUSIVE	(1<<0)
