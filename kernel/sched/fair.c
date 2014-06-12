@@ -2707,11 +2707,58 @@ void check_for_migration(struct rq *rq, struct task_struct *p)
 					&rq->active_balance_work);
 }
 
+static inline int find_new_hmp_ilb(void)
+{
+	int i;
+	int call_cpu = raw_smp_processor_id();
+	int best_cpu = nr_cpu_ids;
+	struct sched_domain *sd;
+	int min_cost = INT_MAX, cost;
+
+	rcu_read_lock();
+
+	/* Pick an idle cpu "closest" to call_cpu */
+	for_each_domain(call_cpu, sd) {
+		for_each_cpu(i, sched_domain_span(sd)) {
+			if (!idle_cpu(i))
+				continue;
+
+			cost = power_cost(NULL, i);
+			if (cost < min_cost) {
+				best_cpu = i;
+				min_cost = cost;
+			}
+		}
+
+		if (best_cpu < nr_cpu_ids)
+			break;
+	}
+
+	rcu_read_unlock();
+
+	return best_cpu;
+}
+
 #else	/* CONFIG_SCHED_HMP */
 
 #define sysctl_sched_enable_power_aware 0
 
 static inline int select_best_cpu(struct task_struct *p, int target)
+{
+	return 0;
+}
+
+static inline int find_new_hmp_ilb(void)
+{
+	return 0;
+}
+
+static inline int power_cost(struct task_struct *p, int cpu)
+{
+	return SCHED_CAPACITY_SCALE;
+}
+
+static inline int mostly_idle_cpu(int cpu)
 {
 	return 0;
 }
@@ -7715,7 +7762,12 @@ static struct {
 
 static inline int find_new_ilb(void)
 {
-	int ilb = cpumask_first(nohz.idle_cpus_mask);
+	int ilb;
+
+	if (sysctl_sched_enable_hmp_task_placement)
+		return find_new_hmp_ilb();
+
+	ilb = cpumask_first(nohz.idle_cpus_mask);
 
 	if (ilb < nr_cpu_ids && idle_cpu(ilb))
 		return ilb;
@@ -8029,7 +8081,7 @@ static inline int nohz_kick_needed(struct rq *rq)
 	if (time_before(now, nohz.next_balance))
 		return 0;
 
-	if (rq->nr_running >= 2)
+	if (rq->nr_running >= 2 && !mostly_idle_cpu(cpu))
 		goto need_kick;
 
 	rcu_read_lock();
