@@ -13,8 +13,6 @@
 #include <asm/efi.h>
 #include <linux/libfdt.h>
 #include <asm/sections.h>
-#include <generated/compile.h>
-#include <generated/utsrelease.h>
 
 static void efi_char16_printk(efi_system_table_t *sys_table_arg,
 			      efi_char16_t *str);
