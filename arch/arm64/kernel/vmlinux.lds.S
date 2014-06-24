@@ -12,6 +12,8 @@
 #include <asm/pgtable.h>
 #endif
 
+#include "image.h"
+
 #define ARM_EXIT_KEEP(x)
 #define ARM_EXIT_DISCARD(x)	x
 
@@ -134,6 +136,8 @@ SECTIONS
 	_end = .;
 
 	STABS_DEBUG
+
+	HEAD_SYMBOLS
 }
 
 /*
