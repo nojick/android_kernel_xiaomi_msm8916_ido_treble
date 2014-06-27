@@ -85,38 +85,6 @@
 #define TLMMV3_SDC3_DATA_PULL_MASK	0x3
 #define TLMMV3_SDC3_CMD_PULL_SHFT	11
 #define TLMMV3_SDC3_CMD_PULL_MASK	0x3
-/* EBI2 PIN TYPE REG MASKS */
-#define TLMM_EBI2_BOOT_SELECT_BIT	0
-#define TLMM_EMMC_BOOT_SELECT_BIT	1
-#define TLMM_EBI2_CS_PULL_SHFT		2
-#define TLMM_EBI2_CS_PULL_MASK		0x3
-#define TLMM_EBI2_CS_DRV_SHFT		4
-#define TLMM_EBI2_CS_DRV_MASK		0x7
-#define TLMM_EBI2_OE_PULL_SHFT		7
-#define TLMM_EBI2_OE_PULL_MASK		0x3
-#define TLMM_EBI2_OE_DRV_SHFT		9
-#define TLMM_EBI2_OE_DRV_MASK		0x7
-#define TLMM_EBI2_ALE_PULL_SHFT		12
-#define TLMM_EBI2_ALE_PULL_MASK		0x3
-#define TLMM_EBI2_ALE_DRV_SHFT		14
-#define TLMM_EBI2_ALE_DRV_MASK		0x7
-#define TLMM_EBI2_CLE_PULL_SHFT		17
-#define TLMM_EBI2_CLE_PULL_MASK		0x3
-#define TLMM_EBI2_CLE_DRV_SHFT		19
-#define TLMM_EBI2_CLE_DRV_MASK		0x7
-#define TLMM_EBI2_WE_PULL_SHFT		22
-#define TLMM_EBI2_WE_PULL_MASK		0x3
-#define TLMM_EBI2_WE_DRV_SHFT		24
-#define TLMM_EBI2_WE_DRV_MASK		0x7
-#define TLMM_EBI2_BUSY_PULL_SHFT	27
-#define TLMM_EBI2_BUSY_PULL_MASK	0x3
-#define TLMM_EBI2_BUSY_DRV_SHFT		29
-#define TLMM_EBI2_BUSY_DRV_MASK		0x7
-#define TLMM_EBI2_DATA_PULL_SHFT	15
-#define TLMM_EBI2_DATA_PULL_MASK	0x3
-#define TLMM_EBI2_DATA_DRV_SHFT		17
-#define TLMM_EBI2_DATA_DRV_MASK		0x7
-
 /* TLMM IRQ REG fields */
 #define INTR_ENABLE_BIT		0
 #define	INTR_POL_CTL_BIT	1
@@ -174,13 +142,6 @@ struct msm_sdc_regs {
 	unsigned long drv_shft;
 };
 
-struct msm_ebi_regs {
-	unsigned long pull_mask;
-	unsigned long pull_shft;
-	unsigned long drv_mask;
-	unsigned long drv_shft;
-};
-
 static const struct msm_sdc_regs sdc_regs[MSM_PINTYPE_SDC_REGS_MAX] = {
 	/* SDC1 CLK */
 	{
@@ -229,28 +190,6 @@ static const struct msm_sdc_regs sdc_regs[MSM_PINTYPE_SDC_REGS_MAX] = {
 		.drv_mask = TLMM_SDC2_DATA_DRV_MASK,
 		.drv_shft = TLMM_SDC2_DATA_DRV_SHFT,
 	},
-	/* SDC3 CLK */
-	{
-		.pull_mask = TLMMV3_SDC3_CLK_PULL_MASK,
-		.pull_shft = TLMMV3_SDC3_CLK_PULL_SHFT,
-		.drv_mask = TLMMV3_SDC3_CLK_DRV_MASK,
-		.drv_shft = TLMMV3_SDC3_CLK_DRV_SHFT,
-	},
-	/* SDC3 CMD */
-	{
-		.pull_mask = TLMMV3_SDC3_CMD_PULL_MASK,
-		.pull_shft = TLMMV3_SDC3_CMD_PULL_SHFT,
-		.drv_mask = TLMMV3_SDC3_CMD_DRV_MASK,
-		.drv_shft = TLMMV3_SDC3_CMD_DRV_SHFT,
-	},
-	/* SDC3 DATA */
-	{
-		.pull_mask = TLMMV3_SDC3_DATA_PULL_MASK,
-		.pull_shft = TLMMV3_SDC3_DATA_PULL_SHFT,
-		.drv_mask = TLMMV3_SDC3_DATA_DRV_MASK,
-		.drv_shft = TLMMV3_SDC3_DATA_DRV_SHFT,
-	},
-
 };
 
 static int msm_tlmm_sdc_cfg(uint pin_no, unsigned long *config,
@@ -461,144 +400,6 @@ static int msm_tlmm_gp_cfg(uint pin_no, unsigned long *config,
 			data = inout_val_to_dir(inout_val);
 		}
 		break;
-	case PIN_CONFIG_INPUT_ENABLE:
-		mask = TLMM_GP_DIR_MASK;
-		shft = TLMM_GP_DIR_SHFT;
-		inout_reg = TLMM_GP_INOUT(pinfo, pin_no);
-		if (write) {
-			/* GPIO_IN (b0) of TLMM_GPIO_IN_OUT is read-only */
-			data = 0;
-		} else {
-			inout_val = readl_relaxed(inout_reg);
-			data = inout_val;
-		}
-		break;
-
-	default:
-		return -EINVAL;
-	};
-
-	if (write) {
-		val &= ~(mask << shft);
-		val |= (data << shft);
-		writel_relaxed(val, cfg_reg);
-	} else
-		*config = pinconf_to_config_packed(id, data);
-	return 0;
-}
-
-static const struct msm_ebi_regs ebi_regs[MSM_PINTYPE_EBI_REGS_MAX] = {
-	/* EBI2 CS*/
-	{
-		.pull_mask = TLMM_EBI2_CS_PULL_MASK,
-		.pull_shft = TLMM_EBI2_CS_PULL_SHFT,
-		.drv_mask = TLMM_EBI2_CS_DRV_MASK,
-		.drv_shft = TLMM_EBI2_CS_DRV_SHFT,
-	},
-	/* EBI2 OE */
-	{
-		.pull_mask = TLMM_EBI2_OE_PULL_MASK,
-		.pull_shft = TLMM_EBI2_OE_PULL_SHFT,
-		.drv_mask = TLMM_EBI2_OE_DRV_MASK,
-		.drv_shft = TLMM_EBI2_OE_DRV_SHFT,
-	},
-	/* EBI2 ALE*/
-	{
-		.pull_mask = TLMM_EBI2_ALE_PULL_MASK,
-		.pull_shft = TLMM_EBI2_ALE_PULL_SHFT,
-		.drv_mask = TLMM_EBI2_ALE_DRV_MASK,
-		.drv_shft = TLMM_EBI2_ALE_DRV_SHFT,
-	},
-	/* EBI2 CLE */
-	{
-		.pull_mask = TLMM_EBI2_CLE_PULL_MASK,
-		.pull_shft = TLMM_EBI2_CLE_PULL_SHFT,
-		.drv_mask = TLMM_EBI2_CLE_DRV_MASK,
-		.drv_shft = TLMM_EBI2_CLE_DRV_SHFT,
-	},
-	/* EBI2 WE*/
-	{
-		.pull_mask = TLMM_EBI2_WE_PULL_MASK,
-		.pull_shft = TLMM_EBI2_WE_PULL_SHFT,
-		.drv_mask = TLMM_EBI2_WE_DRV_MASK,
-		.drv_shft = TLMM_EBI2_WE_DRV_SHFT,
-	},
-	/* EBI2 BUSY */
-	{
-		.pull_mask = TLMM_EBI2_BUSY_PULL_MASK,
-		.pull_shft = TLMM_EBI2_BUSY_PULL_SHFT,
-		.drv_mask = TLMM_EBI2_BUSY_DRV_MASK,
-		.drv_shft = TLMM_EBI2_BUSY_DRV_SHFT,
-	},
-	/* EBI2 DATA */
-	{
-		.pull_mask = TLMM_EBI2_DATA_PULL_MASK,
-		.pull_shft = TLMM_EBI2_DATA_PULL_SHFT,
-		.drv_mask = TLMM_EBI2_DATA_DRV_MASK,
-		.drv_shft = TLMM_EBI2_DATA_DRV_SHFT,
-	},
-};
-
-static int msm_tlmm_ebi_cfg(uint pin_no, unsigned long *config,
-			    bool write, const struct msm_pintype_info *pinfo)
-{
-	unsigned int val, id, data;
-	u32 mask, shft;
-	void __iomem *cfg_reg;
-	void __iomem *reg_base = pinfo->reg_base;
-	const struct msm_pintype_data *ebi_info = pinfo->pintype_data;
-	s32 offset = ebi_info->ebi_reg_offsets[pin_no];
-
-	if (pin_no >= ARRAY_SIZE(ebi_regs))
-		return -EINVAL;
-
-	cfg_reg = reg_base + offset;
-	id = pinconf_to_config_param(*config);
-	val = readl_relaxed(cfg_reg);
-	/* Get mask and shft values for this config type */
-	switch (id) {
-	case PIN_CONFIG_BIAS_DISABLE:
-		mask = ebi_regs[pin_no].pull_mask;
-		shft = ebi_regs[pin_no].pull_shft;
-		data = TLMM_NO_PULL;
-		if (!write) {
-			val >>= shft;
-			val &= mask;
-			data = rval_to_pull(val);
-		}
-		break;
-	case PIN_CONFIG_BIAS_PULL_DOWN:
-		mask = ebi_regs[pin_no].pull_mask;
-		shft = ebi_regs[pin_no].pull_shft;
-		data = TLMM_PULL_DOWN;
-		if (!write) {
-			val >>= shft;
-			val &= mask;
-			data = rval_to_pull(val);
-		}
-		break;
-	case PIN_CONFIG_BIAS_PULL_UP:
-		mask = ebi_regs[pin_no].pull_mask;
-		shft = ebi_regs[pin_no].pull_shft;
-		data = TLMM_PULL_UP;
-		if (!write) {
-			val >>= shft;
-			val &= mask;
-			data = rval_to_pull(val);
-		}
-		break;
-	case PIN_CONFIG_DRIVE_STRENGTH:
-		mask = ebi_regs[pin_no].drv_mask;
-		shft = ebi_regs[pin_no].drv_shft;
-		if (write) {
-			data = pinconf_to_config_argument(*config);
-			data = drv_str_to_rval(data);
-		} else {
-			val >>= shft;
-			val &= mask;
-			data = rval_to_drv_str(val);
-		}
-		break;
 	default:
 		return -EINVAL;
 	};
@@ -762,15 +563,11 @@ static irqreturn_t msm_tlmm_gp_handle_irq(int irq, struct msm_tlmm_irq_chip *ic)
 {
 	unsigned long i;
 	unsigned int virq = 0;
-	struct irq_chip *chip;
 	struct irq_desc *desc = irq_to_desc(irq);
+	struct irq_chip *chip = irq_desc_get_chip(desc);
 	struct msm_pintype_info *pinfo = ic_to_pintype(ic);
 	struct gpio_chip *gc = pintype_get_gc(pinfo);
 
-	if (unlikely(!desc))
-		return IRQ_HANDLED;
-
-	chip = irq_desc_get_chip(desc);
 	chained_irq_enter(chip, desc);
 	for_each_set_bit(i, ic->enabled_irqs, ic->num_irqs)
 	 {
@@ -1087,11 +884,6 @@ static struct msm_pintype_info tlmm_pininfo[] = {
 		.prg_cfg = msm_tlmm_qdsd_cfg,
 		.set_reg_base = msm_tlmm_set_reg_base,
 		.name = "qdsd",
-	},
-	{
-		.prg_cfg = msm_tlmm_ebi_cfg,
-		.set_reg_base = msm_tlmm_set_reg_base,
-		.name = "ebi",
 	}
 };
 
@@ -1112,26 +904,15 @@ static const struct msm_pintype_data name = {		\
 	.reg_base_offset = offset,			\
 }
 
-#define DECLARE_PINTYPE_DATA_EBI(name, offset, offsets)	\
-static const struct msm_pintype_data name = {		\
-	.reg_base_offset = offset,			\
-	.ebi_reg_offsets = offsets,			\
-}
-
 #define ARG_PROTECT(...) __VA_ARGS__
 DECLARE_PINTYPE_DATA_GP(gp_data_8974, 0x1000, 0x10);
 DECLARE_PINTYPE_DATA_GP(gp_data_8916, 0x0, 0x1000);
 DECLARE_PINTYPE_DATA_SDC(sdc_data_8974, 0x2044,
 			 ARG_PROTECT({0, 0, 0, 0, 0x4, 0x4, 0x4}));
-DECLARE_PINTYPE_DATA_SDC(sdc_data_8994, 0x2044,
-		ARG_PROTECT({0, 0, 0, 0, 0x4, 0x4, 0x4, 0x28, 0x28, 0x28}));
 DECLARE_PINTYPE_DATA_SDC(sdc_data_8916, 0x109000,
 			 ARG_PROTECT({0x1000, 0x1000, 0x1000, 0x1000, 0, 0, 0})
 			);
 DECLARE_PINTYPE_DATA_QDSD(qdsd_data, 0x19C000);
-DECLARE_PINTYPE_DATA_EBI(ebi_data, 0x10A000,
-			 ARG_PROTECT({0x7000, 0x7000, 0x7000, 0x7000,
-					 0x7000, 0x7000, 0}));
 #undef ARG_PROTECT
 
 static const struct msm_pintype_data *pintype_data_8974[MSM_PINTYPE_MAX] = {
@@ -1139,15 +920,10 @@ static const struct msm_pintype_data *pintype_data_8974[MSM_PINTYPE_MAX] = {
 };
 
 static const struct msm_pintype_data *pintype_data_8916[MSM_PINTYPE_MAX] = {
-	&gp_data_8916, &sdc_data_8916, &qdsd_data, &ebi_data,
-};
-
-static const struct msm_pintype_data *pintype_data_8994[MSM_PINTYPE_MAX] = {
-	&gp_data_8974, &sdc_data_8994, &qdsd_data,
+	&gp_data_8916, &sdc_data_8916, &qdsd_data,
 };
 
 static const struct of_device_id msm_tlmm_dt_match[] = {
-	{ .compatible = "qcom,msm-tlmm-8994", .data = &pintype_data_8994, },
 	{ .compatible = "qcom,msm-tlmm-8974", .data = &pintype_data_8974, },
 	{ .compatible = "qcom,msm-tlmm-8916", .data = &pintype_data_8916, },
 	{ },
@@ -1167,8 +943,6 @@ static int msm_tlmm_probe(struct platform_device *pdev)
 	match = of_match_node(msm_tlmm_dt_match, node);
 	if (IS_ERR(match))
 		return PTR_ERR(match);
-	else if (!match)
-		return -ENODEV;
 	tlmm_desc = devm_kzalloc(&pdev->dev, sizeof(*tlmm_desc), GFP_KERNEL);
 	if (!tlmm_desc) {
 		dev_err(&pdev->dev, "Alloction failed for tlmm desc\n");
