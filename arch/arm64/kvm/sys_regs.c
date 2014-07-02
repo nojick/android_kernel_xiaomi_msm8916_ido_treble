@@ -121,6 +121,46 @@ done:
 }
 
 /*
+ * Generic accessor for VM registers. Only called as long as HCR_TVM
+ * is set.
+ */
+static bool access_vm_reg(struct kvm_vcpu *vcpu,
+			  const struct sys_reg_params *p,
+			  const struct sys_reg_desc *r)
+{
+	unsigned long val;
+
+	BUG_ON(!p->is_write);
+
+	val = *vcpu_reg(vcpu, p->Rt);
+	if (!p->is_aarch32 || !p->is_32bit)
+		vcpu_sys_reg(vcpu, r->reg) = val;
+	else
+		vcpu_cp15_64_low(vcpu, r->reg) = val & 0xffffffffUL;
+
+	return true;
+}
+
+/*
+ * SCTLR_EL1 accessor. Only called as long as HCR_TVM is set.  If the
+ * guest enables the MMU, we stop trapping the VM sys_regs and leave
+ * it in complete control of the caches.
+ */
+static bool access_sctlr(struct kvm_vcpu *vcpu,
+			 const struct sys_reg_params *p,
+			 const struct sys_reg_desc *r)
+{
+	access_vm_reg(vcpu, p, r);
+
+	if (vcpu_has_cache_enabled(vcpu)) {	/* MMU+Caches enabled? */
+		vcpu->arch.hcr_el2 &= ~HCR_TVM;
+		stage2_flush_vm(vcpu->kvm);
+	}
+
+	return true;
+}
+
+/*
  * We could trap ID_DFR0 and tell the guest we don't support performance
  * monitoring.  Unfortunately the patch to make the kernel check ID_DFR0 was
  * NAKed, so it will read the PMCR anyway.
