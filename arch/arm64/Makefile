@@ -52,6 +52,7 @@ core-$(CONFIG_KVM) += arch/arm64/kvm/
 core-$(CONFIG_CRYPTO) += arch/arm64/crypto/
 libs-y		:= arch/arm64/lib/ $(libs-y)
 libs-y		+= $(LIBGCC)
+libs-$(CONFIG_EFI_STUB) += drivers/firmware/efi/libstub/
 
 # Default target when executing plain make
 ifeq ($(CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE),y)

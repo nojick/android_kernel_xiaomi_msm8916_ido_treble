@@ -67,4 +67,7 @@ config EFI_PARAMS_FROM_FDT
 config EFI_RUNTIME_WRAPPERS
 	bool
 
+config EFI_ARMSTUB
+	bool
+
 endmenu
