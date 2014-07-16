@@ -542,10 +542,10 @@ int drm_calc_vbltimestamp_from_scanoutpos(struct drm_device *dev, int crtc,
 					  unsigned flags,
 					  struct drm_crtc *refcrtc)
 {
-	ktime_t stime, etime, mono_time_offset;
 	struct timeval tv_etime;
 	struct drm_display_mode *mode;
 	int vbl_status, vtotal, vdisplay;
+	ktime_t stime, etime;
 	int vpos, hpos, i;
 	s64 framedur_ns, linedur_ns, pixeldur_ns, delta_ns, duration_ns;
 	bool invbl;
@@ -592,13 +592,6 @@ int drm_calc_vbltimestamp_from_scanoutpos(struct drm_device *dev, int crtc,
 		 */
 		vbl_status = dev->driver->get_scanout_position(dev, crtc, &vpos,
 							       &hpos, &stime, &etime);
-
-		/*
-		 * Get correction for CLOCK_MONOTONIC -> CLOCK_REALTIME if
-		 * CLOCK_REALTIME is requested.
-		 */
-		if (!drm_timestamp_monotonic)
-			mono_time_offset = ktime_get_monotonic_offset();
 
 		/* Return as no-op if scanout query unsupported or failed. */
 		if (!(vbl_status & DRM_SCANOUTPOS_VALID)) {
@@ -656,7 +649,7 @@ int drm_calc_vbltimestamp_from_scanoutpos(struct drm_device *dev, int crtc,
 	}
 
 	if (!drm_timestamp_monotonic)
-		etime = ktime_sub(etime, mono_time_offset);
+		etime = ktime_mono_to_real(etime);
 
 	/* save this only for debugging purposes */
 	tv_etime = ktime_to_timeval(etime);
@@ -687,10 +680,7 @@ static struct timeval get_drm_timestamp(void)
 {
 	ktime_t now;
 
-	now = ktime_get();
-	if (!drm_timestamp_monotonic)
-		now = ktime_sub(now, ktime_get_monotonic_offset());
-
+	now = drm_timestamp_monotonic ? ktime_get() : ktime_get_real();
 	return ktime_to_timeval(now);
 }
 
