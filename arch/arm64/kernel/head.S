@@ -355,17 +355,17 @@ ENDPROC(__mmap_switched)
 	.endm
 
 /*
- * Macro to populate the PGD for the corresponding block entry in the next
- * level (tbl) for the given virtual address.
+ * Macro to populate the PGD (and possibily PUD) for the corresponding
+ * block entry in the next level (tbl) for the given virtual address.
  *
- * Preserves:	pgd, tbl, virt
+ * Preserves:	tbl, next, virt
  * Corrupts:	tmp1, tmp2
  */
-	.macro	create_pgd_entry, pgd, tbl, virt, tmp1, tmp2
-	lsr	\tmp1, \virt, #PGDIR_SHIFT
-	and	\tmp1, \tmp1, #PTRS_PER_PGD - 1	// PGD index
-	orr	\tmp2, \tbl, #3			// PGD entry table type
-	str	\tmp2, [\pgd, \tmp1, lsl #3]
+	.macro	create_pgd_entry, tbl, virt, tmp1, tmp2
+	create_table_entry \tbl, \virt, PGDIR_SHIFT, PTRS_PER_PGD, \tmp1, \tmp2
+#if SWAPPER_PGTABLE_LEVELS == 3
+	create_table_entry \tbl, \virt, TABLE_SHIFT, PTRS_PER_PTE, \tmp1, \tmp2
+#endif
 	.endm
 
 /*
@@ -426,10 +426,10 @@ __create_page_tables:
 	/*
 	 * Create the identity mapping.
 	 */
-	add	x0, x25, #PAGE_SIZE		// section table address
+	mov	x0, x25				// idmap_pg_dir
 	ldr	x3, =KERNEL_START
 	add	x3, x3, x28			// __pa(KERNEL_START)
-	create_pgd_entry x25, x0, x3, x5, x6
+	create_pgd_entry x0, x3, x5, x6
 	ldr	x6, =KERNEL_END
 	mov	x5, x3				// __pa(KERNEL_START)
 	add	x6, x6, x28			// __pa(KERNEL_END)
@@ -438,9 +438,9 @@ __create_page_tables:
 	/*
 	 * Map the kernel image (starting with PHYS_OFFSET).
 	 */
-	add	x0, x26, #PAGE_SIZE		// section table address
+	mov	x0, x26				// swapper_pg_dir
 	mov	x5, #PAGE_OFFSET
-	create_pgd_entry x26, x0, x5, x3, x6
+	create_pgd_entry x0, x5, x3, x6
 	ldr	x6, =KERNEL_END
 	mov	x3, x24				// phys offset
 	create_block_map x0, x7, x3, x5, x6
