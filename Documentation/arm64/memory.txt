@@ -56,23 +56,16 @@ Start			End			Size		Use
 
 fffffc0000000000	fffffdfbfffeffff	  ~2TB		vmalloc
 
-fffffdfbffff0000	fffffdfbffffffff	  64KB		[guard page]
+AArch64 Linux memory layout with 64KB pages + 3 levels:
 
-fffffdfc00000000	fffffdfdffffffff	   8GB		vmemmap
+Start			End			Size		Use
+-----------------------------------------------------------------------
+0000000000000000	0000ffffffffffff	 256TB		user
+ffff000000000000	ffffffffffffffff	 256TB		kernel
 
-fffffdfe00000000	fffffdfffbbfffff	  ~8GB		[guard, future vmmemap]
 
-fffffdfffa000000	fffffdfffaffffff	  16MB		PCI I/O space
-
-fffffdfffb000000	fffffdfffbbfffff	  12MB		[guard]
-
-fffffdfffbc00000	fffffdfffbdfffff	   2MB		fixed mappings
-
-fffffdfffbe00000	fffffdfffbffffff	   2MB		[guard]
-
-fffffdfffc000000	fffffdffffffffff	  64MB		modules
-
-fffffe0000000000	ffffffffffffffff	   2TB		kernel logical memory map
+For details of the virtual kernel memory layout please see the kernel
+booting log.
 
 
 Translation table lookup with 4KB pages:
