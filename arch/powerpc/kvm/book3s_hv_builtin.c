@@ -201,6 +201,9 @@ static void kvm_release_linear(struct kvmppc_linear_info *ri)
 		list_add_tail(&ri->list, &free_linears);
 		spin_unlock(&linear_lock);
 
+		align_size = max(kvm_rma_pages << PAGE_SHIFT, align_size);
+		cma_declare_contiguous(0, selected_size, 0, align_size,
+			KVM_CMA_CHUNK_ORDER - PAGE_SHIFT, false, &kvm_cma);
 	}
 }
 
