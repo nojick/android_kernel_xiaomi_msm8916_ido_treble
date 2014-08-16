@@ -340,7 +340,7 @@ void smp_cross_call_common(const struct cpumask *cpumask, unsigned int func)
 	for_each_cpu(cpu, cpumask)
 		per_cpu(pending_ipi, cpu) = true;
 
-	smp_cross_call(cpumask, func);
+	__smp_cross_call(cpumask, func);
 }
 
 /*
