@@ -64,8 +64,8 @@ struct cpu_operations {
 };
 
 extern const struct cpu_operations *cpu_ops[NR_CPUS];
-extern int __init cpu_read_ops(struct device_node *dn, int cpu);
-extern void __init cpu_read_bootcpu_ops(void);
+int __init cpu_read_ops(struct device_node *dn, int cpu);
+void __init cpu_read_bootcpu_ops(void);
 
 struct of_cpu_method {
 	const char *method;
