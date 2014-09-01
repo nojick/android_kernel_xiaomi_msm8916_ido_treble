@@ -861,11 +861,13 @@ int ext4_ext_tree_init(handle_t *handle, struct inode *inode)
 
 struct ext4_ext_path *
 ext4_ext_find_extent(struct inode *inode, ext4_lblk_t block,
-		     struct ext4_ext_path *path, int flags)
+		     struct ext4_ext_path **orig_path, int flags)
 {
 	struct ext4_extent_header *eh;
 	struct buffer_head *bh;
-	short int depth, i, ppos = 0, alloc = 0;
+	struct ext4_ext_path *path = orig_path ? *orig_path : NULL;
+	short int depth, i, ppos = 0;
+	short free_on_err = (flags & EXT4_EX_NOFREE_ON_ERR) == 0;
 	int ret;
 
 	eh = ext_inode_hdr(inode);
@@ -877,7 +879,7 @@ ext4_ext_find_extent(struct inode *inode, ext4_lblk_t block,
 				GFP_NOFS);
 		if (unlikely(!path))
 			return ERR_PTR(-ENOMEM);
-		alloc = 1;
+		free_on_err = 1;
 	}
 	path[0].p_hdr = eh;
 	path[0].p_bh = NULL;
@@ -929,8 +931,11 @@ ext4_ext_find_extent(struct inode *inode, ext4_lblk_t block,
 
 err:
 	ext4_ext_drop_refs(path);
-	if (alloc)
+	if (free_on_err) {
 		kfree(path);
+		if (orig_path)
+			*orig_path = NULL;
+	}
 	return ERR_PTR(ret);
 }
 
@@ -1362,7 +1367,7 @@ repeat:
 		ext4_ext_drop_refs(path);
 		path = ext4_ext_find_extent(inode,
 				    (ext4_lblk_t)le32_to_cpu(newext->ee_block),
-				    path, gb_flags);
+				    &path, gb_flags | EXT4_EX_NOFREE_ON_ERR);
 		if (IS_ERR(path))
 			err = PTR_ERR(path);
 	} else {
@@ -1375,7 +1380,7 @@ repeat:
 		ext4_ext_drop_refs(path);
 		path = ext4_ext_find_extent(inode,
 				   (ext4_lblk_t)le32_to_cpu(newext->ee_block),
-				    path, gb_flags);
+				    &path, gb_flags | EXT4_EX_NOFREE_ON_ERR);
 		if (IS_ERR(path)) {
 			err = PTR_ERR(path);
 			goto out;
@@ -2160,7 +2165,7 @@ static int ext4_fill_fiemap_extents(struct inode *inode,
 			path = NULL;
 		}
 
-		path = ext4_ext_find_extent(inode, block, path, 0);
+		path = ext4_ext_find_extent(inode, block, &path, 0);
 		if (IS_ERR(path)) {
 			up_read(&EXT4_I(inode)->i_data_sem);
 			err = PTR_ERR(path);
@@ -3317,7 +3322,8 @@ static int ext4_split_extent(handle_t *handle,
 	 * result in split of original leaf or extent zeroout.
 	 */
 	ext4_ext_drop_refs(path);
-	path = ext4_ext_find_extent(inode, map->m_lblk, path, 0);
+	path = ext4_ext_find_extent(inode, map->m_lblk, &path,
+				    EXT4_EX_NOFREE_ON_ERR);
 	if (IS_ERR(path))
 		return PTR_ERR(path);
 	depth = ext_depth(inode);
@@ -3701,7 +3707,8 @@ static int ext4_convert_initialized_extents(handle_t *handle,
 		if (err < 0)
 			goto out;
 		ext4_ext_drop_refs(path);
-		path = ext4_ext_find_extent(inode, map->m_lblk, path, 0);
+		path = ext4_ext_find_extent(inode, map->m_lblk, &path,
+					    EXT4_EX_NOFREE_ON_ERR);
 		if (IS_ERR(path)) {
 			err = PTR_ERR(path);
 			goto out;
@@ -3773,7 +3780,8 @@ static int ext4_convert_unwritten_extents_endio(handle_t *handle,
 		if (err < 0)
 			goto out;
 		ext4_ext_drop_refs(path);
-		path = ext4_ext_find_extent(inode, map->m_lblk, path, 0);
+		path = ext4_ext_find_extent(inode, map->m_lblk, &path,
+					    EXT4_EX_NOFREE_ON_ERR);
 		if (IS_ERR(path)) {
 			err = PTR_ERR(path);
 			goto out;
