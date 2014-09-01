@@ -875,14 +875,20 @@ ext4_ext_find_extent(struct inode *inode, ext4_lblk_t block,
 	eh = ext_inode_hdr(inode);
 	depth = ext_depth(inode);
 
-	if (path)
+	if (path) {
 		ext4_ext_drop_refs(path);
-	else {
+		if (depth > path[0].p_maxdepth) {
+			kfree(path);
+			*orig_path = path = NULL;
+		}
+	}
+	if (!path) {
 		/* account possible depth increase */
 		path = kzalloc(sizeof(struct ext4_ext_path) * (depth + 2),
 				GFP_NOFS);
 		if (unlikely(!path))
 			return ERR_PTR(-ENOMEM);
+		path[0].p_maxdepth = depth + 1;
 	}
 	path[0].p_hdr = eh;
 	path[0].p_bh = NULL;
@@ -1826,6 +1832,7 @@ static void ext4_ext_try_to_merge_up(handle_t *handle,
 		sizeof(struct ext4_extent_idx);
 	s += sizeof(struct ext4_extent_header);
 
+	path[1].p_maxdepth = path[0].p_maxdepth;
 	memcpy(path[0].p_hdr, path[1].p_hdr, s);
 	path[0].p_depth = 0;
 	path[0].p_ext = EXT_FIRST_EXTENT(path[0].p_hdr) +
@@ -2158,12 +2165,6 @@ static int ext4_fill_fiemap_extents(struct inode *inode,
 		/* find extent for this block */
 		down_read(&EXT4_I(inode)->i_data_sem);
 
-		if (path && ext_depth(inode) != depth) {
-			/* depth was changed. we have to realloc path */
-			kfree(path);
-			path = NULL;
-		}
-
 		path = ext4_ext_find_extent(inode, block, &path, 0);
 		if (IS_ERR(path)) {
 			up_read(&EXT4_I(inode)->i_data_sem);
@@ -2181,7 +2182,6 @@ static int ext4_fill_fiemap_extents(struct inode *inode,
 		}
 		ex = path[depth].p_ext;
 		next = ext4_ext_next_allocated_block(path);
-		ext4_ext_drop_refs(path);
 
 		flags = 0;
 		exists = 0;
@@ -2905,7 +2905,7 @@ again:
 			ext4_journal_stop(handle);
 			return -ENOMEM;
 		}
-		path[0].p_depth = depth;
+		path[0].p_maxdepth = path[0].p_depth = depth;
 		path[0].p_hdr = ext_inode_hdr(inode);
 		i = 0;
 
