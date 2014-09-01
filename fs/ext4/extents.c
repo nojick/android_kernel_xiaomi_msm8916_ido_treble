@@ -715,9 +715,11 @@ static void ext4_ext_show_move(struct inode *inode, struct ext4_ext_path *path,
 
 void ext4_ext_drop_refs(struct ext4_ext_path *path)
 {
-	int depth = path->p_depth;
-	int i;
+	int depth, i;
 
+	if (!path)
+		return;
+	depth = path->p_depth;
 	for (i = 0; i <= depth; i++, path++)
 		if (path->p_bh) {
 			brelse(path->p_bh);
@@ -2133,10 +2135,8 @@ merge:
 	err = ext4_ext_dirty(handle, inode, path + path->p_depth);
 
 cleanup:
-	if (npath) {
-		ext4_ext_drop_refs(npath);
-		kfree(npath);
-	}
+	ext4_ext_drop_refs(npath);
+	kfree(npath);
 	return err;
 }
 
@@ -2291,11 +2291,8 @@ static int ext4_fill_fiemap_extents(struct inode *inode,
 		block = es.es_lblk + es.es_len;
 	}
 
-	if (path) {
-		ext4_ext_drop_refs(path);
-		kfree(path);
-	}
-
+	ext4_ext_drop_refs(path);
+	kfree(path);
 	return err;
 }
 
@@ -3026,11 +3023,9 @@ again:
 		}
 	}
 out:
-	if (path) {
-		ext4_ext_drop_refs(path);
-		kfree(path);
-		path = NULL;
-	}
+	ext4_ext_drop_refs(path);
+	kfree(path);
+	path = NULL;
 	if (err == -EAGAIN)
 		goto again;
 	ext4_journal_stop(handle);
@@ -4617,10 +4612,8 @@ out:
 	map->m_pblk = newblock;
 	map->m_len = allocated;
 out2:
-	if (path) {
-		ext4_ext_drop_refs(path);
-		kfree(path);
-	}
+	ext4_ext_drop_refs(path);
+	kfree(path);
 
 	trace_ext4_ext_map_blocks_exit(inode, flags, map,
 				       err ? err : allocated);
@@ -5699,16 +5692,11 @@ ext4_swap_extents(handle_t *handle, struct inode *inode1,
 		count -= len;
 
 	repeat:
-		if (path1) {
-			ext4_ext_drop_refs(path1);
-			kfree(path1);
-			path1 = NULL;
-		}
-		if (path2) {
-			ext4_ext_drop_refs(path2);
-			kfree(path2);
-			path2 = NULL;
-		}
+		ext4_ext_drop_refs(path1);
+		kfree(path1);
+		ext4_ext_drop_refs(path2);
+		kfree(path2);
+		path1 = path2 = NULL;
 	}
 	return replaced_count;
 }
