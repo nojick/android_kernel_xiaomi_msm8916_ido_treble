@@ -3210,6 +3210,7 @@ static int ext4_rename(struct inode *old_dir, struct dentry *old_dentry,
 				 &new.de, &new.inlined);
 	if (IS_ERR(new.bh)) {
 		retval = PTR_ERR(new.bh);
+		new.bh = NULL;
 		goto end_rename;
 	}
 	if (new.bh) {
@@ -3356,6 +3357,7 @@ static int ext4_cross_rename(struct inode *old_dir, struct dentry *old_dentry,
 				 &new.de, &new.inlined);
 	if (IS_ERR(new.bh)) {
 		retval = PTR_ERR(new.bh);
+		new.bh = NULL;
 		goto end_rename;
 	}
 
