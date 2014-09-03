@@ -644,6 +644,13 @@ extern struct efi_memory_map memmap;
 	     (md) <= (efi_memory_desc_t *)((m)->map_end - (m)->desc_size); \
 	     (md) = (void *)(md) + (m)->desc_size)
 
+/*
+ * Format an EFI memory descriptor's type and attributes to a user-provided
+ * character buffer, as per snprintf(), and return the buffer.
+ */
+char * __init efi_md_typeattr_format(char *buf, size_t size,
+				     const efi_memory_desc_t *md);
+
 /**
  * efi_range_is_wc - check the WC bit on an address range
  * @start: starting kvirt address
