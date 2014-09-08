@@ -838,7 +838,8 @@ int core_tpg_post_addlun(
 {
 	int ret;
 
-	ret = percpu_ref_init(&lun->lun_ref, core_tpg_lun_ref_release);
+	ret = percpu_ref_init(&lun->lun_ref, core_tpg_lun_ref_release,
+			      GFP_KERNEL);
 	if (ret < 0)
 		return ret;
 
