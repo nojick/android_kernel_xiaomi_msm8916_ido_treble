@@ -148,8 +148,9 @@ enum csiphy_cfg_type_t {
 };
 
 enum camera_vreg_type {
-	VREG_TYPE_DEFAULT,
-	VREG_TYPE_CUSTOM,
+	REG_LDO,
+	REG_VS,
+	REG_GPIO,
 };
 
 enum sensor_af_t {
@@ -172,13 +173,12 @@ struct msm_camera_i2c_read_config {
 	uint16_t slave_addr;
 	uint16_t reg_addr;
 	enum msm_camera_i2c_data_type data_type;
-	uint16_t data;
+	uint16_t *data;
 };
 
 struct msm_camera_csi2_params {
 	struct msm_camera_csid_params csid_params;
 	struct msm_camera_csiphy_params csiphy_params;
-	uint8_t csi_clk_scale_enable;
 };
 
 struct msm_camera_csi_lane_params {
@@ -198,7 +198,6 @@ struct msm_sensor_info_t {
 	char     sensor_name[MAX_SENSOR_NAME];
 	uint32_t session_id;
 	int32_t  subdev_id[SUB_MODULE_MAX];
-	int32_t  subdev_intf[SUB_MODULE_MAX];
 	uint8_t  is_mount_angle_valid;
 	uint32_t sensor_mount_angle;
 	int modes_supported;
@@ -211,8 +210,6 @@ struct camera_vreg_t {
 	int max_voltage;
 	int op_mode;
 	uint32_t delay;
-	const char *custom_vreg_name;
-	enum camera_vreg_type type;
 };
 
 struct sensorb_cfg_data {
@@ -272,7 +269,7 @@ struct msm_eeprom_cfg_data {
 	enum eeprom_cfg_type_t cfgtype;
 	uint8_t is_supported;
 	union {
-		char eeprom_name[MAX_EEPROM_NAME];
+		char eeprom_name[MAX_SENSOR_NAME];
 		struct eeprom_get_t get_data;
 		struct eeprom_read_t read_data;
 		struct eeprom_write_t write_data;
@@ -304,7 +301,6 @@ struct msm_camera_sensor_slave_info32 {
 	char eeprom_name[32];
 	char actuator_name[32];
 	char ois_name[32];
-	char flash_name[32];
 	enum msm_sensor_camera_id_t camera_id;
 	uint16_t slave_addr;
 	enum i2c_freq_mode_t i2c_freq_mode;
@@ -314,7 +310,6 @@ struct msm_camera_sensor_slave_info32 {
 	uint8_t  is_init_params_valid;
 	struct msm_sensor_init_params sensor_init_params;
 	uint8_t is_flash_supported;
-	enum msm_sensor_output_format_t output_format;
 };
 
 struct msm_camera_csid_lut_params32 {
@@ -327,14 +322,12 @@ struct msm_camera_csid_params32 {
 	uint8_t lane_cnt;
 	uint16_t lane_assign;
 	uint8_t phy_sel;
-	uint32_t csi_clk;
 	struct msm_camera_csid_lut_params32 lut_params;
 };
 
 struct msm_camera_csi2_params32 {
 	struct msm_camera_csid_params32 csid_params;
 	struct msm_camera_csiphy_params csiphy_params;
-	uint8_t csi_clk_scale_enable;
 };
 
 struct csid_cfg_data32 {
@@ -559,24 +552,6 @@ struct msm_camera_led_cfg_t {
 	uint32_t flash_duration[MAX_LED_TRIGGERS];
 };
 
-struct msm_flash_init_info_t {
-	enum msm_flash_driver_type flash_driver_type;
-	struct msm_sensor_power_setting_array *power_setting_array;
-	struct msm_camera_i2c_reg_setting_array *settings;
-};
-
-struct msm_flash_cfg_data_t {
-	enum msm_flash_cfg_type_t cfg_type;
-	uint32_t torch_current;
-	uint32_t flash_current[MAX_LED_TRIGGERS];
-	uint32_t flash_duration[MAX_LED_TRIGGERS];
-	union {
-		struct msm_flash_init_info_t *flash_init_info;
-		struct msm_camera_i2c_reg_setting_array *settings;
-		uint32_t flash_current[MAX_LED_TRIGGERS];
-	} cfg;
-};
-
 /* sensor init structures and enums */
 enum msm_sensor_init_cfg_type_t {
 	CFG_SINIT_PROBE,
@@ -626,9 +601,6 @@ struct sensor_init_cfg_data {
 #define VIDIOC_MSM_OIS_CFG \
 	_IOWR('V', BASE_VIDIOC_PRIVATE + 11, struct msm_ois_cfg_data)
 
-#define VIDIOC_MSM_FLASH_CFG \
-	_IOWR('V', BASE_VIDIOC_PRIVATE + 13, struct msm_flash_cfg_data_t)
-
 #ifdef CONFIG_COMPAT
 struct msm_camera_i2c_reg_setting32 {
 	compat_uptr_t reg_setting;
@@ -636,7 +608,6 @@ struct msm_camera_i2c_reg_setting32 {
 	enum msm_camera_i2c_reg_addr_type addr_type;
 	enum msm_camera_i2c_data_type data_type;
 	uint16_t delay;
-	enum msm_camera_qup_i2c_write_batch_t qup_i2c_batch;
 };
 
 struct msm_actuator_tuning_params_t32 {
@@ -733,24 +704,6 @@ struct msm_ois_cfg_data32 {
 	} cfg;
 };
 
-struct msm_flash_init_info_t32 {
-	enum msm_flash_driver_type flash_driver_type;
-	compat_uptr_t power_setting_array;
-	compat_uptr_t settings;
-};
-
-struct msm_flash_cfg_data_t32 {
-	enum msm_flash_cfg_type_t cfg_type;
-	uint32_t torch_current;
-	uint32_t flash_current[MAX_LED_TRIGGERS];
-	uint32_t flash_duration[MAX_LED_TRIGGERS];
-	union {
-		compat_uptr_t flash_init_info;
-		compat_uptr_t settings;
-		uint32_t flash_current[MAX_LED_TRIGGERS];
-	} cfg;
-};
-
 #define VIDIOC_MSM_ACTUATOR_CFG32 \
 	_IOWR('V', BASE_VIDIOC_PRIVATE + 6, struct msm_actuator_cfg_data32)
 
@@ -772,8 +725,6 @@ struct msm_flash_cfg_data_t32 {
 #define VIDIOC_MSM_CSID_IO_CFG32 \
 	_IOWR('V', BASE_VIDIOC_PRIVATE + 5, struct csid_cfg_data32)
 
-#define VIDIOC_MSM_FLASH_CFG32 \
-	_IOWR('V', BASE_VIDIOC_PRIVATE + 13, struct msm_flash_cfg_data_t32)
 #endif
 
 #endif /* __LINUX_MSM_CAM_SENSOR_H */
