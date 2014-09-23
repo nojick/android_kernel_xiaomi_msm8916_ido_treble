@@ -1183,8 +1183,8 @@ asmlinkage int syscall_trace_enter(struct pt_regs *regs)
 			regs->regs[0] = -ENOSYS;
 	}
 
-	audit_syscall_entry(syscall_get_arch(), regs->syscallno,
-		regs->orig_x0, regs->regs[1], regs->regs[2], regs->regs[3]);
+	audit_syscall_entry(regs->syscallno, regs->orig_x0, regs->regs[1],
+			    regs->regs[2], regs->regs[3]);
 
 	return regs->syscallno;
 }
