@@ -196,7 +196,7 @@ static void *arm64_swiotlb_alloc_noncoherent(struct device *dev, size_t size,
 no_map:
 	swiotlb_free_coherent(dev, size, ptr, *dma_handle);
 no_mem:
-	*dma_handle = ~0;
+	*dma_handle = DMA_ERROR_CODE;
 	return NULL;
 }
 
