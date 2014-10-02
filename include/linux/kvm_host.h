@@ -129,8 +129,6 @@ static inline bool is_error_page(struct page *page)
 #define KVM_USERSPACE_IRQ_SOURCE_ID		0
 #define KVM_IRQFD_RESAMPLE_IRQ_SOURCE_ID	1
 
-struct kvm;
-struct kvm_vcpu;
 extern struct kmem_cache *kvm_vcpu_cache;
 
 extern spinlock_t kvm_lock;
@@ -303,25 +301,6 @@ struct kvm_kernel_irq_routing_entry {
 	};
 	struct hlist_node link;
 };
-
-#ifdef CONFIG_HAVE_KVM_IRQ_ROUTING
-
-struct kvm_irq_routing_table {
-	int chip[KVM_NR_IRQCHIPS][KVM_IRQCHIP_NUM_PINS];
-	struct kvm_kernel_irq_routing_entry *rt_entries;
-	u32 nr_rt_entries;
-	/*
-	 * Array indexed by gsi. Each entry contains list of irq chips
-	 * the gsi is connected to.
-	 */
-	struct hlist_head map[0];
-};
-
-#else
-
-struct kvm_irq_routing_table {};
-
-#endif
 
 #ifndef KVM_PRIVATE_MEM_SLOTS
 #define KVM_PRIVATE_MEM_SLOTS 0
@@ -1006,8 +985,6 @@ static inline bool kvm_check_request(int req, struct kvm_vcpu *vcpu)
 }
 
 extern bool kvm_rebooting;
-
-struct kvm_device_ops;
 
 struct kvm_device {
 	struct kvm_device_ops *ops;
