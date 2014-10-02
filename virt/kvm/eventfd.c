@@ -36,7 +36,7 @@
 
 #include "iodev.h"
 
-#ifdef CONFIG_HAVE_KVM_IRQ_ROUTING
+#ifdef CONFIG_HAVE_KVM_IRQFD
 /*
  * --------------------------------------------------------------------
  * irqfd: Allows an fd to be used to inject an interrupt to the guest
@@ -438,7 +438,7 @@ fail:
 void
 kvm_eventfd_init(struct kvm *kvm)
 {
-#ifdef CONFIG_HAVE_KVM_IRQ_ROUTING
+#ifdef CONFIG_HAVE_KVM_IRQFD
 	spin_lock_init(&kvm->irqfds.lock);
 	INIT_LIST_HEAD(&kvm->irqfds.items);
 	INIT_LIST_HEAD(&kvm->irqfds.resampler_list);
@@ -447,7 +447,7 @@ kvm_eventfd_init(struct kvm *kvm)
 	INIT_LIST_HEAD(&kvm->ioeventfds);
 }
 
-#ifdef CONFIG_HAVE_KVM_IRQ_ROUTING
+#ifdef CONFIG_HAVE_KVM_IRQFD
 /*
  * shutdown any irqfd's that match fd+gsi
  */
