@@ -175,7 +175,7 @@ static int msm_vidc_load_reg_table(struct msm_vidc_platform_resources *res)
 	reg_set->count = get_u32_array_num_elements(pdev, "qcom,reg-presets");
 	reg_set->count /=  sizeof(*reg_set->reg_tbl) / sizeof(u32);
 
-	if (reg_set->count == 0) {
+	if (!reg_set->count) {
 		dprintk(VIDC_DBG, "no elements in reg set\n");
 		return rc;
 	}
@@ -222,7 +222,7 @@ static int msm_vidc_load_qdss_table(struct msm_vidc_platform_resources *res)
 					"qcom,qdss-presets");
 	qdss_addr_set->count /= sizeof(*qdss_addr_set->addr_tbl) / sizeof(u32);
 
-	if (qdss_addr_set->count == 0) {
+	if (!qdss_addr_set->count) {
 		dprintk(VIDC_DBG, "no elements in qdss reg set\n");
 		return rc;
 	}
@@ -270,7 +270,7 @@ static int msm_vidc_load_freq_table(struct msm_vidc_platform_resources *res)
 
 	num_elements = get_u32_array_num_elements(pdev, "qcom,load-freq-tbl");
 	num_elements /= sizeof(*res->load_freq_tbl) / sizeof(u32);
-	if (num_elements == 0) {
+	if (!num_elements) {
 		dprintk(VIDC_ERR, "no elements in frequency table\n");
 		return rc;
 	}
