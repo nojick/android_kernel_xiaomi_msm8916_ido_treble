@@ -380,7 +380,8 @@ static void __init create_mapping(phys_addr_t phys, unsigned long virt,
 			&phys, virt);
 		return;
 	}
-	__create_mapping(pgd_offset_k(virt & PAGE_MASK), phys, virt, size, 0);
+	__create_mapping(&init_mm, pgd_offset_k(virt & PAGE_MASK), phys, virt,
+			 size, 0);
 }
 
 void __init create_id_mapping(phys_addr_t addr, phys_addr_t size, int map_io)
@@ -389,7 +390,7 @@ void __init create_id_mapping(phys_addr_t addr, phys_addr_t size, int map_io)
 		pr_warn("BUG: not creating id mapping for %pa\n", &addr);
 		return;
 	}
-	__create_mapping(&idmap_pg_dir[pgd_index(addr)],
+	__create_mapping(&init_mm, &idmap_pg_dir[pgd_index(addr)],
 			 addr, addr, size, map_io);
 }
 
