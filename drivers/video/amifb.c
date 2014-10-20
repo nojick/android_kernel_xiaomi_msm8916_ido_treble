@@ -3784,7 +3784,6 @@ static struct platform_driver amifb_driver = {
 	.remove = __exit_p(amifb_remove),
 	.driver   = {
 		.name	= "amiga-video",
-		.owner	= THIS_MODULE,
 	},
 };
 

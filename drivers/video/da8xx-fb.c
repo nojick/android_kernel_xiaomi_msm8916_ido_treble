@@ -1584,7 +1584,7 @@ static struct platform_driver da8xx_fb_driver = {
 	.resume = fb_resume,
 	.driver = {
 		   .name = DRIVER_NAME,
-		   .owner = THIS_MODULE,
+		   .pm	= &fb_pm_ops,
 		   },
 };
 

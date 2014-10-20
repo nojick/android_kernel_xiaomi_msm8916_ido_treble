@@ -1106,7 +1106,6 @@ static struct platform_driver s3c2410fb_driver = {
 	.resume		= s3c2410fb_resume,
 	.driver		= {
 		.name	= "s3c2410-lcd",
-		.owner	= THIS_MODULE,
 	},
 };
 
@@ -1117,7 +1116,6 @@ static struct platform_driver s3c2412fb_driver = {
 	.resume		= s3c2410fb_resume,
 	.driver		= {
 		.name	= "s3c2412-lcd",
-		.owner	= THIS_MODULE,
 	},
 };
 
