@@ -473,6 +473,7 @@ void __init setup_arch(char **cmdline_p)
 	relocate_initrd();
 	request_standard_resources();
 
+	efi_virtmap_init();
 	efi_idmap_init();
 
 	unflatten_device_tree();
