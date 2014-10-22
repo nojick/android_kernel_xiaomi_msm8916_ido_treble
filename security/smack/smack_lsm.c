@@ -45,6 +45,157 @@
 #define TRANS_TRUE	"TRUE"
 #define TRANS_TRUE_SIZE	4
 
+#define SMK_CONNECTING	0
+#define SMK_RECEIVING	1
+#define SMK_SENDING	2
+
+LIST_HEAD(smk_ipv6_port_list);
+
+#ifdef CONFIG_SECURITY_SMACK_BRINGUP
+static void smk_bu_mode(int mode, char *s)
+{
+	int i = 0;
+
+	if (mode & MAY_READ)
+		s[i++] = 'r';
+	if (mode & MAY_WRITE)
+		s[i++] = 'w';
+	if (mode & MAY_EXEC)
+		s[i++] = 'x';
+	if (mode & MAY_APPEND)
+		s[i++] = 'a';
+	if (mode & MAY_TRANSMUTE)
+		s[i++] = 't';
+	if (mode & MAY_LOCK)
+		s[i++] = 'l';
+	if (i == 0)
+		s[i++] = '-';
+	s[i] = '\0';
+}
+#endif
+
+#ifdef CONFIG_SECURITY_SMACK_BRINGUP
+static int smk_bu_note(char *note, struct smack_known *sskp,
+		       struct smack_known *oskp, int mode, int rc)
+{
+	char acc[SMK_NUM_ACCESS_TYPE + 1];
+
+	if (rc <= 0)
+		return rc;
+
+	smk_bu_mode(mode, acc);
+	pr_info("Smack Bringup: (%s %s %s) %s\n",
+		sskp->smk_known, oskp->smk_known, acc, note);
+	return 0;
+}
+#else
+#define smk_bu_note(note, sskp, oskp, mode, RC) (RC)
+#endif
+
+#ifdef CONFIG_SECURITY_SMACK_BRINGUP
+static int smk_bu_current(char *note, struct smack_known *oskp,
+			  int mode, int rc)
+{
+	struct task_smack *tsp = current_security();
+	char acc[SMK_NUM_ACCESS_TYPE + 1];
+
+	if (rc <= 0)
+		return rc;
+
+	smk_bu_mode(mode, acc);
+	pr_info("Smack Bringup: (%s %s %s) %s %s\n",
+		tsp->smk_task->smk_known, oskp->smk_known,
+		acc, current->comm, note);
+	return 0;
+}
+#else
+#define smk_bu_current(note, oskp, mode, RC) (RC)
+#endif
+
+#ifdef CONFIG_SECURITY_SMACK_BRINGUP
+static int smk_bu_task(struct task_struct *otp, int mode, int rc)
+{
+	struct task_smack *tsp = current_security();
+	struct task_smack *otsp = task_security(otp);
+	char acc[SMK_NUM_ACCESS_TYPE + 1];
+
+	if (rc <= 0)
+		return rc;
+
+	smk_bu_mode(mode, acc);
+	pr_info("Smack Bringup: (%s %s %s) %s to %s\n",
+		tsp->smk_task->smk_known, otsp->smk_task->smk_known, acc,
+		current->comm, otp->comm);
+	return 0;
+}
+#else
+#define smk_bu_task(otp, mode, RC) (RC)
+#endif
+
+#ifdef CONFIG_SECURITY_SMACK_BRINGUP
+static int smk_bu_inode(struct inode *inode, int mode, int rc)
+{
+	struct task_smack *tsp = current_security();
+	char acc[SMK_NUM_ACCESS_TYPE + 1];
+
+	if (rc <= 0)
+		return rc;
+
+	smk_bu_mode(mode, acc);
+	pr_info("Smack Bringup: (%s %s %s) inode=(%s %ld) %s\n",
+		tsp->smk_task->smk_known, smk_of_inode(inode)->smk_known, acc,
+		inode->i_sb->s_id, inode->i_ino, current->comm);
+	return 0;
+}
+#else
+#define smk_bu_inode(inode, mode, RC) (RC)
+#endif
+
+#ifdef CONFIG_SECURITY_SMACK_BRINGUP
+static int smk_bu_file(struct file *file, int mode, int rc)
+{
+	struct task_smack *tsp = current_security();
+	struct smack_known *sskp = tsp->smk_task;
+	struct inode *inode = file->f_inode;
+	char acc[SMK_NUM_ACCESS_TYPE + 1];
+
+	if (rc <= 0)
+		return rc;
+
+	smk_bu_mode(mode, acc);
+	pr_info("Smack Bringup: (%s %s %s) file=(%s %ld %pD) %s\n",
+		sskp->smk_known, (char *)file->f_security, acc,
+		inode->i_sb->s_id, inode->i_ino, file,
+		current->comm);
+	return 0;
+}
+#else
+#define smk_bu_file(file, mode, RC) (RC)
+#endif
+
+#ifdef CONFIG_SECURITY_SMACK_BRINGUP
+static int smk_bu_credfile(const struct cred *cred, struct file *file,
+				int mode, int rc)
+{
+	struct task_smack *tsp = cred->security;
+	struct smack_known *sskp = tsp->smk_task;
+	struct inode *inode = file->f_inode;
+	char acc[SMK_NUM_ACCESS_TYPE + 1];
+
+	if (rc <= 0)
+		return rc;
+
+	smk_bu_mode(mode, acc);
+	pr_info("Smack Bringup: (%s %s %s) file=(%s %ld %pD) %s\n",
+		sskp->smk_known, smk_of_inode(inode)->smk_known, acc,
+		inode->i_sb->s_id, inode->i_ino, file,
+		current->comm);
+	return 0;
+}
+#else
+#define smk_bu_credfile(cred, file, mode, RC) (RC)
+#endif
+
 /**
  * smk_fetch - Fetch the smack label from a file.
  * @ip: a pointer to the inode

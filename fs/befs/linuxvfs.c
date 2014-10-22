@@ -171,8 +171,8 @@ befs_lookup(struct inode *dir, struct dentry *dentry, unsigned int flags)
 	char *utfname;
 	const char *name = dentry->d_name.name;
 
-	befs_debug(sb, "---> befs_lookup() "
-		   "name %s inode %ld", dentry->d_name.name, dir->i_ino);
+	befs_debug(sb, "---> %s name %pd inode %ld", __func__,
+		   dentry, dir->i_ino);
 
 	/* Convert to UTF-8 */
 	if (BEFS_SB(sb)->nls) {
@@ -190,8 +190,7 @@ befs_lookup(struct inode *dir, struct dentry *dentry, unsigned int flags)
 	}
 
 	if (ret == BEFS_BT_NOT_FOUND) {
-		befs_debug(sb, "<--- befs_lookup() %s not found",
-			   dentry->d_name.name);
+		befs_debug(sb, "<--- %s %pd not found", __func__, dentry);
 		return ERR_PTR(-ENOENT);
 
 	} else if (ret != BEFS_OK || offset == 0) {
@@ -221,21 +220,17 @@ befs_readdir(struct file *filp, void *dirent, filldir_t filldir)
 	size_t keysize;
 	unsigned char d_type;
 	char keybuf[BEFS_NAME_LEN + 1];
-	char *nlsname;
-	int nlsnamelen;
-	const char *dirname = filp->f_path.dentry->d_name.name;
 
-	befs_debug(sb, "---> befs_readdir() "
-		   "name %s, inode %ld, filp->f_pos %Ld",
-		   dirname, inode->i_ino, filp->f_pos);
+	befs_debug(sb, "---> %s name %pD, inode %ld, ctx->pos %lld",
+		  __func__, file, inode->i_ino, ctx->pos);
 
 	result = befs_btree_read(sb, ds, filp->f_pos, BEFS_NAME_LEN + 1,
 				 keybuf, &keysize, &value);
 
 	if (result == BEFS_ERR) {
-		befs_debug(sb, "<--- befs_readdir() ERROR");
-		befs_error(sb, "IO error reading %s (inode %lu)",
-			   dirname, inode->i_ino);
+		befs_debug(sb, "<--- %s ERROR", __func__);
+		befs_error(sb, "IO error reading %pD (inode %lu)",
+			   file, inode->i_ino);
 		return -EIO;
 
 	} else if (result == BEFS_BT_END) {

@@ -1837,9 +1837,10 @@ static __be32 nfsd4_encode_path(const struct path *root,
 		*buflen -= 4 + (XDR_QUADLEN(len) << 2);
 		if (*buflen < 0)
 			goto out_free;
-		WRITE32(len);
-		WRITEMEM(dentry->d_name.name, len);
-		dprintk("/%s", dentry->d_name.name);
+		}
+		p = xdr_encode_opaque(p, dentry->d_name.name, len);
+		dprintk("/%pd", dentry);
+		spin_unlock(&dentry->d_lock);
 		dput(dentry);
 		ncomponents--;
 	}
