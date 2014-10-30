@@ -50,7 +50,6 @@
 /* CPU power domain register offsets */
 #define CPU_PWR_CTL			0x4
 #define CPU_PWR_GATE_CTL		0x14
-#define LDO_BHS_PWR_CTL			0x28
 
 #define MSMTHULIUM_CPU_PWR_CTL		0x0
 #define MSMTHULIUM_CPU_PGS_STS		0x38
@@ -73,6 +72,7 @@
 #define APC_LDO_CFG1		0xc
 #define APC_LDO_CFG2		0x10
 #define APC_LDO_VREF_CFG	0x4
+#define APC_LDO_BHS_PWR_CTL	0x28
 
 #define MSMTHULIUM_CPUSS_VER_1P0	0x10000000
 #define MSMTHULIUM_CPUSS_VER_1P1	0x10010000
@@ -420,6 +420,11 @@ int msm8994_cpu_ldo_config(unsigned int cpu)
 			cpu);
 		BUG_ON(1);
 	}
+
+	/* Set LDO_BHS_PWR control register to hardware reset value */
+	val = readl_relaxed(ldo_bhs_reg_base + APC_LDO_BHS_PWR_CTL);
+	val = (val & 0xffffff00) | 0x12;
+	writel_relaxed(val, ldo_bhs_reg_base + APC_LDO_BHS_PWR_CTL);
 
 	/* Program LDO CFG registers */
 	val = readl_relaxed(ldo_bhs_reg_base + APC_LDO_CFG1);
