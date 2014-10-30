@@ -623,7 +623,6 @@ void msm_vidc_queue_v4l2_event(struct msm_vidc_inst *inst, int event_type)
 {
 	struct v4l2_event event = {.id = 0, .type = event_type};
 	v4l2_event_queue_fh(&inst->event_handler, &event);
-	wake_up(&inst->kernel_event_queue);
 }
 
 static void msm_comm_generate_max_clients_error(struct msm_vidc_inst *inst)
@@ -783,7 +782,6 @@ static void handle_event_change(enum command_response cmd, void *data)
 
 			/*send event to client*/
 			v4l2_event_queue_fh(&inst->event_handler, &buf_event);
-			wake_up(&inst->kernel_event_queue);
 			return;
 		}
 		default:
@@ -1362,7 +1360,6 @@ static void handle_ebd(enum command_response cmd, void *data)
 		mutex_lock(&inst->bufq[OUTPUT_PORT].lock);
 		vb2_buffer_done(vb, VB2_BUF_STATE_DONE);
 		mutex_unlock(&inst->bufq[OUTPUT_PORT].lock);
-		wake_up(&inst->kernel_event_queue);
 		msm_vidc_debugfs_update(inst, MSM_VIDC_DEBUGFS_EVENT_EBD);
 	}
 }
@@ -1663,7 +1660,6 @@ static void handle_fbd(enum command_response cmd, void *data)
 		mutex_lock(&inst->bufq[CAPTURE_PORT].lock);
 		vb2_buffer_done(vb, VB2_BUF_STATE_DONE);
 		mutex_unlock(&inst->bufq[CAPTURE_PORT].lock);
-		wake_up(&inst->kernel_event_queue);
 	}
 }
 
@@ -3772,7 +3768,6 @@ void msm_comm_flush_dynamic_buffers(struct msm_vidc_inst *inst)
 				/*send event to client*/
 				v4l2_event_queue_fh(&inst->event_handler,
 					&buf_event);
-				wake_up(&inst->kernel_event_queue);
 			}
 		}
 	}
