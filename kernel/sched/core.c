@@ -8242,6 +8242,10 @@ static void sched_init_numa(void)
 		if (!sched_debug())
 			break;
 	}
+
+	if (!level)
+		return;
+
 	/*
 	 * 'level' contains the number of unique distances, excluding the
 	 * identity distance node_distance(i,i).
