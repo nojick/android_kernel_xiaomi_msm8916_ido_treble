@@ -104,9 +104,9 @@
 #define PTE_HYP			PTE_USER
 
 /*
- * Highest possible physical address supported.
+ * 40-bit physical address supported.
  */
-#define PHYS_MASK_SHIFT		(48)
+#define PHYS_MASK_SHIFT		(40)
 #define PHYS_MASK		((UL(1) << PHYS_MASK_SHIFT) - 1)
 
 /*
