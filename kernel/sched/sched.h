@@ -939,6 +939,7 @@ unsigned int cpu_temp(int cpu);
 
 extern unsigned int nr_eligible_big_tasks(int cpu);
 extern void update_up_down_migrate(void);
+extern int power_delta_exceeded(unsigned int cpu_cost, unsigned int base_cost);
 
 /*
  * 'load' is in reference to "best cpu" at its best frequency.
