@@ -205,6 +205,7 @@ int set_l2_mode(struct low_power_ops *ops, int mode, bool notify_rpm)
 		ops->tz_flag = MSM_SCM_L2_GDHS;
 		coresight_cti_ctx_save();
 		break;
+	case MSM_SPM_MODE_CLOCK_GATING:
 	case MSM_SPM_MODE_RETENTION:
 	case MSM_SPM_MODE_DISABLED:
 		ops->tz_flag = MSM_SCM_L2_ON;
