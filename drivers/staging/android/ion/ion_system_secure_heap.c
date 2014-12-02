@@ -43,8 +43,8 @@ static bool is_cp_flag_present(unsigned long flags)
 static void ion_system_secure_heap_free(struct ion_buffer *buffer)
 {
 	int ret;
-	u64 source_vm;
-	u64 dest_vm;
+	u32 source_vm;
+	u32 dest_vm;
 	struct ion_heap *heap = buffer->heap;
 	struct ion_system_secure_heap *secure_heap = container_of(heap,
 						struct ion_system_secure_heap,
@@ -72,8 +72,8 @@ static int ion_system_secure_heap_allocate(struct ion_heap *heap,
 					unsigned long flags)
 {
 	int ret;
-	u64 source_vm;
-	u64 dest_vm;
+	u32 source_vm;
+	u32 dest_vm;
 	struct ion_system_secure_heap *secure_heap = container_of(heap,
 						struct ion_system_secure_heap,
 						heap);
