@@ -926,6 +926,11 @@ static inline int capacity(struct rq *rq)
 	return rq->capacity;
 }
 
+static inline int capacity(struct rq *rq)
+{
+	return rq->capacity;
+}
+
 static inline void
 inc_cumulative_runnable_avg(struct rq *rq, struct task_struct *p)
 {
