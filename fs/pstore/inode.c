@@ -320,25 +320,27 @@ int pstore_mkfile(enum pstore_type_id type, char *psname, u64 id, int count,
 			  psname, id, compressed ? ".enc.z" : "");
 		break;
 	case PSTORE_TYPE_CONSOLE:
-		scnprintf(name, sizeof(name), "console-%s-%lld", psname, id);
+		scnprintf(name, sizeof(name), "console-%s", psname);
 		break;
 	case PSTORE_TYPE_FTRACE:
-		scnprintf(name, sizeof(name), "ftrace-%s-%lld", psname, id);
+		scnprintf(name, sizeof(name), "ftrace-%s", psname);
 		break;
 	case PSTORE_TYPE_MCE:
 		scnprintf(name, sizeof(name), "mce-%s-%lld", psname, id);
 		break;
-	case PSTORE_TYPE_PMSG:
-		scnprintf(name, sizeof(name), "pmsg-%s-%lld", psname, id);
-		break;
 	case PSTORE_TYPE_PPC_RTAS:
-		sprintf(name, "rtas-%s-%lld", psname, id);
+		scnprintf(name, sizeof(name), "rtas-%s-%lld", psname, id);
 		break;
 	case PSTORE_TYPE_PPC_OF:
-		sprintf(name, "powerpc-ofw-%s-%lld", psname, id);
+		scnprintf(name, sizeof(name), "powerpc-ofw-%s-%lld",
+			  psname, id);
 		break;
 	case PSTORE_TYPE_PPC_COMMON:
-		sprintf(name, "powerpc-common-%s-%lld", psname, id);
+		scnprintf(name, sizeof(name), "powerpc-common-%s-%lld",
+			  psname, id);
+		break;
+	case PSTORE_TYPE_PMSG:
+		scnprintf(name, sizeof(name), "pmsg-%s-%lld", psname, id);
 		break;
 	case PSTORE_TYPE_UNKNOWN:
 		scnprintf(name, sizeof(name), "unknown-%s-%lld", psname, id);
