@@ -209,6 +209,25 @@ static bool msm_pm_pc_hotplug(void)
 	return 0;
 }
 
+static bool msm_pm_fastpc(bool from_idle)
+{
+	int ret = 0;
+	unsigned int cpu = smp_processor_id();
+
+	ret = msm_spm_set_low_power_mode(MSM_SPM_MODE_FASTPC, false);
+	WARN_ON(ret);
+
+	if (from_idle || cpu_online(cpu))
+		msm_arch_idle();
+	else
+		msm_pm_pc_hotplug();
+
+	ret = msm_spm_set_low_power_mode(MSM_SPM_MODE_CLOCK_GATING, false);
+	WARN_ON(ret);
+
+	return true;
+}
+
 int msm_pm_collapse(unsigned long unused)
 {
 	uint32_t cpu = smp_processor_id();
@@ -403,6 +422,7 @@ static bool (*execute[MSM_PM_SLEEP_MODE_NR])(bool idle) = {
 	[MSM_PM_SLEEP_MODE_POWER_COLLAPSE_STANDALONE] =
 		msm_pm_power_collapse_standalone,
 	[MSM_PM_SLEEP_MODE_RETENTION] = msm_pm_retention,
+	[MSM_PM_SLEEP_MODE_FASTPC] = msm_pm_fastpc,
 	[MSM_PM_SLEEP_MODE_POWER_COLLAPSE] = msm_pm_power_collapse,
 };
 
