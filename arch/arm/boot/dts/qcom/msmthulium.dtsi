@@ -43,6 +43,7 @@
 			qcom,cpuss-pm = <&cpuss_pm>;
 			qcom,cpuss-csr = <&cpuss_csr>;
 			qcom,acc = <&acc0>;
+			qcom,sleep-status = <&cpu0_slp_sts>;
 			next-level-cache = <&L2_0>;
 			L2_0: l2-cache {
 			      compatible = "arm,arch-cache";
@@ -58,6 +59,7 @@
 			reg = <0x0 0x1>;
 			enable-method = "qcom,msmthulium-acc";
 			qcom,acc = <&acc1>;
+			qcom,sleep-status = <&cpu1_slp_sts>;
 			next-level-cache = <&L2_0>;
 		};
 
@@ -67,6 +69,7 @@
 			reg = <0x0 0x100>;
 			enable-method = "qcom,msmthulium-acc";
 			qcom,acc = <&acc2>;
+			qcom,sleep-status = <&cpu2_slp_sts>;
 			next-level-cache = <&L2_1>;
 			L2_1: l2-cache {
 			      compatible = "arm,arch-cache";
@@ -79,7 +82,8 @@
 			device_type = "cpu";
 			compatible = "arm,armv8";
 			reg = <0x0 0x101>;
-			enable-method = "qcom,msmthulium-acc";
+			enable-method = "qcom,msm8996-acc";
+			qcom,sleep-status = <&cpu3_slp_sts>;
 			qcom,acc = <&acc3>;
 			next-level-cache = <&L2_1>;
 		};
@@ -1907,6 +1911,114 @@
 		qcom,edge = "rpm";
 		qcom,notify-edges = <&glink_lpass>, <&glink_mpss>, <&glink_dsps>;
 		qcom,xprt = "smem";
+	};
+
+	qcom,cache_erp64@6500000 {
+		compatible = "qcom,kryo_cache_erp64";
+		reg = <0x6500000 0x4000>;
+		/*
+		 * PPI 0  for L0/L1
+		 * SPI 1  for Cluster 1 L2 Info
+		 * SPI 9  for Cluster 2 L2 Info
+		 * SPI 2  for Cluster 1 L2 Error
+		 * SPI 10 for Cluster 2 L2 Error
+		 * SPI 17 for L3 error
+		 */
+		interrupts = <1 0 0>, <0 1 0>, <0 9 0>, <0 2 0>, <0 10 0>,
+			     <0 17 0>;
+		interrupt-names = "l1_irq", "l2_irq_info_0", "l2_irq_info_1",
+				  "l2_irq_err_0", "l2_irq_err_1", "l3_irq";
+	};
+
+	qcom,m4m_erp64@9A40000 {
+		compatible = "qcom,m4m_erp";
+		reg = <0x9A40000 0x40000>;
+		interrupts = <0 22 0>;
+		interrupt-names = "m4m_irq";
+	};
+
+	lmh: qcom,lmh {
+		compatible = "qcom,lmh";
+		interrupts = <0 23 4>;
+	};
+
+	timer@09840000 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+		compatible = "arm,armv7-timer-mem";
+		reg = <0x09840000 0x1000>;
+		clock-frequency = <19200000>;
+
+		frame@09850000 {
+			frame-number = <0>;
+			interrupts = <0 31 0x4>,
+				     <0 30 0x4>;
+			reg = <0x09850000 0x1000>,
+			      <0x09860000 0x1000>;
+		};
+
+		frame@09870000 {
+			frame-number = <1>;
+			interrupts = <0 32 0x4>;
+			reg = <0x09870000 0x1000>;
+			status = "disabled";
+		};
+
+		frame@09880000 {
+			frame-number = <2>;
+			interrupts = <0 33 0x4>;
+			reg = <0x09880000 0x1000>;
+			status = "disabled";
+		};
+
+		frame@09890000 {
+			frame-number = <3>;
+			interrupts = <0 34 0x4>;
+			reg = <0x09890000 0x1000>;
+			status = "disabled";
+		};
+
+		frame@098a0000 {
+			frame-number = <4>;
+			interrupts = <0 35 0x4>;
+			reg = <0x098a0000 0x1000>;
+			status = "disabled";
+		};
+
+		frame@098b0000 {
+			frame-number = <5>;
+			interrupts = <0 36 0x4>;
+			reg = <0x098b0000 0x1000>;
+			status = "disabled";
+		};
+
+		frame@098c0000 {
+			frame-number = <6>;
+			interrupts = <0 37 0x4>;
+			reg = <0x098c0000 0x1000>;
+			status = "disabled";
+		};
+	};
+
+	cpu0_slp_sts: cpu-sleep-status@9981058 {
+		reg = <0x9981058 0x100>;
+		qcom,sleep-status-mask = <0xc00000>;
+	};
+
+	cpu1_slp_sts: cpu-sleep-status@9991058 {
+		reg = <0x9991058 0x100>;
+		qcom,sleep-status-mask = <0xc00000>;
+	};
+
+	cpu2_slp_sts: cpu-sleep-status@99b1058 {
+		reg = <0x99b1058 0x100>;
+		qcom,sleep-status-mask = <0xc00000>;
+	};
+
+	cpu3_slp_sts: cpu-sleep-status@99c1058 {
+		reg = <0x99c1058 0x100>;
+		qcom,sleep-status-mask = <0xc00000>;
 	};
 };
 
