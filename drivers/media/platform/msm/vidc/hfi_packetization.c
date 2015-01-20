@@ -119,7 +119,7 @@ static inline u32 get_hfi_layout(enum hal_buffer_layout_type hal_buf_layout)
 		hfi_layout = HFI_MVC_BUFFER_LAYOUT_SEQ;
 		break;
 	default:
-		dprintk(VIDC_ERR, "Invalid buffer layout: 0x%x\n",
+		dprintk(VIDC_ERR, "Invalid buffer layout: %#x\n",
 			hal_buf_layout);
 		hfi_layout = HFI_MVC_BUFFER_LAYOUT_SEQ;
 		break;
@@ -169,7 +169,7 @@ static inline u32 get_hfi_codec(enum hal_video_codec hal_codec)
 		hfi_codec = HFI_VIDEO_CODEC_HEVC_HYBRID;
 		break;
 	default:
-		dprintk(VIDC_ERR, "Invalid codec 0x%x\n", hal_codec);
+		dprintk(VIDC_ERR, "Invalid codec %#x\n", hal_codec);
 		hfi_codec = 0;
 		break;
 	}
@@ -425,7 +425,7 @@ static u32 get_hfi_buffer(int hal_buffer)
 		buffer = HFI_BUFFER_INTERNAL_PERSIST_1;
 		break;
 	default:
-		dprintk(VIDC_ERR, "Invalid buffer :0x%x\n",
+		dprintk(VIDC_ERR, "Invalid buffer: %#x\n",
 				hal_buffer);
 		buffer = 0;
 		break;
@@ -541,7 +541,7 @@ static u32 get_hfi_buf_mode(enum buffer_mode_type hal_buf_mode)
 		buf_mode = HFI_BUFFER_MODE_DYNAMIC;
 		break;
 	default:
-		dprintk(VIDC_ERR, "Invalid buffer mode :0x%x\n",
+		dprintk(VIDC_ERR, "Invalid buffer mode: %#x\n",
 				hal_buf_mode);
 		buf_mode = 0;
 		break;
@@ -563,7 +563,7 @@ static u32 get_hfi_ltr_mode(enum ltr_mode ltr_mode_type)
 		ltrmode = HFI_LTR_MODE_PERIODIC;
 		break;
 	default:
-		dprintk(VIDC_ERR, "Invalid ltr mode :0x%x\n",
+		dprintk(VIDC_ERR, "Invalid ltr mode: %#x\n",
 			ltr_mode_type);
 		ltrmode = HFI_LTR_MODE_DISABLE;
 		break;
@@ -846,7 +846,7 @@ int create_pkt_cmd_session_flush(struct hfi_cmd_session_flush_packet *pkt,
 		pkt->flush_type = HFI_FLUSH_ALL;
 		break;
 	default:
-		dprintk(VIDC_ERR, "Invalid flush mode: 0x%x\n", flush_mode);
+		dprintk(VIDC_ERR, "Invalid flush mode: %#x\n", flush_mode);
 		return -EINVAL;
 	}
 	return rc;
@@ -871,7 +871,7 @@ int create_pkt_cmd_session_get_property(
 				HFI_PROPERTY_PARAM_PROFILE_LEVEL_CURRENT;
 		break;
 	default:
-		dprintk(VIDC_ERR, "%s cmd:0x%x not supported\n", __func__,
+		dprintk(VIDC_ERR, "%s cmd:%#x not supported\n", __func__,
 			ptype);
 		rc = -EINVAL;
 		break;
@@ -1075,7 +1075,7 @@ int create_pkt_cmd_session_set_property(
 			pkt->rg_property_data[1] = HFI_OUTPUT_ORDER_DISPLAY;
 			break;
 		default:
-			dprintk(VIDC_ERR, "invalid output order: 0x%x\n",
+			dprintk(VIDC_ERR, "invalid output order: %#x\n",
 						  *data);
 			break;
 		}
@@ -1164,7 +1164,7 @@ int create_pkt_cmd_session_set_property(
 			pkt->rg_property_data[1] = HFI_DIVX_FORMAT_6;
 			break;
 		default:
-			dprintk(VIDC_ERR, "Invalid divx format: 0x%x\n", *data);
+			dprintk(VIDC_ERR, "Invalid divx format: %#x\n", *data);
 			break;
 		}
 		pkt->size += sizeof(u32) * 2;
@@ -1317,7 +1317,7 @@ int create_pkt_cmd_session_set_property(
 			break;
 		default:
 			dprintk(VIDC_ERR,
-					"Invalid Rate control setting: 0x%p\n",
+					"Invalid Rate control setting: %p\n",
 					pdata);
 			break;
 		}
@@ -1367,7 +1367,7 @@ int create_pkt_cmd_session_set_property(
 			hfi->mode = HFI_H264_DB_MODE_ALL_BOUNDARY;
 			break;
 		default:
-			dprintk(VIDC_ERR, "Invalid deblocking mode: 0x%x\n",
+			dprintk(VIDC_ERR, "Invalid deblocking mode: %#x\n",
 						  prop->mode);
 			break;
 		}
@@ -1516,7 +1516,7 @@ int create_pkt_cmd_session_set_property(
 			hfi->rotation = HFI_ROTATE_270;
 			break;
 		default:
-			dprintk(VIDC_ERR, "Invalid rotation setting: 0x%x\n",
+			dprintk(VIDC_ERR, "Invalid rotation setting: %#x\n",
 				prop->rotate);
 			rc = -EINVAL;
 			break;
@@ -1532,7 +1532,7 @@ int create_pkt_cmd_session_set_property(
 			hfi->flip = HFI_FLIP_VERTICAL;
 			break;
 		default:
-			dprintk(VIDC_ERR, "Invalid flip setting: 0x%x\n",
+			dprintk(VIDC_ERR, "Invalid flip setting: %#x\n",
 				prop->flip);
 			rc = -EINVAL;
 			break;
@@ -1566,7 +1566,7 @@ int create_pkt_cmd_session_set_property(
 			break;
 		default:
 			dprintk(VIDC_ERR,
-					"Invalid intra refresh setting: 0x%x\n",
+					"Invalid intra refresh setting: %#x\n",
 					prop->mode);
 			break;
 		}
@@ -1599,7 +1599,7 @@ int create_pkt_cmd_session_set_property(
 			hfi->multi_slice = HFI_MULTI_SLICE_BY_BYTE_COUNT;
 			break;
 		default:
-			dprintk(VIDC_ERR, "Invalid slice settings: 0x%x\n",
+			dprintk(VIDC_ERR, "Invalid slice settings: %#x\n",
 				prop->multi_slice);
 			break;
 		}
@@ -1942,7 +1942,7 @@ int create_pkt_cmd_session_set_property(
 	case HAL_CONFIG_VENC_TIMESTAMP_SCALE:
 	case HAL_PARAM_VENC_LOW_LATENCY:
 	default:
-		dprintk(VIDC_ERR, "DEFAULT: Calling 0x%x\n", ptype);
+		dprintk(VIDC_ERR, "DEFAULT: Calling %#x\n", ptype);
 		rc = -ENOTSUPP;
 		break;
 	}
