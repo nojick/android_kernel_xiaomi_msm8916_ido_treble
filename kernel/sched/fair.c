@@ -2486,6 +2486,22 @@ int sched_set_init_task_load(struct task_struct *p, int init_load_pct)
 	return 0;
 }
 
+#ifdef CONFIG_CGROUP_SCHED
+
+static inline int upmigrate_discouraged(struct task_struct *p)
+{
+	return task_group(p)->upmigrate_discouraged;
+}
+
+#else
+
+static inline int upmigrate_discouraged(struct task_struct *p)
+{
+	return 0;
+}
+
+#endif
+
 int sched_set_cpu_prefer_idle(int cpu, int prefer_idle)
 {
 	struct rq *rq = cpu_rq(cpu);
@@ -2565,8 +2581,7 @@ static inline int is_big_task(struct task_struct *p)
 	u64 load = task_load(p);
 	int nice = task_nice(p);
 
-	/* Todo: Provide cgroup-based control as well? */
-	if (nice > sched_upmigrate_min_nice)
+	if (nice > sched_upmigrate_min_nice || upmigrate_discouraged(p))
 		return 0;
 
 	load = scale_load_to_cpu(load, task_cpu(p));
@@ -2753,8 +2768,7 @@ static int task_will_fit(struct task_struct *p, int cpu)
 		if (rq->capacity > prev_rq->capacity)
 			return 1;
 	} else {
-		/* Todo: Provide cgroup-based control as well? */
-		if (nice > sched_upmigrate_min_nice)
+		if (nice > sched_upmigrate_min_nice || upmigrate_discouraged(p))
 			return 1;
 
 		load = scale_load_to_cpu(task_load(p), cpu);
@@ -3757,8 +3771,8 @@ static inline int migration_needed(struct rq *rq, struct task_struct *p)
 	if (is_small_task(p))
 		return 0;
 
-	/* Todo: cgroup-based control? */
-	if (nice > sched_upmigrate_min_nice && rq->capacity > min_capacity)
+	if ((nice > sched_upmigrate_min_nice || upmigrate_discouraged(p)) &&
+			 rq->capacity > min_capacity)
 		return MOVE_TO_LITTLE_CPU;
 
 	if (!task_will_fit(p, cpu_of(rq)))
