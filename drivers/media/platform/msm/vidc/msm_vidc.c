@@ -502,6 +502,7 @@ int map_and_register_buf(struct msm_vidc_inst *inst, struct v4l2_buffer *b)
 			* we receive RELEASE_BUFFER_REFERENCE EVENT from f/w.
 			*/
 			dprintk(VIDC_DBG, "[MAP] Buffer already prepared\n");
+			temp->inactive = false;
 			list_for_each_entry(iterator,
 				&inst->registeredbufs.list, list) {
 				if (iterator == temp) {
@@ -518,10 +519,9 @@ int map_and_register_buf(struct msm_vidc_inst *inst, struct v4l2_buffer *b)
 		if (rc < 0)
 			goto exit;
 
-		if (!is_dynamic_output_buffer_mode(b, inst))
-			same_fd_handle = get_same_fd_buffer(
-						&inst->registeredbufs,
-						b->m.planes[i].reserved[0]);
+		same_fd_handle = get_same_fd_buffer(
+				&inst->registeredbufs,
+				b->m.planes[i].reserved[0]);
 
 		populate_buf_info(binfo, b, i);
 		if (same_fd_handle) {
