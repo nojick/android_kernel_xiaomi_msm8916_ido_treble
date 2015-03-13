@@ -21,6 +21,8 @@
 
 #define MSM_VDEC_DVC_NAME "msm_vdec_8974"
 #define MIN_NUM_OUTPUT_BUFFERS 4
+#define MIN_NUM_CAPTURE_BUFFERS 6
+#define MIN_NUM_THUMBNAIL_MODE_CAPTURE_BUFFERS 1
 #define MAX_NUM_OUTPUT_BUFFERS VB2_MAX_FRAME
 #define DEFAULT_VIDEO_CONCEAL_COLOR_BLACK 0x8010
 #define MB_SIZE_IN_PIXEL (16 * 16)
@@ -1541,6 +1543,7 @@ static int msm_vdec_queue_setup(struct vb2_queue *q,
 	struct msm_vidc_inst *inst;
 	struct hal_buffer_requirements *bufreq;
 	int extra_idx = 0;
+	int min_buff_count = 0;
 	struct hfi_device *hdev;
 	struct hal_buffer_count_actual new_buf_count;
 	enum hal_property property_id;
@@ -1611,6 +1614,14 @@ static int msm_vdec_queue_setup(struct vb2_queue *q,
 		new_buf_count.buffer_type =
 			msm_comm_get_hal_output_buffer(inst);
 		new_buf_count.buffer_count_actual = *num_buffers;
+
+		min_buff_count = (!!(inst->flags & VIDC_THUMBNAIL)) ?
+			MIN_NUM_THUMBNAIL_MODE_CAPTURE_BUFFERS :
+				MIN_NUM_CAPTURE_BUFFERS;
+
+		*num_buffers = clamp_val(*num_buffers,
+			min_buff_count, VB2_MAX_FRAME);
+
 		dprintk(VIDC_DBG, "Set actual output buffer count: %d\n",
 				*num_buffers);
 		rc = call_hfi_op(hdev, session_set_property,
