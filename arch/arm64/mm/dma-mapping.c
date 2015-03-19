@@ -59,7 +59,7 @@ static int __init early_coherent_pool(char *p)
 }
 early_param("coherent_pool", early_coherent_pool);
 
-static void *__alloc_from_pool(size_t size, struct page **ret_page)
+static void *__alloc_from_pool(size_t size, struct page **ret_page, gfp_t flags)
 {
 	unsigned long val;
 	void *ptr = NULL;
@@ -208,7 +208,7 @@ static void *__dma_alloc_noncoherent(struct device *dev, size_t size,
 
 	if (!(flags & __GFP_WAIT)) {
 		struct page *page = NULL;
-		void *addr = __alloc_from_pool(size, &page);
+		void *addr = __alloc_from_pool(size, &page, flags);
 
 		if (addr)
 			*dma_handle = phys_to_dma(dev, page_to_phys(page));
