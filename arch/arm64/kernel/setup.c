@@ -126,12 +126,6 @@ void __init early_print(const char *str, ...)
 	printk("%s", buf);
 }
 
-void cpuinfo_store_cpu(void)
-{
-	struct cpuinfo_arm64 *info = this_cpu_ptr(&cpu_data);
-	info->reg_midr = read_cpuid_id();
-}
-
 void __init smp_setup_processor_id(void)
 {
 	/*
