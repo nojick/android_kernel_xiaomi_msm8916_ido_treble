@@ -3733,13 +3733,10 @@ int sched_hmp_proc_update_handler(struct ctl_table *table, int write,
 
 	if (data == &sysctl_sched_min_runtime) {
 		sched_min_runtime = ((u64) sysctl_sched_min_runtime) * 1000;
-		return 0;
+		goto done;
 	}
 
-	if (data == (unsigned int *)&sysctl_sched_upmigrate_min_nice)
-		update_min_nice = 1;
-
-	if (update_min_nice) {
+	if (data == (unsigned int *)&sysctl_sched_upmigrate_min_nice) {
 		if ((*(int *)data) < -20 || (*(int *)data) > 19) {
 			*data = old_val;
 			ret = -EINVAL;
@@ -3750,7 +3747,7 @@ int sched_hmp_proc_update_handler(struct ctl_table *table, int write,
 		/* all tunables other than min_nice are in percentage */
 		if (sysctl_sched_downmigrate_pct >
 		    sysctl_sched_upmigrate_pct || *data > 100) {
-		*data = old_val;
+			*data = old_val;
 			ret = -EINVAL;
 			goto done;
 		}
