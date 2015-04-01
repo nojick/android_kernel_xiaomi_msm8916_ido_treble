@@ -87,16 +87,6 @@ struct channel_ctx;
 enum transport_state_e;
 enum local_channel_state_e;
 
-/* Tracer Packet Event IDs for G-Link */
-enum glink_tracer_pkt_events {
-	GLINK_CORE_TX = 1,
-	GLINK_QUEUE_TO_SCHEDULER = 2,
-	GLINK_SCHEDULER_TX = 3,
-	GLINK_XPRT_TX = 4,
-	GLINK_XPRT_RX = 5,
-	GLINK_CORE_RX = 6,
-};
-
 /**
  * glink_get_ss_enum_string() - get the name of the subsystem based on enum value
  * @enum_id:	enum id of a specific subsystem.
@@ -642,36 +632,29 @@ enum ssr_command {
 
 /**
  * struct subsys_info - Subsystem info structure
- * ssr_name:		name of the subsystem recognized by the SSR framework
- * edge:		name of the G-Link edge
- * xprt:		name of the G-Link transport
- * handle:		glink_ssr channel used for this subsystem
- * link_state_handle:	link state handle for this edge, used to unregister
- *			from receiving link state callbacks
- * link_info:		Transport info used in link state callback registration
- * cb_data:		Private callback data structure for notification
- *			functions
+ * ssr_name:	name of the subsystem recognized by the SSR framework
+ * edge:	name of the G-Link edge
+ * xprt:	name of the G-Link transport
+ * handle:	glink_ssr channel used for this subsystem
+ * link_info:	Transport info used in link state callback registration
+ * cb_data:	Private callback data structure for notification functions
  * subsystem_list_node:	used to chain this structure in a list of subsystem
  *			info structures
- * notify_list:		list of subsys_info_leaf structures, containing the
- *			subsystems to notify if this subsystem undergoes SSR
+ * notify_list:	list of subsys_info_leaf structures, containing the subsystems
+ *		to notify if this subsystem undergoes SSR
  * notify_list_len:	length of notify_list
- * link_up:		Flag indicating whether transport is up or not
- * link_up_lock:	Lock for protecting the link_up flag
  */
 struct subsys_info {
 	const char *ssr_name;
 	const char *edge;
 	const char *xprt;
 	void *handle;
-	void *link_state_handle;
 	struct glink_link_info *link_info;
 	struct ssr_notify_data *cb_data;
 	struct list_head subsystem_list_node;
 	struct list_head notify_list;
 	int notify_list_len;
 	bool link_up;
-	spinlock_t link_up_lock;
 };
 
 /**
@@ -730,8 +713,6 @@ struct cleanup_done_msg {
  * responded:	Indicates whether or not a cleanup_done response was received.
  * version:	G-Link SSR protocol version
  * seq_num:	G-Link SSR protocol sequence number
- * edge:	The G-Link edge name for the channel associated with this
- *		callback data
  */
 struct ssr_notify_data {
 	bool tx_done;
@@ -739,7 +720,6 @@ struct ssr_notify_data {
 	bool responded;
 	uint32_t version;
 	uint32_t seq_num;
-	const char *edge;
 };
 
 /**
