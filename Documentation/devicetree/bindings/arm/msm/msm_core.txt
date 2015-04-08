@@ -7,6 +7,7 @@ scheduling decision.
 The required nodes for the Energy-aware driver are:
 
 - compatible:    "qcom,apss-core-ea"
+- reg:           Physical address mapped to this device
 
 Required properties:
 - qcom,core-mapping: Parent node that lists characteristics of
@@ -27,6 +28,10 @@ Optional properties:
                  is no change in threshold. If this property is not
                  present, the power is recalculated only on
                  temperature threshold notifications.
+-qcom,throttling-temp: Temperature threshold for cpu frequency mitigation.
+                 The value should be set same as the threshold temperature
+                 in thermal module - 5 C, such that there is a bandwidth to
+                 control the cores before frequency mitigation happens.
 
 [Second level nodes]
 Required properties to define per core characteristics:
@@ -40,8 +45,9 @@ Optional properties to define per core characteristics:
 
 Example
 
-qcom,msm-core {
+qcom,msm-core@0xfc4b0000 {
 	compatible = "qcom,apss-core-ea";
+	reg = <0xfc4b0000 0x1000>;
 	qcom,low-hyst-temp = <10>;
 	qcom,high-hyst-temp = <5>;
 	qcom,polling-interval = <50>;
