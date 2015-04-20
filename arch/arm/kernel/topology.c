@@ -303,4 +303,8 @@ void __init init_cpu_topology(void)
 	smp_wmb();
 
 	parse_dt_topology();
+
+	for_each_possible_cpu(cpu)
+		update_siblings_masks(cpu);
+
 }
