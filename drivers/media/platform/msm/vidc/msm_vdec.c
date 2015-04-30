@@ -24,6 +24,8 @@
 #define MAX_NUM_OUTPUT_BUFFERS VB2_MAX_FRAME
 #define DEFAULT_VIDEO_CONCEAL_COLOR_BLACK 0x8010
 #define MB_SIZE_IN_PIXEL (16 * 16)
+#define MAX_OPERATING_FRAME_RATE (300 << 16)
+#define OPERATING_FRAME_RATE_STEP (1 << 16)
 
 #define TZ_DYNAMIC_BUFFER_FEATURE_ID 12
 #define TZ_FEATURE_VERSION(major, minor, patch) \
@@ -542,6 +544,15 @@ static struct msm_vidc_ctrl msm_vdec_ctrls[] = {
 		.default_value = V4L2_MPEG_VIDC_VIDEO_PRIORITY_REALTIME_DISABLE,
 		.step = 1,
 		.qmenu = NULL,
+	},
+	{
+		.id = V4L2_CID_MPEG_VIDC_VIDEO_OPERATING_RATE,
+		.name = "Set Decoder Operating rate",
+		.type = V4L2_CTRL_TYPE_INTEGER,
+		.minimum = 0,
+		.maximum = MAX_OPERATING_FRAME_RATE,
+		.default_value = 0,
+		.step = OPERATING_FRAME_RATE_STEP,
 	},
 };
 
@@ -2430,6 +2441,8 @@ static int try_set_ctrl(struct msm_vidc_inst *inst, struct v4l2_ctrl *ctrl)
 		property_id = HAL_CONFIG_REALTIME;
 		hal_property.enable = ctrl->val;
 		pdata = &hal_property;
+		break;
+	case V4L2_CID_MPEG_VIDC_VIDEO_OPERATING_RATE:
 		break;
 	default:
 		break;
