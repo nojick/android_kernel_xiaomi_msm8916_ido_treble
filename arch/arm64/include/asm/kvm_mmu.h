@@ -238,6 +238,16 @@ struct kvm;
 static inline void coherent_icache_guest_page(struct kvm *kvm, hva_t hva,
 					      unsigned long size)
 {
+	return (vcpu_sys_reg(vcpu, SCTLR_EL1) & 0b101) == 0b101;
+}
+
+static inline void coherent_cache_guest_page(struct kvm_vcpu *vcpu, hva_t hva,
+					     unsigned long size,
+					     bool ipa_uncached)
+{
+	if (!vcpu_has_cache_enabled(vcpu) || ipa_uncached)
+		kvm_flush_dcache_to_poc((void *)hva, size);
+
 	if (!icache_is_aliasing()) {		/* PIPT */
 		flush_icache_range(hva, hva + size);
 	} else if (!icache_is_aivivt()) {	/* non ASID-tagged VIVT */
