@@ -524,6 +524,8 @@ static int get_hfi_extradata_index(enum hal_extradata_id index)
 	case HAL_EXTRADATA_METADATA_MBI:
 		ret = HFI_PROPERTY_PARAM_VENC_MBI_DUMPING;
 		break;
+	case HAL_EXTRADATA_VQZIP_SEI:
+		ret = HFI_PROPERTY_PARAM_VDEC_VQZIP_SEI_EXTRADATA;
 	case HAL_EXTRADATA_MASTERING_DISPLAY_COLOUR_SEI:
 		ret =
 		HFI_PROPERTY_PARAM_VDEC_MASTERING_DISPLAY_COLOUR_SEI_EXTRADATA;
@@ -1625,8 +1627,7 @@ int create_pkt_cmd_session_set_property(
 		int id = 0;
 		pkt->rg_property_data[0] =
 			get_hfi_extradata_index(extra->index);
-		hfi =
-			(struct hfi_index_extradata_config *)
+		hfi = (struct hfi_index_extradata_config *)
 			&pkt->rg_property_data[1];
 		hfi->enable = extra->enable;
 		id = get_hfi_extradata_id(extra->index);
