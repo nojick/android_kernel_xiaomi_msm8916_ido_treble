@@ -88,6 +88,7 @@ int __ext4_journal_stop(const char *where, unsigned int line, handle_t *handle)
 		return 0;
 	}
 
+	sb = handle->h_transaction->t_journal->j_private;
 	err = handle->h_err;
 	if (!handle->h_transaction) {
 		rc = jbd2_journal_stop(handle);
