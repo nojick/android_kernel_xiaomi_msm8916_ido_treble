@@ -88,4 +88,6 @@ int msm_comm_get_inst_load(struct msm_vidc_inst *inst,
 			enum load_calc_quirks quirks);
 int msm_comm_get_load(struct msm_vidc_core *core,
 			enum session_type type, enum load_calc_quirks quirks);
+
+void msm_comm_cleanup_internal_buffers(struct msm_vidc_inst *inst);
 #endif
