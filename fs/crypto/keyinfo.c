@@ -1,3 +1,25 @@
+@nojick 
+nojick
+/
+android_kernel_xiaomi_msm8916_ido
+Private
+Code
+Issues
+Pull requests
+Actions
+Projects
+Security
+Insights
+Settings
+android_kernel_xiaomi_msm8916_ido/fs/crypto/keyinfo.c
+@ebiggers
+ebiggers UPSTREAM: fscrypt: fix dereference of NULL user_key_payload
+…
+Latest commit 85ecc6f on 9 Oct 2017
+ History
+ 1 contributor
+397 lines (348 sloc)  10.4 KB
+ 
 /*
  * key management facility for FS encryption support.
  *
