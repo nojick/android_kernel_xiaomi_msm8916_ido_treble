@@ -323,8 +323,6 @@ int __init psci_init(void)
 	return init_fn(np);
 }
 
-#ifdef CONFIG_SMP
-
 static int __init cpu_psci_cpu_init(struct device_node *dn, unsigned int cpu)
 {
 	return 0;
