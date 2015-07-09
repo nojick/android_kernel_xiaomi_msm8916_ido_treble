@@ -39,6 +39,7 @@
 #include <soc/qcom/rpm-notifier.h>
 #include <soc/qcom/event_timer.h>
 #include <soc/qcom/lpm-stats.h>
+#include <soc/qcom/jtag.h>
 #include <asm/cputype.h>
 #include <asm/arch_timer.h>
 #include <asm/cacheflush.h>
@@ -696,6 +697,8 @@ static inline void cpu_prepare(struct lpm_cluster *cluster, int cpu_index,
 {
 	struct lpm_cpu_level *cpu_level = &cluster->cpu->levels[cpu_index];
 	unsigned int cpu = raw_smp_processor_id();
+	bool jtag_save_restore =
+			cluster->cpu->levels[cpu_index].jtag_save_restore;
 
 	/* Use broadcast timer for aggregating sleep mode within a cluster.
 	 * A broadcast timer could be used in the following scenarios
@@ -716,6 +719,12 @@ static inline void cpu_prepare(struct lpm_cluster *cluster, int cpu_index,
 			MSM_PM_SLEEP_MODE_POWER_COLLAPSE_STANDALONE)
 			|| (cpu_level->is_reset)))
 		cpu_pm_enter();
+
+	/*
+	 * Save JTAG registers for 8996v1.0 & 8996v2.x in C4 LPM
+	 */
+	if (jtag_save_restore)
+		msm_jtag_save_state();
 }
 
 static inline void cpu_unprepare(struct lpm_cluster *cluster, int cpu_index,
@@ -723,6 +732,8 @@ static inline void cpu_unprepare(struct lpm_cluster *cluster, int cpu_index,
 {
 	struct lpm_cpu_level *cpu_level = &cluster->cpu->levels[cpu_index];
 	unsigned int cpu = raw_smp_processor_id();
+	bool jtag_save_restore =
+			cluster->cpu->levels[cpu_index].jtag_save_restore;
 
 	if (from_idle && (cpu_level->use_bc_timer ||
 			(cpu_index >= cluster->min_child_level)))
@@ -733,6 +744,12 @@ static inline void cpu_unprepare(struct lpm_cluster *cluster, int cpu_index,
 			MSM_PM_SLEEP_MODE_POWER_COLLAPSE_STANDALONE)
 		|| cpu_level->is_reset))
 		cpu_pm_exit();
+
+	/*
+	 * Restore JTAG registers for 8996v1.0 & 8996v2.x in C4 LPM
+	 */
+	if (jtag_save_restore)
+		msm_jtag_restore_state();
 }
 
 int get_cluster_id(struct lpm_cluster *cluster, int *aff_lvl)
