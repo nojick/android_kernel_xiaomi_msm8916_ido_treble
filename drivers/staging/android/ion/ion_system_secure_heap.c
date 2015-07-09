@@ -36,9 +36,12 @@ static bool is_cp_flag_present(unsigned long flags)
 static void ion_system_secure_heap_free(struct ion_buffer *buffer)
 {
 	int ret = 0;
+	int i;
 	u32 source_vm;
 	int dest_vmid;
 	int dest_perms;
+	struct sg_table *sgt;
+	struct scatterlist *sg;
 	struct ion_heap *heap = buffer->heap;
 	struct ion_system_secure_heap *secure_heap = container_of(heap,
 						struct ion_system_secure_heap,
@@ -60,6 +63,10 @@ static void ion_system_secure_heap_free(struct ion_buffer *buffer)
 		return;
 	}
 
+	sgt = buffer->priv_virt;
+	for_each_sg(sgt->sgl, sg, sgt->nents, i)
+		ClearPagePrivate(sg_page(sg));
+
 	buffer->heap = secure_heap->sys_heap;
 	secure_heap->sys_heap->ops->free(buffer);
 }
@@ -70,9 +77,12 @@ static int ion_system_secure_heap_allocate(struct ion_heap *heap,
 					unsigned long flags)
 {
 	int ret = 0;
+	int i;
 	u32 source_vm;
 	int dest_vmid;
 	int dest_perms;
+	struct sg_table *sgt;
+	struct scatterlist *sg;
 	struct ion_system_secure_heap *secure_heap = container_of(heap,
 						struct ion_system_secure_heap,
 						heap);
@@ -107,6 +117,11 @@ static int ion_system_secure_heap_allocate(struct ion_heap *heap,
 		pr_err("%s: Assign call failed\n", __func__);
 		goto err;
 	}
+
+	sgt = buffer->priv_virt;
+	for_each_sg(sgt->sgl, sg, sgt->nents, i)
+		SetPagePrivate(sg_page(sg));
+
 	return ret;
 
 err:
