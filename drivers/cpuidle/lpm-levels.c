@@ -816,11 +816,6 @@ static int lpm_cpuidle_enter(struct cpuidle_device *dev,
 
 	trace_cpu_idle_rcuidle(idx, dev->cpu);
 
-	if (need_resched()) {
-		dev->last_residency = 0;
-		goto exit;
-	}
-
 	pwr_params = &cluster->cpu->levels[idx].pwr;
 	sched_set_cpu_cstate(smp_processor_id(), idx + 1,
 		pwr_params->energy_overhead, pwr_params->latency_us);
@@ -830,6 +825,9 @@ static int lpm_cpuidle_enter(struct cpuidle_device *dev,
 	cpu_prepare(cluster, idx, true);
 	cluster_prepare(cluster, cpumask, idx, true);
 	lpm_stats_cpu_enter(idx);
+
+	if (need_resched() || (idx < 0))
+		goto exit;
 
 	if (idx > 0 && !use_psci) {
 		update_debug_pc_event(CPU_ENTER, idx, 0xdeaffeed, 0xdeaffeed,
@@ -842,6 +840,7 @@ static int lpm_cpuidle_enter(struct cpuidle_device *dev,
 		success = psci_enter_sleep(cluster, idx, true);
 	}
 
+exit:
 	lpm_stats_cpu_exit(idx, success);
 	cluster_unprepare(cluster, cpumask, idx, true);
 	cpu_unprepare(cluster, idx, true);
@@ -852,8 +851,6 @@ static int lpm_cpuidle_enter(struct cpuidle_device *dev,
 	do_div(time, 1000);
 	dev->last_residency = (int)time;
 	trace_cpu_idle_exit(idx, success);
-
-exit:
 	trace_cpu_idle_rcuidle(PWR_EVENT_EXIT, dev->cpu);
 	local_irq_enable();
 	return idx;
