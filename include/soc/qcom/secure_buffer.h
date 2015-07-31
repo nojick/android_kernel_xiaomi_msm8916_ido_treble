@@ -25,6 +25,10 @@
 #define VMID_HLOS_FREE 0xE
 #define VMID_MSS_NONMSA 0x10
 #define VMID_INVAL -1
+/*
+ * if you add a secure VMID here make sure you update
+ * msm_secure_vmid_to_string
+ */
 
 #define PERM_READ                       0x4
 #define PERM_WRITE                      0x2
@@ -41,6 +45,7 @@ int hyp_assign_phys(phys_addr_t addr, u64 size,
 			int *dest_vmids, int *dest_perms,
 			int dest_nelems);
 bool msm_secure_v2_is_supported(void);
+const char *msm_secure_vmid_to_string(int secure_vmid);
 #else
 static inline int msm_secure_table(struct sg_table *table)
 {
@@ -66,6 +71,10 @@ int hyp_assign_phys(phys_addr_t addr, u64 size,
 static inline bool msm_secure_v2_is_supported(void)
 {
 	return false;
+}
+const char *msm_secure_vmid_to_string(int secure_vmid)
+{
+	return "N/A";
 }
 #endif
 #endif
