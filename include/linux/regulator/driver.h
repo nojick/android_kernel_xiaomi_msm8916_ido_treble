@@ -355,6 +355,7 @@ struct regulator_dev {
 	unsigned int ena_gpio_state:1;
 	unsigned long last_off_jiffy;
 	struct proxy_consumer *proxy_consumer;
+	struct regulator *debug_consumer;
 };
 
 struct regulator_dev *
