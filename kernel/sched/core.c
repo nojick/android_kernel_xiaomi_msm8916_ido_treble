@@ -901,6 +901,28 @@ sched_set_cpu_cstate(int cpu, int cstate, int wakeup_energy, int wakeup_latency)
 	rq->wakeup_latency = wakeup_latency;
 }
 
+/*
+ * Note D-state for (idle) cluster.
+ *
+ * @dstate = dstate index, 0 -> active state
+ * @wakeup_energy = energy spent in waking up cluster
+ * @wakeup_latency = latency to wakeup from cluster
+ *
+ */
+void sched_set_cluster_dstate(const cpumask_t *cluster_cpus, int dstate,
+			int wakeup_energy, int wakeup_latency)
+{
+	int cpu;
+
+	for_each_cpu(cpu, cluster_cpus) {
+		struct rq *rq = cpu_rq(cpu);
+
+		rq->dstate = dstate;
+		rq->dstate_wakeup_energy = wakeup_energy;
+		rq->dstate_wakeup_latency = wakeup_latency;
+	}
+}
+
 #endif /* CONFIG_SMP */
 
 #if defined(CONFIG_RT_GROUP_SCHED) || (defined(CONFIG_FAIR_GROUP_SCHED) && \
@@ -9219,6 +9241,10 @@ void __init sched_init(void)
 		rq->notifier_sent = 0;
 #endif
 #endif
+
+		rq->dstate = 0;
+		rq->dstate_wakeup_latency = 0;
+		rq->dstate_wakeup_energy = 0;
 
 		INIT_LIST_HEAD(&rq->cfs_tasks);
 
