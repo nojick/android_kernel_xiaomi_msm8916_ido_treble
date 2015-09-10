@@ -258,4 +258,7 @@
 #define clk_rpm_debug_mux			0x25cd1f3a
 #define clk_wcnss_m_clk				0x709f430b
 
+#define clk_a53_lc_clk				0xc69f0878
+#define clk_a53_bc_clk				0xcf28e63a
+#define clk_cci_clk                             0x96854074
 #endif
