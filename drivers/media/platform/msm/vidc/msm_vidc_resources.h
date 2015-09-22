@@ -136,6 +136,7 @@ struct msm_vidc_platform_resources {
 	bool use_non_secure_pil;
 	bool sw_power_collapsible;
 	bool sys_idle_indicator;
+	uint32_t pm_qos_latency_us;
 	bool thermal_mitigable;
 };
 

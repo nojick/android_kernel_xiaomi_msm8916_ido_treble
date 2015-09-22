@@ -754,6 +754,8 @@ int read_platform_resources_from_dt(
 				"Using fw-bias : %pa", &res->firmware_base);
 	}
 
+	of_property_read_u32(pdev->dev.of_node,
+			"qcom,pm-qos-latency-us", &res->pm_qos_latency_us);
 	res->sw_power_collapsible = of_property_read_bool(pdev->dev.of_node,
 					"qcom,sw-power-collapse");
 	dprintk(VIDC_DBG, "Power collapse supported = %s\n",
