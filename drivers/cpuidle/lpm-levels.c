@@ -227,6 +227,7 @@ int set_l2_mode(struct low_power_ops *ops, int mode, bool notify_rpm)
 
 
 	switch (mode) {
+	case MSM_SPM_MODE_STANDALONE_POWER_COLLAPSE:
 	case MSM_SPM_MODE_POWER_COLLAPSE:
 	case MSM_SPM_MODE_FASTPC:
 		cpu_ops->tz_flag = MSM_SCM_L2_OFF;
@@ -266,6 +267,7 @@ int set_l3_mode(struct low_power_ops *ops, int mode, bool notify_rpm)
 			smp_processor_id())->lpm_dev;
 
 	switch (mode) {
+	case MSM_SPM_MODE_STANDALONE_POWER_COLLAPSE:
 	case MSM_SPM_MODE_POWER_COLLAPSE:
 	case MSM_SPM_MODE_FASTPC:
 		cpu_ops->tz_flag |= MSM_SCM_L3_PC_OFF;
