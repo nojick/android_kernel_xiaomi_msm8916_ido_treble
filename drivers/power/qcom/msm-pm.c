@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2014, 2017 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2010-2015, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -28,7 +28,6 @@
 #include <linux/msm-bus.h>
 #include <linux/uaccess.h>
 #include <linux/dma-mapping.h>
-#include <soc/qcom/avs.h>
 #include <soc/qcom/spm.h>
 #include <soc/qcom/pm.h>
 #include <soc/qcom/scm.h>
@@ -88,7 +87,6 @@ static long *msm_pc_debug_counters;
 
 static cpumask_t retention_cpus;
 static DEFINE_SPINLOCK(retention_lock);
-static DEFINE_MUTEX(msm_pc_debug_mutex);
 
 static bool msm_pm_is_L1_writeback(void)
 {
@@ -262,7 +260,7 @@ int msm_pm_collapse(unsigned long unused)
 EXPORT_SYMBOL(msm_pm_collapse);
 
 static bool __ref msm_pm_spm_power_collapse(
-	unsigned int cpu, bool from_idle, bool notify_rpm)
+	unsigned int cpu, int mode, bool from_idle, bool notify_rpm)
 {
 	void *entry;
 	bool collapsed = 0;
@@ -273,8 +271,7 @@ static bool __ref msm_pm_spm_power_collapse(
 		pr_info("CPU%u: %s: notify_rpm %d\n",
 			cpu, __func__, (int) notify_rpm);
 
-	ret = msm_spm_set_low_power_mode(
-			MSM_SPM_MODE_POWER_COLLAPSE, notify_rpm);
+	ret = msm_spm_set_low_power_mode(mode, notify_rpm);
 	WARN_ON(ret);
 
 	entry = save_cpu_regs ?  cpu_resume : msm_secondary_startup;
@@ -310,18 +307,12 @@ static bool msm_pm_power_collapse_standalone(
 		bool from_idle)
 {
 	unsigned int cpu = smp_processor_id();
-	unsigned int avsdscr;
-	unsigned int avscsr;
 	bool collapsed;
 
-	avsdscr = avs_get_avsdscr();
-	avscsr = avs_get_avscsr();
-	avs_set_avscsr(0); /* Disable AVS */
+	collapsed = msm_pm_spm_power_collapse(cpu,
+			MSM_SPM_MODE_STANDALONE_POWER_COLLAPSE,
+			from_idle, false);
 
-	collapsed = msm_pm_spm_power_collapse(cpu, from_idle, false);
-
-	avs_set_avsdscr(avsdscr);
-	avs_set_avscsr(avscsr);
 	return collapsed;
 }
 
@@ -364,8 +355,6 @@ static bool msm_pm_power_collapse(bool from_idle)
 {
 	unsigned int cpu = smp_processor_id();
 	unsigned long saved_acpuclk_rate = 0;
-	unsigned int avsdscr;
-	unsigned int avscsr;
 	bool collapsed;
 
 	if (MSM_PM_DEBUG_POWER_COLLAPSE & msm_pm_debug_mask)
@@ -375,20 +364,14 @@ static bool msm_pm_power_collapse(bool from_idle)
 	if (MSM_PM_DEBUG_POWER_COLLAPSE & msm_pm_debug_mask)
 		pr_info("CPU%u: %s: pre power down\n", cpu, __func__);
 
-	avsdscr = avs_get_avsdscr();
-	avscsr = avs_get_avscsr();
-	avs_set_avscsr(0); /* Disable AVS */
-
 	if (cpu_online(cpu) && !msm_no_ramp_down_pc)
 		saved_acpuclk_rate = ramp_down_last_cpu(cpu);
 
-	collapsed = msm_pm_spm_power_collapse(cpu, from_idle, true);
+	collapsed = msm_pm_spm_power_collapse(cpu, MSM_SPM_MODE_POWER_COLLAPSE,
+			from_idle, true);
 
 	if (cpu_online(cpu) && !msm_no_ramp_down_pc)
 		ramp_up_first_cpu(cpu, saved_acpuclk_rate);
-
-	avs_set_avsdscr(avsdscr);
-	avs_set_avscsr(avscsr);
 
 	if (MSM_PM_DEBUG_POWER_COLLAPSE & msm_pm_debug_mask)
 		pr_info("CPU%u: %s: post power up\n", cpu, __func__);
@@ -695,48 +678,33 @@ static ssize_t msm_pc_debug_counters_file_read(struct file *file,
 		char __user *bufu, size_t count, loff_t *ppos)
 {
 	struct msm_pc_debug_counters_buffer *data;
-	ssize_t ret;
 
-	mutex_lock(&msm_pc_debug_mutex);
 	data = file->private_data;
 
-	if (!data) {
-		ret = -EINVAL;
-		goto exit;
-	}
+	if (!data)
+		return -EINVAL;
 
-	if (!bufu) {
-		ret = -EINVAL;
-		goto exit;
-	}
+	if (!bufu)
+		return -EINVAL;
 
-	if (!access_ok(VERIFY_WRITE, bufu, count)) {
-		ret = -EFAULT;
-		goto exit;
-	}
+	if (!access_ok(VERIFY_WRITE, bufu, count))
+		return -EFAULT;
 
 	if (*ppos >= data->len && data->len == 0)
 		data->len = msm_pc_debug_counters_copy(data);
 
-	ret = simple_read_from_buffer(bufu, count, ppos,
+	return simple_read_from_buffer(bufu, count, ppos,
 			data->buf, data->len);
-exit:
-	mutex_unlock(&msm_pc_debug_mutex);
-	return ret;
 }
 
 static int msm_pc_debug_counters_file_open(struct inode *inode,
 		struct file *file)
 {
 	struct msm_pc_debug_counters_buffer *buf;
-	int ret = 0;
 
-	mutex_lock(&msm_pc_debug_mutex);
 
-	if (!inode->i_private) {
-		ret = -EINVAL;
-		goto exit;
-	}
+	if (!inode->i_private)
+		return -EINVAL;
 
 	file->private_data = kzalloc(
 		sizeof(struct msm_pc_debug_counters_buffer), GFP_KERNEL);
@@ -745,24 +713,19 @@ static int msm_pc_debug_counters_file_open(struct inode *inode,
 		pr_err("%s: ERROR kmalloc failed to allocate %zu bytes\n",
 		__func__, sizeof(struct msm_pc_debug_counters_buffer));
 
-		ret = -ENOMEM;
-		goto exit;
+		return -ENOMEM;
 	}
 
 	buf = file->private_data;
 	buf->reg = (long *)inode->i_private;
 
-exit:
-	mutex_unlock(&msm_pc_debug_mutex);
-	return ret;
+	return 0;
 }
 
 static int msm_pc_debug_counters_file_close(struct inode *inode,
 		struct file *file)
 {
-	mutex_lock(&msm_pc_debug_mutex);
 	kfree(file->private_data);
-	mutex_unlock(&msm_pc_debug_mutex);
 	return 0;
 }
 
@@ -795,7 +758,7 @@ static int msm_pm_clk_init(struct platform_device *pdev)
 			if (cpu && synced_clocks)
 				return 0;
 			else
-				return PTR_ERR(clk);
+				clk = NULL;
 		}
 		per_cpu(cpu_clks, cpu) = clk;
 	}
@@ -894,25 +857,15 @@ static int __init msm_pm_drv_init(void)
 
 	rc = platform_driver_register(&msm_cpu_pm_snoc_client_driver);
 
-	if (rc)
+	if (rc) {
 		pr_err("%s(): failed to register driver %s\n", __func__,
 				msm_cpu_pm_snoc_client_driver.driver.name);
-	return rc;
+		return rc;
+	}
+
+	return platform_driver_register(&msm_cpu_pm_driver);
 }
 late_initcall(msm_pm_drv_init);
-
-static int __init msm_pm_debug_counters_init(void)
-{
-	int rc;
-
-	rc = platform_driver_register(&msm_cpu_pm_driver);
-
-	if (rc)
-		pr_err("%s(): failed to register driver %s\n", __func__,
-				msm_cpu_pm_driver.driver.name);
-	return rc;
-}
-fs_initcall(msm_pm_debug_counters_init);
 
 int __init msm_pm_sleep_status_init(void)
 {
