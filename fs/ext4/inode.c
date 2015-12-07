@@ -395,6 +395,9 @@ int ext4_issue_zeroout(struct inode *inode, ext4_lblk_t lblk, ext4_fsblk_t pblk,
 {
 	int ret;
 
+	if (ext4_encrypted_inode(inode))
+		return ext4_encrypted_zeroout(inode, lblk, pblk, len);
+
 	ret = sb_issue_zeroout(inode->i_sb, pblk, len, GFP_NOFS);
 	if (ret > 0)
 		ret = 0;
