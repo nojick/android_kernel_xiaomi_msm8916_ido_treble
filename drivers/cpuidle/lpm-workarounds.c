@@ -1,4 +1,4 @@
-/* Copyright (c) 2014, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2014-2016, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -168,6 +168,12 @@ static ssize_t store_clock_gating_enabled(struct kobject *kobj,
 
 static struct kobj_attribute clock_gating_enabled_attr =
 __ATTR(dynamic_clock_gating, 0644, NULL, store_clock_gating_enabled);
+
+bool lpm_wa_get_skip_l2_spm(void)
+{
+	return skip_l2_spm;
+}
+EXPORT_SYMBOL(lpm_wa_get_skip_l2_spm);
 
 static int lpm_wa_probe(struct platform_device *pdev)
 {
