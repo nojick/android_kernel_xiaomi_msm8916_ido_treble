@@ -10,6 +10,7 @@
 
 #include <linux/fs.h>
 #include <linux/f2fs_fs.h>
+#include <trace/events/android_fs.h>
 
 #include "f2fs.h"
 #include "node.h"
@@ -99,6 +100,8 @@ int f2fs_read_inline_data(struct inode *inode, struct page *page)
 
 	ipage = get_node_page(F2FS_I_SB(inode), inode->i_ino);
 	if (IS_ERR(ipage)) {
+		trace_android_fs_dataread_end(inode, page_offset(page),
+					      PAGE_SIZE);
 		unlock_page(page);
 		return PTR_ERR(ipage);
 	}
@@ -116,6 +119,7 @@ int f2fs_read_inline_data(struct inode *inode, struct page *page)
 	if (!PageUptodate(page))
 		SetPageUptodate(page);
 	f2fs_put_page(ipage, 1);
+	trace_android_fs_dataread_end(inode, page_offset(page), PAGE_SIZE);
 	unlock_page(page);
 	return 0;
 }
