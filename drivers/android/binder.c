@@ -120,6 +120,7 @@ static int binder_set_stop_on_user_error(const char *val,
 					 struct kernel_param *kp)
 {
 	int ret;
+
 	ret = param_set_int(val, kp);
 	if (binder_stop_on_user_error < 2)
 		wake_up(&binder_user_error_wait);
@@ -211,6 +212,7 @@ static struct binder_transaction_log_entry *binder_transaction_log_add(
 	struct binder_transaction_log *log)
 {
 	struct binder_transaction_log_entry *e;
+
 	e = &log->entry[log->next];
 	memset(e, 0, sizeof(*e));
 	log->next++;
@@ -436,6 +438,7 @@ static inline void binder_unlock(const char *tag)
 static void binder_set_nice(long nice)
 {
 	long min_nice;
+
 	if (can_nice(current, nice)) {
 		set_user_nice(current, nice);
 		return;
@@ -711,6 +714,7 @@ static int binder_inc_ref(struct binder_ref *ref, int strong,
 			  struct list_head *target_list)
 {
 	int ret;
+
 	if (strong) {
 		if (ref->strong == 0) {
 			ret = binder_inc_node(ref->node, 1, 1, target_list);
@@ -742,6 +746,7 @@ static int binder_dec_ref(struct binder_ref *ref, int strong)
 		ref->strong--;
 		if (ref->strong == 0) {
 			int ret;
+
 			ret = binder_dec_node(ref->node, strong, 1);
 			if (ret)
 				return ret;
@@ -1497,6 +1502,7 @@ static void binder_transaction(struct binder_proc *proc,
 		}
 		if (!(tr->flags & TF_ONE_WAY) && thread->transaction_stack) {
 			struct binder_transaction *tmp;
+
 			tmp = thread->transaction_stack;
 			if (tmp->to_thread != thread) {
 				binder_user_error("%d:%d got new transaction with bad transaction stack, transaction %d has target %d:%d\n",
@@ -2210,12 +2216,14 @@ static int binder_thread_write(struct binder_proc *proc,
 			struct binder_work *w;
 			binder_uintptr_t cookie;
 			struct binder_ref_death *death = NULL;
+
 			if (get_user(cookie, (binder_uintptr_t __user *)ptr))
 				return -EFAULT;
 
 			ptr += sizeof(cookie);
 			list_for_each_entry(w, &proc->delivered_death, entry) {
 				struct binder_ref_death *tmp_death = container_of(w, struct binder_ref_death, work);
+
 				if (tmp_death->cookie == cookie) {
 					death = tmp_death;
 					break;
@@ -2275,6 +2283,37 @@ static int binder_has_thread_work(struct binder_thread *thread)
 {
 	return !list_empty(&thread->todo) || thread->return_error != BR_OK ||
 		(thread->looper & BINDER_LOOPER_STATE_NEED_RETURN);
+}
+
+static int binder_put_node_cmd(struct binder_proc *proc,
+			       struct binder_thread *thread,
+			       void __user **ptrp,
+			       binder_uintptr_t node_ptr,
+			       binder_uintptr_t node_cookie,
+			       int node_debug_id,
+			       uint32_t cmd, const char *cmd_name)
+{
+	void __user *ptr = *ptrp;
+
+	if (put_user(cmd, (uint32_t __user *)ptr))
+		return -EFAULT;
+	ptr += sizeof(uint32_t);
+
+	if (put_user(node_ptr, (binder_uintptr_t __user *)ptr))
+		return -EFAULT;
+	ptr += sizeof(binder_uintptr_t);
+
+	if (put_user(node_cookie, (binder_uintptr_t __user *)ptr))
+		return -EFAULT;
+	ptr += sizeof(binder_uintptr_t);
+
+	binder_stat_br(proc, thread, cmd);
+	binder_debug(BINDER_DEBUG_USER_REFS, "%d:%d %s %d u%016llx c%016llx\n",
+		     proc->pid, thread->pid, cmd_name, node_debug_id,
+		     (u64)node_ptr, (u64)node_cookie);
+
+	*ptrp = ptr;
+	return 0;
 }
 
 static int binder_thread_read(struct binder_proc *proc,
@@ -2402,71 +2441,78 @@ retry:
 		} break;
 		case BINDER_WORK_NODE: {
 			struct binder_node *node = container_of(w, struct binder_node, work);
-			uint32_t cmd = BR_NOOP;
-			const char *cmd_name;
-			int strong = node->internal_strong_refs || node->local_strong_refs;
-			int weak = !hlist_empty(&node->refs) || node->local_weak_refs || strong;
-			if (weak && !node->has_weak_ref) {
-				cmd = BR_INCREFS;
-				cmd_name = "BR_INCREFS";
+			int strong, weak;
+			binder_uintptr_t node_ptr = node->ptr;
+			binder_uintptr_t node_cookie = node->cookie;
+			int node_debug_id = node->debug_id;
+			int has_weak_ref;
+			int has_strong_ref;
+			void __user *orig_ptr = ptr;
+
+			BUG_ON(proc != node->proc);
+			strong = node->internal_strong_refs ||
+					node->local_strong_refs;
+			weak = !hlist_empty(&node->refs) ||
+					node->local_weak_refs || strong;
+			has_strong_ref = node->has_strong_ref;
+			has_weak_ref = node->has_weak_ref;
+
+			if (weak && !has_weak_ref) {
 				node->has_weak_ref = 1;
 				node->pending_weak_ref = 1;
 				node->local_weak_refs++;
-			} else if (strong && !node->has_strong_ref) {
-				cmd = BR_ACQUIRE;
-				cmd_name = "BR_ACQUIRE";
+			}
+			if (strong && !has_strong_ref) {
 				node->has_strong_ref = 1;
 				node->pending_strong_ref = 1;
 				node->local_strong_refs++;
-			} else if (!strong && node->has_strong_ref) {
-				cmd = BR_RELEASE;
-				cmd_name = "BR_RELEASE";
+			}
+			if (!strong && has_strong_ref)
 				node->has_strong_ref = 0;
-			} else if (!weak && node->has_weak_ref) {
-				cmd = BR_DECREFS;
-				cmd_name = "BR_DECREFS";
+			if (!weak && has_weak_ref)
 				node->has_weak_ref = 0;
-			}
-			if (cmd != BR_NOOP) {
-				if (put_user(cmd, (uint32_t __user *)ptr))
-					return -EFAULT;
-				ptr += sizeof(uint32_t);
-				if (put_user(node->ptr,
-					     (binder_uintptr_t __user *)ptr))
-					return -EFAULT;
-				ptr += sizeof(binder_uintptr_t);
-				if (put_user(node->cookie,
-					     (binder_uintptr_t __user *)ptr))
-					return -EFAULT;
-				ptr += sizeof(binder_uintptr_t);
+			list_del(&w->entry);
 
-				binder_stat_br(proc, thread, cmd);
-				binder_debug(BINDER_DEBUG_USER_REFS,
-					     "%d:%d %s %d u%016llx c%016llx\n",
-					     proc->pid, thread->pid, cmd_name,
-					     node->debug_id,
-					     (u64)node->ptr, (u64)node->cookie);
-			} else {
-				list_del_init(&w->entry);
-				if (!weak && !strong) {
-					binder_debug(BINDER_DEBUG_INTERNAL_REFS,
-						     "%d:%d node %d u%016llx c%016llx deleted\n",
-						     proc->pid, thread->pid,
-						     node->debug_id,
-						     (u64)node->ptr,
-						     (u64)node->cookie);
-					rb_erase(&node->rb_node, &proc->nodes);
-					kfree(node);
-					binder_stats_deleted(BINDER_STAT_NODE);
-				} else {
-					binder_debug(BINDER_DEBUG_INTERNAL_REFS,
-						     "%d:%d node %d u%016llx c%016llx state unchanged\n",
-						     proc->pid, thread->pid,
-						     node->debug_id,
-						     (u64)node->ptr,
-						     (u64)node->cookie);
-				}
+			if (!weak && !strong) {
+				binder_debug(BINDER_DEBUG_INTERNAL_REFS,
+					     "%d:%d node %d u%016llx c%016llx deleted\n",
+					     proc->pid, thread->pid,
+					     node_debug_id,
+					     (u64)node_ptr,
+					     (u64)node_cookie);
+				rb_erase(&node->rb_node, &proc->nodes);
+				kfree(node);
+				binder_stats_deleted(BINDER_STAT_NODE);
 			}
+			if (weak && !has_weak_ref)
+				ret = binder_put_node_cmd(
+						proc, thread, &ptr, node_ptr,
+						node_cookie, node_debug_id,
+						BR_INCREFS, "BR_INCREFS");
+			if (!ret && strong && !has_strong_ref)
+				ret = binder_put_node_cmd(
+						proc, thread, &ptr, node_ptr,
+						node_cookie, node_debug_id,
+						BR_ACQUIRE, "BR_ACQUIRE");
+			if (!ret && !strong && has_strong_ref)
+				ret = binder_put_node_cmd(
+						proc, thread, &ptr, node_ptr,
+						node_cookie, node_debug_id,
+						BR_RELEASE, "BR_RELEASE");
+			if (!ret && !weak && has_weak_ref)
+				ret = binder_put_node_cmd(
+						proc, thread, &ptr, node_ptr,
+						node_cookie, node_debug_id,
+						BR_DECREFS, "BR_DECREFS");
+			if (orig_ptr == ptr)
+				binder_debug(BINDER_DEBUG_INTERNAL_REFS,
+					     "%d:%d node %d u%016llx c%016llx state unchanged\n",
+					     proc->pid, thread->pid,
+					     node_debug_id,
+					     (u64)node_ptr,
+					     (u64)node_cookie);
+			if (ret)
+				return ret;
 		} break;
 		case BINDER_WORK_DEAD_BINDER:
 		case BINDER_WORK_DEAD_BINDER_AND_CLEAR:
@@ -2512,6 +2558,7 @@ retry:
 		BUG_ON(t->buffer == NULL);
 		if (t->buffer->target_node) {
 			struct binder_node *target_node = t->buffer->target_node;
+
 			tr.target.ptr = target_node->ptr;
 			tr.cookie =  target_node->cookie;
 			t->saved_priority = task_nice(current);
@@ -2533,6 +2580,7 @@ retry:
 
 		if (t->from) {
 			struct task_struct *sender = t->from->proc->tsk;
+
 			tr.sender_pid = task_tgid_nr_ns(sender,
 							task_active_pid_ns(current));
 		} else {
@@ -2603,6 +2651,7 @@ done:
 static void binder_release_work(struct list_head *list)
 {
 	struct binder_work *w;
+
 	while (!list_empty(list)) {
 		w = list_first_entry(list, struct binder_work, entry);
 		list_del_init(&w->entry);
@@ -2893,6 +2942,7 @@ static long binder_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	case BINDER_WRITE_READ:
 		ret = binder_ioctl_write_read(filp, cmd, arg, thread);
 		if (ret)
+			goto err;
 		break;
 	case BINDER_SET_MAX_THREADS:
 		if (copy_from_user(&proc->max_threads, ubuf, sizeof(proc->max_threads))) {
@@ -2945,6 +2995,7 @@ err_unlocked:
 static void binder_vma_open(struct vm_area_struct *vma)
 {
 	struct binder_proc *proc = vma->vm_private_data;
+
 	binder_debug(BINDER_DEBUG_OPEN_CLOSE,
 		     "%d open vm area %lx-%lx (%ld K) vma %lx pagep %lx\n",
 		     proc->pid, vma->vm_start, vma->vm_end,
@@ -2955,6 +3006,7 @@ static void binder_vma_open(struct vm_area_struct *vma)
 static void binder_vma_close(struct vm_area_struct *vma)
 {
 	struct binder_proc *proc = vma->vm_private_data;
+
 	binder_debug(BINDER_DEBUG_OPEN_CLOSE,
 		     "%d close vm area %lx-%lx (%ld K) vma %lx pagep %lx\n",
 		     proc->pid, vma->vm_start, vma->vm_end,
@@ -3050,6 +3102,7 @@ static int binder_open(struct inode *nodp, struct file *filp)
 
 	if (binder_debugfs_dir_entry_proc) {
 		char strbuf[11];
+
 		snprintf(strbuf, sizeof(strbuf), "%u", proc->pid);
 		/*
 		 * proc debug entries are shared between contexts, so
@@ -3080,8 +3133,10 @@ static void binder_deferred_flush(struct binder_proc *proc)
 {
 	struct rb_node *n;
 	int wake_count = 0;
+
 	for (n = rb_first(&proc->threads); n != NULL; n = rb_next(n)) {
 		struct binder_thread *thread = rb_entry(n, struct binder_thread, rb_node);
+
 		thread->looper |= BINDER_LOOPER_STATE_NEED_RETURN;
 		if (thread->looper & BINDER_LOOPER_STATE_WAITING) {
 			wake_up_interruptible(&thread->wait);
@@ -3098,6 +3153,7 @@ static void binder_deferred_flush(struct binder_proc *proc)
 static int binder_release(struct inode *nodp, struct file *filp)
 {
 	struct binder_proc *proc = filp->private_data;
+
 	debugfs_remove(proc->debugfs_entry);
 	binder_defer_work(proc, BINDER_DEFERRED_RELEASE);
 
@@ -3225,6 +3281,7 @@ static void binder_deferred_func(struct work_struct *work)
 	struct files_struct *files;
 
 	int defer;
+
 	do {
 		binder_lock(__func__);
 		mutex_lock(&binder_deferred_lock);
