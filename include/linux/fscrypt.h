@@ -49,17 +49,6 @@ struct fscrypt_symlink_data {
 	char encrypted_path[1];
 } __packed;
 
-/**
- * This function is used to calculate the disk space required to
- * store a filename of length l in encrypted symlink format.
- */
-static inline u32 fscrypt_symlink_data_len(u32 l)
-{
-	if (l < FS_CRYPTO_BLOCK_SIZE)
-		l = FS_CRYPTO_BLOCK_SIZE;
-	return (l + sizeof(struct fscrypt_symlink_data) - 1);
-}
-
 struct fscrypt_str {
 	unsigned char *name;
 	u32 len;
@@ -91,7 +80,7 @@ struct fscrypt_operations {
 	const char *key_prefix;
 	int (*get_context)(struct inode *, void *, size_t);
 	int (*set_context)(struct inode *, const void *, size_t, void *);
-	int (*dummy_context)(struct inode *);
+	bool (*dummy_context)(struct inode *);
 	bool (*empty_dir)(struct inode *);
 	unsigned (*max_namelen)(struct inode *);
 };
@@ -159,5 +148,143 @@ static inline bool fscrypt_has_encryption_key(const struct inode *inode)
 #include <linux/fscrypt_notsupp.h>
 #endif /* __FS_HAS_ENCRYPTION */
 
+/**
+ * fscrypt_require_key - require an inode's encryption key
+ * @inode: the inode we need the key for
+ *
+ * If the inode is encrypted, set up its encryption key if not already done.
+ * Then require that the key be present and return -ENOKEY otherwise.
+ *
+ * No locks are needed, and the key will live as long as the struct inode --- so
+ * it won't go away from under you.
+ *
+ * Return: 0 on success, -ENOKEY if the key is missing, or another -errno code
+ * if a problem occurred while setting up the encryption key.
+ */
+static inline int fscrypt_require_key(struct inode *inode)
+{
+	if (IS_ENCRYPTED(inode)) {
+		int err = fscrypt_get_encryption_info(inode);
+
+		if (err)
+			return err;
+		if (!fscrypt_has_encryption_key(inode))
+			return -ENOKEY;
+	}
+	return 0;
+}
+
+/**
+ * fscrypt_prepare_link - prepare to link an inode into a possibly-encrypted directory
+ * @old_dentry: an existing dentry for the inode being linked
+ * @dir: the target directory
+ * @dentry: negative dentry for the target filename
+ *
+ * A new link can only be added to an encrypted directory if the directory's
+ * encryption key is available --- since otherwise we'd have no way to encrypt
+ * the filename.  Therefore, we first set up the directory's encryption key (if
+ * not already done) and return an error if it's unavailable.
+ *
+ * We also verify that the link will not violate the constraint that all files
+ * in an encrypted directory tree use the same encryption policy.
+ *
+ * Return: 0 on success, -ENOKEY if the directory's encryption key is missing,
+ * -EPERM if the link would result in an inconsistent encryption policy, or
+ * another -errno code.
+ */
+static inline int fscrypt_prepare_link(struct dentry *old_dentry,
+				       struct inode *dir,
+				       struct dentry *dentry)
+{
+	if (IS_ENCRYPTED(dir))
+		return __fscrypt_prepare_link(d_inode(old_dentry), dir);
+	return 0;
+}
+
+/**
+ * fscrypt_prepare_rename - prepare for a rename between possibly-encrypted directories
+ * @old_dir: source directory
+ * @old_dentry: dentry for source file
+ * @new_dir: target directory
+ * @new_dentry: dentry for target location (may be negative unless exchanging)
+ * @flags: rename flags (we care at least about %RENAME_EXCHANGE)
+ *
+ * Prepare for ->rename() where the source and/or target directories may be
+ * encrypted.  A new link can only be added to an encrypted directory if the
+ * directory's encryption key is available --- since otherwise we'd have no way
+ * to encrypt the filename.  A rename to an existing name, on the other hand,
+ * *is* cryptographically possible without the key.  However, we take the more
+ * conservative approach and just forbid all no-key renames.
+ *
+ * We also verify that the rename will not violate the constraint that all files
+ * in an encrypted directory tree use the same encryption policy.
+ *
+ * Return: 0 on success, -ENOKEY if an encryption key is missing, -EPERM if the
+ * rename would cause inconsistent encryption policies, or another -errno code.
+ */
+static inline int fscrypt_prepare_rename(struct inode *old_dir,
+					 struct dentry *old_dentry,
+					 struct inode *new_dir,
+					 struct dentry *new_dentry,
+					 unsigned int flags)
+{
+	if (IS_ENCRYPTED(old_dir) || IS_ENCRYPTED(new_dir))
+		return __fscrypt_prepare_rename(old_dir, old_dentry,
+						new_dir, new_dentry, flags);
+	return 0;
+}
+
+/**
+ * fscrypt_prepare_lookup - prepare to lookup a name in a possibly-encrypted directory
+ * @dir: directory being searched
+ * @dentry: filename being looked up
+ * @flags: lookup flags
+ *
+ * Prepare for ->lookup() in a directory which may be encrypted.  Lookups can be
+ * done with or without the directory's encryption key; without the key,
+ * filenames are presented in encrypted form.  Therefore, we'll try to set up
+ * the directory's encryption key, but even without it the lookup can continue.
+ *
+ * To allow invalidating stale dentries if the directory's encryption key is
+ * added later, we also install a custom ->d_revalidate() method and use the
+ * DCACHE_ENCRYPTED_WITH_KEY flag to indicate whether a given dentry is a
+ * plaintext name (flag set) or a ciphertext name (flag cleared).
+ *
+ * Return: 0 on success, -errno if a problem occurred while setting up the
+ * encryption key
+ */
+static inline int fscrypt_prepare_lookup(struct inode *dir,
+					 struct dentry *dentry,
+					 unsigned int flags)
+{
+	if (IS_ENCRYPTED(dir))
+		return __fscrypt_prepare_lookup(dir, dentry);
+	return 0;
+}
+
+/**
+ * fscrypt_prepare_setattr - prepare to change a possibly-encrypted inode's attributes
+ * @dentry: dentry through which the inode is being changed
+ * @attr: attributes to change
+ *
+ * Prepare for ->setattr() on a possibly-encrypted inode.  On an encrypted file,
+ * most attribute changes are allowed even without the encryption key.  However,
+ * without the encryption key we do have to forbid truncates.  This is needed
+ * because the size being truncated to may not be a multiple of the filesystem
+ * block size, and in that case we'd have to decrypt the final block, zero the
+ * portion past i_size, and re-encrypt it.  (We *could* allow truncating to a
+ * filesystem block boundary, but it's simpler to just forbid all truncates ---
+ * and we already forbid all other contents modifications without the key.)
+ *
+ * Return: 0 on success, -ENOKEY if the key is missing, or another -errno code
+ * if a problem occurred while setting up the encryption key.
+ */
+static inline int fscrypt_prepare_setattr(struct dentry *dentry,
+					  struct iattr *attr)
+{
+	if (attr->ia_valid & ATTR_SIZE)
+		return fscrypt_require_key(d_inode(dentry));
+	return 0;
+}
 
 #endif	/* _LINUX_FSCRYPT_H */
