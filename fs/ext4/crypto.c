@@ -443,7 +443,6 @@ int ext4_encrypted_zeroout(struct inode *inode, ext4_lblk_t lblk,
 			goto errout;
 		}
 		err = submit_bio_wait(WRITE, bio);
-                err = submit_bio_wait(WRITE, bio);
 		if ((err == 0) && !test_bit(BIO_UPTODATE, &bio->bi_flags))
 			err = -EIO;
 		bio_put(bio);
