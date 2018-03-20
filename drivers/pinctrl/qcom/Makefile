@@ -7,3 +7,4 @@ obj-$(CONFIG_PINCTRL_MSM8960)	+= pinctrl-msm8960.o
 obj-$(CONFIG_PINCTRL_MSM8X74)	+= pinctrl-msm8x74.o
 obj-$(CONFIG_PINCTRL_MSMTHULIUM)	+= pinctrl-msmthulium.o
 obj-$(CONFIG_PINCTRL_MSM8916)	+= pinctrl-msm8916.o
+obj-$(CONFIG_PINCTRL_MSM8939)   += pinctrl-msm8939.o
