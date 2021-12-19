@@ -1683,7 +1683,7 @@ static int attach_recursive_mnt(struct mount *source_mnt,
 		child = list_first_entry(&tree_list, struct mount, mnt_hash);
 		umount_tree(child, 0);
 	}
-	br_write_unlock(&vfsmount_lock);
+	unlock_mount_hash();
 	cleanup_group_ids(source_mnt, NULL);
  out:
 	return err;
@@ -1946,9 +1946,9 @@ static int do_remount(struct path *path, int flags, int mnt_flags,
 	else {
 		err = do_remount_sb2(path->mnt, sb, flags, data, 0);
 		namespace_lock();
-		br_write_lock(&vfsmount_lock);
+		lock_mount_hash();
 		propagate_remount(mnt);
-		br_write_unlock(&vfsmount_lock);
+		unlock_mount_hash();
 		namespace_unlock();
 	}
 	if (!err) {
