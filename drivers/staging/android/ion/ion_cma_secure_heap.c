@@ -373,7 +373,7 @@ int ion_secure_cma_drain_pool(struct ion_heap *heap, void *unused)
 	return 0;
 }
 
-static int ion_secure_cma_shrinker(struct shrinker *shrinker,
+static unsigned long ion_secure_cma_shrinker(struct shrinker *shrinker,
 					struct shrink_control *sc)
 {
 	struct ion_cma_secure_heap *sheap = container_of(shrinker,
@@ -397,6 +397,15 @@ static int ion_secure_cma_shrinker(struct shrinker *shrinker,
 
 	return atomic_read(&sheap->total_pool_size);
 }
+
+static unsigned long ion_secure_cma_shrinker_count(struct shrinker *shrinker,
+						   struct shrink_control *sc)
+{
+	struct ion_cma_secure_heap *sheap = container_of(shrinker,
+					struct ion_cma_secure_heap, shrinker);
+	return atomic_read(&sheap->total_pool_size);
+}
+
 
 static void ion_secure_cma_free_from_pool(struct ion_cma_secure_heap *sheap,
 					dma_addr_t handle,
@@ -710,7 +719,8 @@ struct ion_heap *ion_secure_cma_heap_create(struct ion_platform_heap *data)
 	INIT_WORK(&sheap->work, ion_secure_pool_pages);
 	sheap->shrinker.seeks = DEFAULT_SEEKS;
 	sheap->shrinker.batch = 0;
-	sheap->shrinker.shrink = ion_secure_cma_shrinker;
+	sheap->shrinker.scan_objects = ion_secure_cma_shrinker;
+	sheap->shrinker.count_objects = ion_secure_cma_shrinker_count;
 	sheap->default_prefetch_size = sheap->heap_size;
 	register_shrinker(&sheap->shrinker);
 
