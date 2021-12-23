@@ -1730,7 +1730,6 @@ static void __d_instantiate(struct dentry *dentry, struct inode *inode)
 	dentry->d_flags |= add_flags;
 	if (inode)
 		hlist_add_head(&dentry->d_u.d_alias, &inode->i_dentry);
-	}
 	dentry->d_inode = inode;
 	dentry_rcuwalk_barrier(dentry);
 	spin_unlock(&dentry->d_lock);
