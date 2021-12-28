@@ -1359,7 +1359,7 @@ generic_file_read_iter(struct kiocb *iocb, struct iov_iter *iter)
 			 * the rest of the read.
 			 */
 			if (retval < 0 || !count || *ppos >= size) {
-				file_accessed(filp);
+				file_accessed(file);
 				goto out;
 			}
 		}
