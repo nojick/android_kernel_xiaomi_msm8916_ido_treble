@@ -1293,7 +1293,6 @@ struct super_block {
 
 	/* AIO completions deferred from interrupt context */
 	struct workqueue_struct *s_dio_done_wq;
-};
 
 	/*
 	 * Indicates how deep in a filesystem stack this SB is
