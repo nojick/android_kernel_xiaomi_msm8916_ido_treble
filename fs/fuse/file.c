@@ -1255,7 +1255,7 @@ static ssize_t fuse_file_aio_write(struct kiocb *iocb, const struct iovec *iov,
 		return generic_file_aio_write(iocb, iov, nr_segs, pos);
 	}
 
-	BUG_ON(iocb->ki_pos != pos);
+	WARN_ON(iocb->ki_pos != pos);
 
 	count = iov_length(iov, nr_segs);
 	iov_iter_init(&i, WRITE, iov, nr_segs, count);
