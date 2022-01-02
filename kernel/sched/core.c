@@ -9913,7 +9913,7 @@ static void cpu_cgroup_exit(struct cgroup_subsys_state *css,
 static u64 cpu_notify_on_migrate_read_u64(struct cgroup *cgrp,
 					  struct cftype *cft)
 {
-	struct task_group *tg = cgroup_tg(cgrp);
+	struct task_group *tg = css_tg(css);
 
 	return tg->notify_on_migrate;
 }
@@ -9921,7 +9921,7 @@ static u64 cpu_notify_on_migrate_read_u64(struct cgroup *cgrp,
 static int cpu_notify_on_migrate_write_u64(struct cgroup *cgrp,
 					   struct cftype *cft, u64 notify)
 {
-	struct task_group *tg = cgroup_tg(cgrp);
+	struct task_group *tg = css_tg(css);
 
 	tg->notify_on_migrate = (notify > 0);
 
