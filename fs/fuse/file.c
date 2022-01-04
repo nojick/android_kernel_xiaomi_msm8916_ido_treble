@@ -1350,7 +1350,7 @@ static int fuse_get_user_pages(struct fuse_req *req, struct iov_iter *ii,
 	size_t nbytes = 0;  /* # bytes already packed in req */
 
 	/* Special case for kernel I/O: can copy directly into the buffer */
-	if (ii->type & REQ_KERNEL) {
+	if (segment_eq(get_fs(), KERNEL_DS)) {
 		unsigned long user_addr = fuse_get_user_addr(ii);
 		size_t frag_size = fuse_get_frag_size(ii, *nbytesp);
 
@@ -1367,25 +1367,34 @@ static int fuse_get_user_pages(struct fuse_req *req, struct iov_iter *ii,
 	while (nbytes < *nbytesp && req->num_pages < req->max_pages) {
 		unsigned npages;
 		size_t start;
+		unsigned long user_addr = fuse_get_user_addr(ii);
+		unsigned offset = user_addr & ~PAGE_MASK;
+		size_t frag_size = fuse_get_frag_size(ii, *nbytesp - nbytes);
+		int ret;
 		unsigned n = req->max_pages - req->num_pages;
-		ssize_t ret = iov_iter_get_pages(ii,
-					&req->pages[req->num_pages],
-					n * PAGE_SIZE, &start);
+		frag_size = min_t(size_t, frag_size, n << PAGE_SHIFT);
+
+		npages = (frag_size + offset + PAGE_SIZE - 1) >> PAGE_SHIFT;
+		npages = clamp(npages, 1U, n);
+
+		ret = get_user_pages_fast(user_addr, npages, !write,
+					  &req->pages[req->num_pages]);
 		if (ret < 0)
 			return ret;
 
-		iov_iter_advance(ii, ret);
-		nbytes += ret;
+		npages = ret;
+		frag_size = min_t(size_t, frag_size,
+				  (npages << PAGE_SHIFT) - offset);
+		iov_iter_advance(ii, frag_size);
 
-		ret += start;
-		npages = (ret + PAGE_SIZE - 1) / PAGE_SIZE;
-
-		req->page_descs[req->num_pages].offset = start;
+		req->page_descs[req->num_pages].offset = offset;
 		fuse_page_descs_length_init(req, req->num_pages, npages);
 
 		req->num_pages += npages;
 		req->page_descs[req->num_pages - 1].length -=
-			(PAGE_SIZE - ret) & (PAGE_SIZE - 1);
+			(npages << PAGE_SHIFT) - offset - frag_size;
+
+		nbytes += frag_size;
 	}
 
 	if (write)
