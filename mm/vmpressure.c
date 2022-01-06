@@ -116,11 +116,6 @@ static struct vmpressure *vmpressure_parent(struct vmpressure *vmpr)
 	return memcg_to_vmpressure(memcg);
 }
 #else
-static struct vmpressure *cg_to_vmpressure(struct cgroup *cg)
-{
-	return NULL;
-}
-
 static struct vmpressure *vmpressure_parent(struct vmpressure *vmpr)
 {
 	return NULL;
@@ -313,7 +308,7 @@ void vmpressure_global(gfp_t gfp, unsigned long scanned,
 	if (!scanned)
 		return;
 
-	mutex_lock(&vmpr->sr_lock);
+	spin_lock(&vmpr->sr_lock);
 	vmpr->scanned += scanned;
 	vmpr->reclaimed += reclaimed;
 
@@ -323,16 +318,17 @@ void vmpressure_global(gfp_t gfp, unsigned long scanned,
 	stall = vmpr->stall;
 	scanned = vmpr->scanned;
 	reclaimed = vmpr->reclaimed;
-	mutex_unlock(&vmpr->sr_lock);
+	spin_unlock(&vmpr->sr_lock);
 
 	if (scanned < vmpressure_win)
 		return;
 
-	mutex_lock(&vmpr->sr_lock);
+	spin_lock(&vmpr->sr_lock);
 	vmpr->scanned = 0;
 	vmpr->reclaimed = 0;
 	vmpr->stall = 0;
-	mutex_unlock(&vmpr->sr_lock);
+	spin_unlock(&vmpr->sr_lock);
+
 
 	pressure = vmpressure_calc_pressure(scanned, reclaimed);
 	pressure = vmpressure_account_stall(pressure, stall, scanned);
