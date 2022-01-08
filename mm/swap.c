@@ -83,7 +83,7 @@ static void put_compound_page(struct page *page)
 {
 	if (unlikely(PageTail(page))) {
 		/* __split_huge_page_refcount can run under us */
-		struct page *page_head = compound_head(page);
+		struct page *page_head = compound_trans_head(page);
 
 		/*
 		 * THP can not break up slab pages so avoid taking
@@ -257,7 +257,7 @@ bool __get_page_tail(struct page *page)
 	 */
 	unsigned long flags;
 	bool got;
-	struct page *page_head = compound_head(page);
+	struct page *page_head = compound_trans_head(page);
 
 	/* Ref to put_compound_page() comment. */
 	if (!__compound_tail_refcounted(page_head)) {
