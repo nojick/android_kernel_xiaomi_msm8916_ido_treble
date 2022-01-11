@@ -188,10 +188,6 @@ source "drivers/soc/Kconfig"
 
 source "drivers/firmware/Kconfig"
 
-source "drivers/android/Kconfig"
-
 source "drivers/fingerprint/Kconfig"
-
-source "drivers/android/Kconfig"
 
 endmenu
