@@ -26,7 +26,6 @@
 #include <linux/scatterlist.h>
 #include <linux/device-mapper.h>
 #include <linux/printk.h>
-#include <linux/pft.h>
 
 #include <asm/page.h>
 #include <asm/unaligned.h>
@@ -102,7 +101,6 @@ static  bool req_crypt_should_encrypt(struct req_dm_crypt_io *req)
 
 	bio = req->cloned_request->bio;
 
-	ret = pft_get_key_index(bio, &key_id, &is_encrypted, &is_inplace);
 	/* req->key_id = key_id; @todo support more than 1 pfe key */
 	if ((ret == 0) && (is_encrypted || is_inplace)) {
 		should_encrypt = true;
@@ -128,7 +126,6 @@ static  bool req_crypt_should_deccrypt(struct req_dm_crypt_io *req)
 
 	bio = req->cloned_request->bio;
 
-	ret = pft_get_key_index(bio, &key_id, &is_encrypted, &is_inplace);
 	/* req->key_id = key_id; @todo support more than 1 pfe key */
 	if ((ret == 0) && (is_encrypted && !is_inplace)) {
 		should_deccrypt = true;
