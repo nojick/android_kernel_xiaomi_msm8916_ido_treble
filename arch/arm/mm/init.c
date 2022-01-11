@@ -757,8 +757,6 @@ void __init mem_init(void)
 #undef MLK_ROUNDUP
 void free_initmem(void)
 {
-	unsigned long reclaimed_initmem;
-
 #ifdef CONFIG_HAVE_TCM
 	extern char __tcm_start, __tcm_end;
 
@@ -777,8 +775,7 @@ void free_initmem(void)
 #else
 	poison_init_mem(__init_begin, __init_end - __init_begin);
 	if (!machine_is_integrator() && !machine_is_cintegrator()) {
-		reclaimed_initmem = free_initmem_default(-1);
-		totalram_pages += reclaimed_initmem;
+		free_initmem_default(-1);
 	}
 #endif
 }
@@ -789,12 +786,9 @@ static int keep_initrd;
 
 void free_initrd_mem(unsigned long start, unsigned long end)
 {
-	unsigned long reclaimed_initrd_mem;
-
 	if (!keep_initrd) {
 		poison_init_mem((void *)start, PAGE_ALIGN(end) - start);
-		reclaimed_initrd_mem = free_reserved_area(start, end, -1, "initrd");
-		totalram_pages += reclaimed_initrd_mem;
+		free_reserved_area(start, end, -1, "initrd");
 	}
 }
 
