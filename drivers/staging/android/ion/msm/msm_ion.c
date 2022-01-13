@@ -29,7 +29,7 @@
 #include <linux/dma-contiguous.h>
 #include <linux/vmalloc.h>
 #include <linux/highmem.h>
-#include <linux/cma.h>
+#include <linux/dma-contiguous.h>
 #include <asm/cacheflush.h>
 #include "../ion_priv.h"
 #include "ion_cp_common.h"
