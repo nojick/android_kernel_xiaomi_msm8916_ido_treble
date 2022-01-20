@@ -1393,8 +1393,7 @@ static int __init setup_vmstat(void)
 #ifdef CONFIG_SMP
 	int cpu;
 
-	cpu_notifier_register_begin();
-	__register_cpu_notifier(&vmstat_notifier);
+	register_cpu_notifier(&vmstat_notifier);
 
 	get_online_cpus();
 	for_each_online_cpu(cpu) {
@@ -1402,7 +1401,6 @@ static int __init setup_vmstat(void)
 		node_set_state(cpu_to_node(cpu), N_CPU);
 	}
 	put_online_cpus();
-	cpu_notifier_register_done();
 #endif
 #ifdef CONFIG_PROC_FS
 	proc_create("buddyinfo", S_IRUGO, NULL, &fragmentation_file_operations);
