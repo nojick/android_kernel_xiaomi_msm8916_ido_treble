@@ -525,9 +525,6 @@ static int keyring_search_iterator(const void *object, void *iterator_data)
 			goto skipped;
 		}
 
-	if (!match)
-		return ERR_PTR(-ENOKEY);
-
 		if (key->expiry && ctx->now.tv_sec >= key->expiry) {
 			ctx->result = ERR_PTR(-EKEYEXPIRED);
 			kleave(" = %d [expire]", ctx->skipped_ret);
@@ -871,6 +868,19 @@ key_ref_t keyring_search(key_ref_t keyring,
 			 struct key_type *type,
 			 const char *description)
 {
+	struct keyring_search_context ctx = {
+		.index_key.type		= type,
+		.index_key.description	= description,
+		.cred			= current_cred(),
+		.match			= type->match,
+		.match_data		= description,
+		.flags			= (type->def_lookup_type |
+					   KEYRING_SEARCH_DO_STATE_CHECK),
+	};
+
+	if (!ctx.match)
+		return ERR_PTR(-ENOKEY);
+
 	return keyring_search_aux(keyring, &ctx);
 }
 EXPORT_SYMBOL(keyring_search);
