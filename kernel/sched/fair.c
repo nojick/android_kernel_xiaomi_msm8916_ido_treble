@@ -2234,21 +2234,17 @@ int sched_hmp_proc_update_handler(struct ctl_table *table, int write,
 		loff_t *ppos)
 {
 	int ret;
-	unsigned int old_val;
 	unsigned int *data = (unsigned int *)table->data;
+	unsigned int old_val = *data;
 	int update_min_nice = 0;
-
-	mutex_lock(&policy_mutex);
-
-	old_val = *data;
 
 	ret = proc_dointvec_minmax(table, write, buffer, lenp, ppos);
 
 	if (ret || !write || !sched_enable_hmp)
-		goto done;
+		return ret;
 
 	if (write && (old_val == *data))
-		goto done;
+		return 0;
 
 	if (data == (unsigned int *)&sysctl_sched_upmigrate_min_nice)
 		update_min_nice = 1;
@@ -2256,10 +2252,8 @@ int sched_hmp_proc_update_handler(struct ctl_table *table, int write,
 	if (update_min_nice) {
 		if ((*(int *)data) < -20 || (*(int *)data) > 19) {
 			*data = old_val;
-			ret = -EINVAL;
-			goto done;
+			return -EINVAL;
 		}
-		update_min_nice = 1;
 	} else {
 		/* all tunables other than min_nice are in percentage */
 		if ((sysctl_sched_downmigrate_pct >
@@ -2267,8 +2261,7 @@ int sched_hmp_proc_update_handler(struct ctl_table *table, int write,
 		    (sysctl_sched_mostly_idle_load_pct >
 		    sysctl_sched_spill_load_pct) || *data > 100) {
 			*data = old_val;
-			ret = -EINVAL;
-			goto done;
+			return -EINVAL;
 		}
 	}
 
@@ -2294,9 +2287,7 @@ int sched_hmp_proc_update_handler(struct ctl_table *table, int write,
 		put_online_cpus();
 	}
 
-done:
-	mutex_unlock(&policy_mutex);
-	return ret;
+	return 0;
 }
 
 /*
