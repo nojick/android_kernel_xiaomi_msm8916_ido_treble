@@ -309,16 +309,14 @@ static struct ctl_table kern_table[] = {
 		.data		= &sysctl_sched_freq_inc_notify,
 		.maxlen		= sizeof(unsigned int),
 		.mode		= 0644,
-		.proc_handler	= proc_dointvec_minmax,
-		.extra1		= &zero,
+		.proc_handler	= proc_dointvec,
 	},
 	{
 		.procname	= "sched_freq_dec_notify",
 		.data		= &sysctl_sched_freq_dec_notify,
 		.maxlen		= sizeof(unsigned int),
 		.mode		= 0644,
-		.proc_handler	= proc_dointvec_minmax,
-		.extra1		= &zero,
+		.proc_handler	= proc_dointvec,
 	},
 	{
 		.procname       = "sched_migration_fixup",
@@ -397,8 +395,7 @@ static struct ctl_table kern_table[] = {
 		.data		= &sysctl_sched_spill_nr_run,
 		.maxlen		= sizeof(unsigned int),
 		.mode		= 0644,
-		.proc_handler	= proc_dointvec_minmax,
-		.extra1		= &zero,
+		.proc_handler	= proc_dointvec,
 	},
 	{
 		.procname	= "sched_upmigrate",
