@@ -1242,17 +1242,8 @@ __read_mostly unsigned int sysctl_sched_freq_account_wait_time;
  */
 __read_mostly unsigned int sysctl_sched_gov_response_time = 10000000;
 
-/*
- * For increase, send notification if
- *      freq_required - cur_freq > sysctl_sched_freq_inc_notify
- */
-__read_mostly int sysctl_sched_freq_inc_notify = 10 * 1024 * 1024; /* + 10GHz */
-
-/*
- * For decrease, send notification if
- *      cur_freq - freq_required > sysctl_sched_freq_dec_notify
- */
-__read_mostly int sysctl_sched_freq_dec_notify = 10 * 1024 * 1024; /* - 10GHz */
+__read_mostly int sysctl_sched_freq_inc_notify_slack_pct = -INT_MAX;
+__read_mostly int sysctl_sched_freq_dec_notify_slack_pct = INT_MAX;
 
 static __read_mostly unsigned int sched_io_is_busy;
 
@@ -1362,14 +1353,19 @@ static inline int cpu_is_waiting_on_io(struct rq *rq)
 static inline int
 nearly_same_freq(unsigned int cur_freq, unsigned int freq_required)
 {
-	int delta = freq_required - cur_freq;
+	int margin;
 
-	if (freq_required > cur_freq)
-		return delta < sysctl_sched_freq_inc_notify;
+	margin = cur_freq - freq_required;
+	margin *= 100;
+	margin /= (int)cur_freq;
 
-	delta = -delta;
+	/*
+	 * + margin implies cur_freq > req_freq
+	 * - margin implies cur_freq < req_freq
+	 */
 
-	return delta < sysctl_sched_freq_dec_notify;
+	return (margin > sysctl_sched_freq_inc_notify_slack_pct &&
+		margin < sysctl_sched_freq_dec_notify_slack_pct);
 }
 
 /* Is governor late in responding? */
