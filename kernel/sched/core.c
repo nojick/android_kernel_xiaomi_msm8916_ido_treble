@@ -1257,12 +1257,6 @@ __read_mostly int sysctl_sched_freq_dec_notify_slack_pct = INT_MAX;
 static __read_mostly unsigned int sched_io_is_busy;
 
 /*
- * Force-issue notification to governor if we waited long enough since sending
- * last notification and did not see any freq change.
- */
-__read_mostly unsigned int sysctl_sched_gov_response_time = 10000000;
-
-/*
  * Maximum possible frequency across all cpus. Task demand and cpu
  * capacity (cpu_power) metrics are scaled in reference to it.
  */
@@ -1286,118 +1280,32 @@ static unsigned int sync_cpu;
 #define PREV_WINDOW_CONTRIB	2
 #define DONT_ACCOUNT		4
 
-#ifdef CONFIG_SCHED_FREQ_INPUT
-
-/* Does freq_required sufficiently exceed or fall behind cur_freq? */
-static inline int
-nearly_same_freq(unsigned int cur_freq, unsigned int freq_required)
-{
-	int margin;
-
-	margin = cur_freq - freq_required;
-	margin *= 100;
-	margin /= (int)cur_freq;
-
-	/*
-	 * + margin implies cur_freq > req_freq
-	 * - margin implies cur_freq < req_freq
-	 */
-
-	return (margin > sysctl_sched_freq_inc_notify_slack_pct &&
-		margin < sysctl_sched_freq_dec_notify_slack_pct);
-}
-
-/* Is governor late in responding? */
-static inline int freq_request_timeout(struct rq *rq)
-{
-	u64 now = sched_clock();
-
-	return ((now - rq->freq_requested_ts) > sysctl_sched_gov_response_time);
-}
-
-/* Should scheduler alert governor for changing frequency? */
-static int send_notification(struct rq *rq, unsigned int freq_required)
-{
-	int cpu, rc = 0;
-	unsigned int freq_requested = rq->freq_requested;
-	struct rq *domain_rq;
-	unsigned long flags;
-
-	if (freq_required > rq->max_freq)
-		freq_required = rq->max_freq;
-	else if (freq_required < rq->min_freq)
-		freq_required = rq->min_freq;
-
-	if (nearly_same_freq(rq->cur_freq, freq_required))
-		return 0;
-
-	if (freq_requested && nearly_same_freq(freq_requested, freq_required) &&
-	    !freq_request_timeout(rq))
-		return 0;
-
-	cpu = cpumask_first(&rq->freq_domain_cpumask);
-	if (cpu >= nr_cpu_ids)
-		return 0;
-
-	domain_rq = cpu_rq(cpu);
-	raw_spin_lock_irqsave(&domain_rq->lock, flags);
-	freq_requested = domain_rq->freq_requested;
-	if (!freq_requested ||
-	    !nearly_same_freq(freq_requested, freq_required) ||
-	    freq_request_timeout(domain_rq)) {
-
-		u64 now = sched_clock();
-
-		/*
-		 * Cache the new frequency requested in rq of all cpus that are
-		 * in same freq domain. This saves frequent grabbing of
-		 * domain_rq->lock
-		 */
-		for_each_cpu(cpu, &rq->freq_domain_cpumask) {
-			cpu_rq(cpu)->freq_requested = freq_required;
-			cpu_rq(cpu)->freq_requested_ts = now;
-		}
-		rc = 1;
-	}
-	raw_spin_unlock_irqrestore(&domain_rq->lock, flags);
-
-	return rc;
-}
-
-/* Alert governor if there is a need to change frequency */
-void check_for_freq_change(struct rq *rq)
+/* Returns how undercommitted a CPU is given its current frequency and
+ * task load (as measured in the previous window).  Returns this value
+ * as a percentage of the CPU's maximum frequency.  A negative value
+ * means the CPU is overcommitted at its current frequency.
+ */
+int rq_freq_margin(struct rq *rq)
 {
 	unsigned int freq_required;
-	int i, max_demand_cpu = 0;
-	u64 max_demand = 0;
+	int margin;
+	u64 demand;
 
 	if (!sched_enable_hmp)
-		return;
+		return INT_MAX;
 
-	/* Find out max demand across cpus in same frequency domain */
-	for_each_cpu(i, &rq->freq_domain_cpumask) {
-		if (cpu_rq(i)->prev_runnable_sum > max_demand) {
-			max_demand = cpu_rq(i)->prev_runnable_sum;
-			max_demand_cpu = i;
-		}
-	}
+	demand = scale_load_to_cpu(rq->prev_runnable_sum, rq->cpu);
+	demand *= 128;
+	demand = div64_u64(demand, max_task_load());
 
-	max_demand = scale_load_to_cpu(max_demand, rq->cpu);
-	max_demand *= 128;
-	max_demand = div64_u64(max_demand, max_task_load());
-
-	freq_required = max_demand * rq->max_possible_freq;
+	freq_required = demand * rq->max_possible_freq;
 	freq_required /= 128;
 
-	if (!send_notification(rq, freq_required))
-		return;
-
-	atomic_notifier_call_chain(
-		&load_alert_notifier_head, 0,
-		(void *)(long)max_demand_cpu);
+	margin = rq->cur_freq - freq_required;
+	margin *= 100;
+	margin /= (int)rq->max_possible_freq;
+	return margin;
 }
-
-#endif	/* CONFIG_SCHED_FREQ_INPUT */
 
 /*
  * Called when new window is starting for a task, to record cpu usage over
@@ -1971,7 +1879,6 @@ unsigned long sched_get_busy(int cpu)
 {
 	unsigned long flags;
 	struct rq *rq = cpu_rq(cpu);
-	u64 load;
 
 	/*
 	 * This function could be called in timer context, and the
@@ -1982,17 +1889,8 @@ unsigned long sched_get_busy(int cpu)
 	update_task_ravg(rq->curr, rq, TASK_UPDATE, sched_clock(), 0);
 	raw_spin_unlock_irqrestore(&rq->lock, flags);
 
-	/*
-	 * Scale load in reference to rq->max_possible_freq.
-	 *
-	 * Note that scale_load_to_cpu() scales load in reference to
-	 * rq->max_freq
-	 */
-	load = scale_load_to_cpu(rq->prev_runnable_sum, cpu);
-	load = div64_u64(load * (u64)rq->max_freq, (u64)rq->max_possible_freq);
-	load = div64_u64(load, NSEC_PER_USEC);
-
-	return load;
+	return div64_u64(scale_load_to_cpu(rq->prev_runnable_sum, cpu),
+			  NSEC_PER_USEC);
 }
 
 void sched_set_io_is_busy(int val)
@@ -2236,23 +2134,6 @@ static int cpufreq_notifier_trans(struct notifier_block *nb,
 		raw_spin_unlock_irqrestore(&rq->lock, flags);
 	}
 
-	/* clear freq request for CPUs in the same freq domain */
-	if (!rq->freq_requested)
-		return 0;
-
-	/* The first CPU (and its rq lock) in a freq domain is used to
-	 * serialize all freq change tests and notifications for CPUs
-	 * in that domain. */
-	cpu = cpumask_first(&rq->freq_domain_cpumask);
-	if (cpu >= nr_cpu_ids)
-		return 0;
-
-	rq = cpu_rq(cpu);
-	raw_spin_lock_irqsave(&rq->lock, flags);
-	for_each_cpu(cpu, &rq->freq_domain_cpumask)
-		cpu_rq(cpu)->freq_requested = 0;
-	raw_spin_unlock_irqrestore(&rq->lock, flags);
-
 	return 0;
 }
 
@@ -2294,6 +2175,7 @@ static void fixup_busy_time(struct task_struct *p, int new_cpu)
 	struct rq *src_rq = task_rq(p);
 	struct rq *dest_rq = cpu_rq(new_cpu);
 	u64 wallclock;
+	int freq_notify = 0;
 
 	if (p->state == TASK_WAKING)
 		double_rq_lock(src_rq, dest_rq);
@@ -2301,6 +2183,7 @@ static void fixup_busy_time(struct task_struct *p, int new_cpu)
 	if (sched_disable_window_stats)
 		goto done;
 
+	freq_notify = 1;
 	wallclock = sched_clock();
 
 	update_task_ravg(task_rq(p)->curr, task_rq(p),
@@ -2355,24 +2238,28 @@ static void fixup_busy_time(struct task_struct *p, int new_cpu)
 done:
 	if (p->state == TASK_WAKING)
 		double_rq_unlock(src_rq, dest_rq);
-}
 
-/* A long sleep is defined as sleeping at least one full window prior
- * to the current window start. */
-static inline int is_long_sleep(struct rq *rq, struct task_struct *p)
-{
-	if (p->ravg.mark_start > rq->window_start)
-		return 0;
+	if (!freq_notify && cpumask_test_cpu(new_cpu,
+			     &src_rq->freq_domain_cpumask))
+		return;
 
-	return ((rq->window_start - p->ravg.mark_start) > sched_ravg_window);
+	/* Evaluate possible frequency notifications for
+	 * source and destination CPUs in different frequency
+	 * domains. */
+	if (rq_freq_margin(dest_rq) <
+	    sysctl_sched_freq_inc_notify_slack_pct)
+		atomic_notifier_call_chain(
+			&load_alert_notifier_head, 0,
+			(void *)(long)new_cpu);
+
+	if (rq_freq_margin(src_rq) >
+	    sysctl_sched_freq_dec_notify_slack_pct)
+		atomic_notifier_call_chain(
+			&load_alert_notifier_head, 0,
+			(void *)(long)task_cpu(p));
 }
 
 #else	/* CONFIG_SCHED_FREQ_INPUT || CONFIG_SCHED_HMP */
-
-static inline int is_long_sleep(struct rq *rq, struct task_struct *p)
-{
-	return 0;
-}
 
 static inline void
 update_task_ravg(struct task_struct *p, struct rq *rq,
@@ -2917,7 +2804,6 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
 	unsigned long src_cpu;
 	int notify = 0;
 	struct migration_notify_data mnd;
-	int long_sleep = 0;
 #ifdef CONFIG_SMP
 	struct rq *rq;
 	u64 wallclock;
@@ -2999,7 +2885,6 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
 	raw_spin_lock(&rq->lock);
 	wallclock = sched_clock();
 	update_task_ravg(rq->curr, rq, TASK_UPDATE, wallclock, 0);
-	long_sleep = is_long_sleep(rq, p);
 	update_task_ravg(p, rq, TASK_WAKE, wallclock, 0);
 	raw_spin_unlock(&rq->lock);
 
@@ -3016,6 +2901,14 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
 	if (src_cpu != cpu) {
 		wake_flags |= WF_MIGRATED;
 		set_task_cpu(p, cpu);
+	} else {
+#ifdef CONFIG_SCHED_FREQ_INPUT
+		if (rq_freq_margin(cpu_rq(cpu)) <
+		    sysctl_sched_freq_inc_notify_slack_pct)
+			atomic_notifier_call_chain(
+				&load_alert_notifier_head, 0,
+				(void *)(long)cpu);
+#endif
 	}
 #endif /* CONFIG_SMP */
 
@@ -3046,11 +2939,6 @@ out:
 	if (notify)
 		atomic_notifier_call_chain(&migration_notifier_head,
 					   0, (void *)&mnd);
-
-	if (long_sleep || !same_freq_domain(src_cpu, cpu))
-		check_for_freq_change(cpu_rq(cpu));
-	if (!long_sleep && !same_freq_domain(src_cpu, cpu))
-		check_for_freq_change(cpu_rq(src_cpu));
 
 	return success;
 }
@@ -3290,6 +3178,13 @@ void wake_up_new_task(struct task_struct *p)
 	init_task_runnable_average(p);
 	rq = __task_rq_lock(p);
 	mark_task_starting(p);
+#ifdef CONFIG_SCHED_FREQ_INPUT
+	if (rq_freq_margin(task_rq(p)) <
+	    sysctl_sched_freq_inc_notify_slack_pct)
+		atomic_notifier_call_chain(
+			&load_alert_notifier_head, 0,
+			(void *)(long)task_cpu(p));
+#endif
 	activate_task(rq, p, 0);
 	p->on_rq = 1;
 	trace_sched_wakeup_new(p, true);
@@ -3299,8 +3194,6 @@ void wake_up_new_task(struct task_struct *p)
 		p->sched_class->task_woken(rq, p);
 #endif
 	task_rq_unlock(rq, p, &flags);
-	if (init_task_load)
-		check_for_freq_change(rq);
 }
 
 #ifdef CONFIG_PREEMPT_NOTIFIERS
@@ -8336,8 +8229,6 @@ void __init sched_init(void)
 		rq->capacity = 1024;
 		rq->load_scale_factor = 1024;
 		rq->window_start = 0;
-		rq->freq_requested = 0;
-		rq->freq_requested_ts = 0;
 #endif
 #ifdef CONFIG_SCHED_HMP
 		rq->nr_small_tasks = rq->nr_big_tasks = 0;
