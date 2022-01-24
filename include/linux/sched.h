@@ -272,8 +272,6 @@ extern char ___assert_task_state[1 - 2*!!(
 /* Task command name length */
 #define TASK_COMM_LEN 16
 
-extern const char *sched_window_reset_reasons[];
-
 enum task_event {
 	PUT_PREV_TASK   = 0,
 	PICK_NEXT_TASK  = 1,
@@ -1058,7 +1056,7 @@ struct sched_avg {
 	 * choices of y < 1-2^(-32)*1024.
 	 */
 	u32 runnable_avg_sum, runnable_avg_period;
-#ifdef CONFIG_SCHED_HMP
+#if defined(CONFIG_SCHED_FREQ_INPUT) || defined(CONFIG_SCHED_HMP)
 	u32 runnable_avg_sum_scaled;
 #endif
 	u64 last_runnable_update;
@@ -1122,18 +1120,12 @@ struct ravg {
 	 * sysctl_sched_ravg_hist_size windows. 'demand' could drive frequency
 	 * demand for tasks.
 	 *
-	 * 'curr_window' represents task's contribution to cpu busy time
-	 * statistics (rq->curr_runnable_sum) in current window
-	 *
-	 * 'prev_window' represents task's contribution to cpu busy time
-	 * statistics (rq->prev_runnable_sum) in previous window
+	 * 'flags' can have either or both of PREV_WINDOW_CONTRIB and
+	 * CURR_WINDOW_CONTRIB set.
 	 */
 	u64 mark_start;
-	u32 sum, demand;
+	u32 sum, demand, partial_demand, flags;
 	u32 sum_history[RAVG_HIST_SIZE_MAX];
-#ifdef CONFIG_SCHED_FREQ_INPUT
-	u32 curr_window, prev_window;
-#endif
 };
 
 struct sched_entity {
@@ -1214,7 +1206,7 @@ struct task_struct {
 	const struct sched_class *sched_class;
 	struct sched_entity se;
 	struct sched_rt_entity rt;
-#ifdef CONFIG_SCHED_HMP
+#if defined(CONFIG_SCHED_FREQ_INPUT) || defined(CONFIG_SCHED_HMP)
 	struct ravg ravg;
 #endif
 #ifdef CONFIG_CGROUP_SCHED
@@ -2237,7 +2229,7 @@ extern void wake_up_new_task(struct task_struct *tsk);
 #endif
 extern void sched_fork(struct task_struct *p);
 extern void sched_dead(struct task_struct *p);
-#ifdef CONFIG_SCHED_HMP
+#if defined(CONFIG_SCHED_HMP) || defined(CONFIG_SCHED_FREQ_INPUT)
 extern void sched_exit(struct task_struct *p);
 #else
 static inline void sched_exit(struct task_struct *p) { }
