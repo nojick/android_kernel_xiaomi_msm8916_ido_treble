@@ -1222,9 +1222,9 @@ __read_mostly unsigned int sysctl_sched_ravg_hist_size = 5;
 
 
 static __read_mostly unsigned int sched_window_stats_policy =
-	 WINDOW_STATS_MAX_RECENT_AVG;
+	 WINDOW_STATS_USE_AVG;
 __read_mostly unsigned int sysctl_sched_window_stats_policy =
-	WINDOW_STATS_MAX_RECENT_AVG;
+	WINDOW_STATS_USE_AVG;
 
 static __read_mostly unsigned int sched_account_wait_time = 1;
 __read_mostly unsigned int sysctl_sched_account_wait_time = 1;
@@ -1376,12 +1376,10 @@ update_history(struct rq *rq, struct task_struct *p, u32 runtime, int samples,
 compute_demand:
 	avg = div64_u64(sum, sched_ravg_hist_size);
 
-	if (sched_window_stats_policy == WINDOW_STATS_RECENT)
+	if (sched_window_stats_policy == WINDOW_STATS_USE_RECENT)
 		demand = runtime;
-	else if (sched_window_stats_policy == WINDOW_STATS_MAX)
+	else if (sched_window_stats_policy == WINDOW_STATS_USE_MAX)
 		demand = max;
-	else if (sched_window_stats_policy == WINDOW_STATS_AVG)
-		demand = avg;
 	else
 		demand = max(avg, runtime);
 
