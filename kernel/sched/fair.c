@@ -1788,7 +1788,7 @@ static int best_small_task_cpu(struct task_struct *p)
 			continue;
 		}
 
-		if (idle_cpu(i) && cstate) {
+		if (cstate) {
 			if (cstate < min_cstate) {
 				min_cstate_cpu = i;
 				min_cstate = cstate;
