@@ -482,8 +482,8 @@ struct rq {
 	int max_possible_capacity;
 	u64 window_start;
 
-	u64 curr_runnable_sum;
-	u64 prev_runnable_sum;
+	unsigned int curr_runnable_sum;
+	unsigned int prev_runnable_sum;
 #endif
 
 #ifdef CONFIG_SCHED_HMP
