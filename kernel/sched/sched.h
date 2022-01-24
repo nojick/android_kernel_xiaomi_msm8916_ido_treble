@@ -483,7 +483,8 @@ struct rq {
 	u64 window_start;
 
 #ifdef CONFIG_SCHED_FREQ_INPUT
-	unsigned int old_busy_time;
+	unsigned int freq_requested;
+	u64 freq_requested_ts;
 #endif
 #endif
 
