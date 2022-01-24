@@ -1604,7 +1604,7 @@ static int task_will_fit(struct task_struct *p, int cpu)
 	struct rq *prev_rq = cpu_rq(prev_cpu);
 	struct rq *rq = cpu_rq(cpu);
 	int upmigrate = sched_upmigrate;
-	int nice = TASK_NICE(p);
+	int nice = task_nice(p);
 
 	/* Todo: Provide cgroup-based control as well? */
 	if (nice > sysctl_sched_upmigrate_min_nice ||
@@ -1908,7 +1908,7 @@ static int lower_power_cpu_available(struct task_struct *p, int cpu)
  */
 static inline int migration_needed(struct rq *rq, struct task_struct *p)
 {
-	int nice = TASK_NICE(p);
+	int nice = task_nice(p);
 
 	/* Todo: cgroup-based control? */
 	if (nice > sysctl_sched_upmigrate_min_nice &&
