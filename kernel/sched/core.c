@@ -1741,6 +1741,24 @@ static inline void migrate_sync_cpu(int cpu)
 		sync_cpu = smp_processor_id();
 }
 
+unsigned long sched_get_busy(int cpu)
+{
+	unsigned long flags;
+	struct rq *rq = cpu_rq(cpu);
+
+	/*
+	 * This function could be called in timer context, and the
+	 * current task may have been executing for a long time. Ensure
+	 * that the window stats are current by doing an update.
+	 */
+	raw_spin_lock_irqsave(&rq->lock, flags);
+	update_task_ravg(rq->curr, rq, TASK_UPDATE, sched_clock(), 0);
+	raw_spin_unlock_irqrestore(&rq->lock, flags);
+
+	return div64_u64(scale_load_to_cpu(rq->prev_runnable_sum, cpu),
+			  NSEC_PER_USEC);
+}
+
 static void reset_all_task_stats(void)
 {
 	struct task_struct *g, *p;
@@ -1867,26 +1885,6 @@ void reset_all_window_stats(u64 window_start, unsigned int window_size)
 	local_irq_restore(flags);
 }
 
-#ifdef CONFIG_SCHED_FREQ_INPUT
-
-unsigned long sched_get_busy(int cpu)
-{
-	unsigned long flags;
-	struct rq *rq = cpu_rq(cpu);
-
-	/*
-	 * This function could be called in timer context, and the
-	 * current task may have been executing for a long time. Ensure
-	 * that the window stats are current by doing an update.
-	 */
-	raw_spin_lock_irqsave(&rq->lock, flags);
-	update_task_ravg(rq->curr, rq, TASK_UPDATE, sched_clock(), 0);
-	raw_spin_unlock_irqrestore(&rq->lock, flags);
-
-	return div64_u64(scale_load_to_cpu(rq->prev_runnable_sum, cpu),
-			  NSEC_PER_USEC);
-}
-
 void sched_set_io_is_busy(int val)
 {
 	sched_io_is_busy = val;
@@ -1928,7 +1926,6 @@ int sched_set_window(u64 window_start, unsigned int window_size)
 
 	return 0;
 }
-#endif	/* CONFIG_SCHED_FREQ_INPUT */
 
 /* Keep track of max/min capacity possible across CPUs "currently" */
 static void update_min_max_capacity(void)
