@@ -748,8 +748,7 @@ static inline unsigned long capacity_scale_cpu_freq(int cpu)
 
 #ifdef CONFIG_SCHED_HMP
 
-extern unsigned int sched_enable_hmp;
-extern unsigned int sched_enable_power_aware;
+extern unsigned int sysctl_sched_enable_hmp_task_placement;
 
 int mostly_idle_cpu(int cpu);
 extern void check_for_migration(struct rq *rq, struct task_struct *p);
@@ -762,7 +761,7 @@ extern unsigned int power_cost_at_freq(int cpu, unsigned int freq);
 
 #else /* CONFIG_SCHED_HMP */
 
-#define sched_enable_hmp 0
+#define sysctl_sched_enable_hmp_task_placement 0
 
 static inline void check_for_migration(struct rq *rq, struct task_struct *p) { }
 static inline void pre_big_small_task_count_change(void) { }

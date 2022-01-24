@@ -1350,7 +1350,7 @@ unsigned int max_task_load(void)
 #ifdef CONFIG_SCHED_HMP
 
 /* Use this knob to turn on or off HMP-aware task placement logic */
-unsigned int __read_mostly sched_enable_hmp = 1;
+unsigned int __read_mostly sysctl_sched_enable_hmp_task_placement = 1;
 
 /* A cpu can no longer accomodate more tasks if:
  *
@@ -1371,7 +1371,7 @@ unsigned int __read_mostly sysctl_sched_mostly_idle_nr_run = 3;
  * Control whether or not individual CPU power consumption is used to
  * guide task placement.
  */
-unsigned int __read_mostly sched_enable_power_aware = 1;
+unsigned int __read_mostly sysctl_sched_enable_power_aware = 1;
 
 /*
  * This specifies the maximum percent power difference between 2
@@ -1553,7 +1553,7 @@ int sched_set_boost(int enable)
 	unsigned long flags;
 	int ret = 0;
 
-	if (!sched_enable_hmp)
+	if (!sysctl_sched_enable_hmp_task_placement)
 		return -EINVAL;
 
 	spin_lock_irqsave(&boost_lock, flags);
@@ -1673,7 +1673,7 @@ unsigned int power_cost_at_freq(int cpu, unsigned int freq)
 	struct cpu_pstate_pwr *costs;
 
 	if (!per_cpu_info || !per_cpu_info[cpu].ptable ||
-	    !sched_enable_power_aware)
+	    !sysctl_sched_enable_power_aware)
 		/* When power aware scheduling is not in use, or CPU
 		 * power data is not available, just use the CPU
 		 * capacity as a rough stand-in for real CPU power
@@ -1703,7 +1703,7 @@ static unsigned int power_cost(struct task_struct *p, int cpu)
 	unsigned int demand;
 	unsigned int cur_freq = cpu_rq(cpu)->cur_freq;
 
-	if (!sched_enable_power_aware)
+	if (!sysctl_sched_enable_power_aware)
 		return cpu_rq(cpu)->max_possible_capacity;
 
 	/* calculate % of max freq needed */
@@ -1863,7 +1863,7 @@ done:
 
 void inc_nr_big_small_task(struct rq *rq, struct task_struct *p)
 {
-	if (!sched_enable_hmp)
+	if (!sysctl_sched_enable_hmp_task_placement)
 		return;
 
 	if (is_big_task(p))
@@ -1874,7 +1874,7 @@ void inc_nr_big_small_task(struct rq *rq, struct task_struct *p)
 
 void dec_nr_big_small_task(struct rq *rq, struct task_struct *p)
 {
-	if (!sched_enable_hmp)
+	if (!sysctl_sched_enable_hmp_task_placement)
 		return;
 
 	if (is_big_task(p))
@@ -1942,7 +1942,7 @@ int sched_hmp_proc_update_handler(struct ctl_table *table, int write,
 	unsigned int old_val = *data;
 
 	ret = proc_dointvec_minmax(table, write, buffer, lenp, ppos);
-	if (ret || !write || !sched_enable_hmp)
+	if (ret || !write || !sysctl_sched_enable_hmp_task_placement)
 		return ret;
 
 	if ((sysctl_sched_downmigrate_pct > sysctl_sched_upmigrate_pct) ||
@@ -2065,7 +2065,7 @@ static inline int migration_needed(struct rq *rq, struct task_struct *p)
 	int nice = TASK_NICE(p);
 
 	if (is_small_task(p) || p->state != TASK_RUNNING ||
-			!sched_enable_hmp)
+			!sysctl_sched_enable_hmp_task_placement)
 		return 0;
 
 	/* Todo: cgroup-based control? */
@@ -2076,7 +2076,7 @@ static inline int migration_needed(struct rq *rq, struct task_struct *p)
 	if (!task_will_fit(p, cpu_of(rq)))
 		return 1;
 
-	if (sched_enable_power_aware &&
+	if (sysctl_sched_enable_power_aware &&
 	    lower_power_cpu_available(p, cpu_of(rq)))
 		return 1;
 
@@ -2129,7 +2129,7 @@ static inline int nr_big_tasks(struct rq *rq)
 
 #else	/* CONFIG_SCHED_HMP */
 
-#define sched_enable_power_aware 0
+#define sysctl_sched_enable_power_aware 0
 
 static inline int select_best_cpu(struct task_struct *p, int target)
 {
@@ -2679,7 +2679,7 @@ add_to_scaled_stat(int cpu, struct sched_avg *sa, u64 delta)
 	u64 scaled_delta;
 	int sf;
 
-	if (!sched_enable_hmp)
+	if (!sysctl_sched_enable_hmp_task_placement)
 		return;
 
 	if (unlikely(cur_freq > max_possible_freq ||
@@ -2696,7 +2696,7 @@ add_to_scaled_stat(int cpu, struct sched_avg *sa, u64 delta)
 
 static inline void decay_scaled_stat(struct sched_avg *sa, u64 periods)
 {
-	if (!sched_enable_hmp)
+	if (!sysctl_sched_enable_hmp_task_placement)
 		return;
 
 	sa->runnable_avg_sum_scaled =
@@ -4527,7 +4527,7 @@ select_task_rq_fair(struct task_struct *p, int sd_flag, int wake_flags)
 	if (p->nr_cpus_allowed == 1)
 		return prev_cpu;
 
-	if (sched_enable_hmp)
+	if (sysctl_sched_enable_hmp_task_placement)
 		return select_best_cpu(p, prev_cpu);
 
 	if (sd_flag & SD_BALANCE_WAKE) {
@@ -6219,7 +6219,7 @@ static struct rq *find_busiest_queue(struct lb_env *env,
 	unsigned long busiest_load = 0, busiest_power = 1;
 	int i;
 
-	if (sched_enable_hmp)
+	if (sysctl_sched_enable_hmp_task_placement)
 		return find_busiest_queue_hmp(env, group);
 
 	for_each_cpu(i, sched_group_cpus(group)) {
@@ -6605,7 +6605,7 @@ void idle_balance(int this_cpu, struct rq *this_rq)
 	 * most power-efficient idle CPU. */
 	rcu_read_lock();
 	sd = rcu_dereference_check_sched_domain(this_rq->sd);
-	if (sd && sched_enable_power_aware) {
+	if (sd && sysctl_sched_enable_power_aware) {
 		for_each_cpu(i, sched_domain_span(sd)) {
 			if (i == this_cpu || idle_cpu(i)) {
 				cost = power_cost_at_freq(i, 0);
@@ -6781,7 +6781,7 @@ static inline int find_new_ilb(int call_cpu, int type)
 {
 	int ilb;
 
-	if (sched_enable_hmp)
+	if (sysctl_sched_enable_hmp_task_placement)
 		return find_new_hmp_ilb(call_cpu, type);
 
 	ilb = cpumask_first(nohz.idle_cpus_mask);
@@ -6992,7 +6992,7 @@ static int select_lowest_power_cpu(struct cpumask *cpus)
 	int lowest_power_cpu = -1;
 	int lowest_power = INT_MAX;
 
-	if (sched_enable_power_aware) {
+	if (sysctl_sched_enable_power_aware) {
 		for_each_cpu(i, cpus) {
 			cost = power_cost_at_freq(i, 0);
 			if (cost < lowest_power) {
@@ -7095,7 +7095,7 @@ static inline int _nohz_kick_needed(struct rq *rq, int cpu, int *type)
 {
 	unsigned long now = jiffies;
 
-	if (sched_enable_hmp)
+	if (sysctl_sched_enable_hmp_task_placement)
 		return _nohz_kick_needed_hmp(rq, cpu, type);
 
 	/*
