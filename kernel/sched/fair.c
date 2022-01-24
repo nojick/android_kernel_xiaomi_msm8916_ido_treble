@@ -4691,7 +4691,6 @@ static unsigned long __read_mostly max_load_balance_interval = HZ/10;
 #define LBF_NEED_BREAK	0x02
 #define LBF_DST_PINNED  0x04
 #define LBF_SOME_PINNED	0x08
-#define LBF_PWR_ACTIVE_BALANCE 0x10
 
 struct lb_env {
 	struct sched_domain	*sd;
@@ -5425,26 +5424,11 @@ static bool update_sd_pick_busiest(struct lb_env *env,
 	if (sgs->avg_load <= sds->busiest_stat.avg_load)
 		return false;
 
-	if (sgs->sum_nr_running > sgs->group_capacity) {
-		env->flags &= ~LBF_PWR_ACTIVE_BALANCE;
+	if (sgs->sum_nr_running > sgs->group_capacity)
 		return true;
-	}
 
-	if (sgs->group_imb) {
-		env->flags &= ~LBF_PWR_ACTIVE_BALANCE;
+	if (sgs->group_imb)
 		return true;
-	}
-
-	/* Mark a less power-efficient CPU as busy only if we haven't
-	 * seen a busy group yet. We want to prioritize spreading
-	 * work over power optimization. */
-	if (!sds->busiest && sg->group_weight == 1 &&
-	    sgs->sum_nr_running &&
-	    power_cost_at_freq(env->dst_cpu, 0) <
-	    power_cost_at_freq(cpumask_first(sched_group_cpus(sg)), 0)) {
-		env->flags |= LBF_PWR_ACTIVE_BALANCE;
-		return true;
-	}
 
 	/*
 	 * ASYM_PACKING needs to move all the work to the lowest
@@ -5874,9 +5858,6 @@ static int need_active_balance(struct lb_env *env)
 {
 	struct sched_domain *sd = env->sd;
 
-	if (env->flags & LBF_PWR_ACTIVE_BALANCE)
-		return 1;
-
 	if (env->idle == CPU_NEWLY_IDLE) {
 
 		/*
@@ -6083,17 +6064,14 @@ more_balance:
 	}
 
 	if (!ld_moved) {
-		if (!(env.flags & LBF_PWR_ACTIVE_BALANCE))
-			schedstat_inc(sd, lb_failed[idle]);
-
+		schedstat_inc(sd, lb_failed[idle]);
 		/*
 		 * Increment the failure counter only on periodic balance.
 		 * We do not want newidle balance, which can be very
 		 * frequent, pollute the failure counter causing
 		 * excessive cache_hot migrations and active balances.
 		 */
-		if (idle != CPU_NEWLY_IDLE &&
-		    !(env.flags & LBF_PWR_ACTIVE_BALANCE))
+		if (idle != CPU_NEWLY_IDLE)
 			sd->nr_balance_failed++;
 
 		if (need_active_balance(&env)) {
