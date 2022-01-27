@@ -1726,8 +1726,6 @@ void __init init_timers(void)
 	BUG_ON(err != NOTIFY_OK);
 
 	init_deferrable_timer();
-
-	init_timer_stats();
 	register_cpu_notifier(&timers_nb);
 	open_softirq(TIMER_SOFTIRQ, run_timer_softirq);
 }
