@@ -2745,7 +2745,7 @@ static void try_to_wake_up_local(struct task_struct *p)
 	if (!(p->state & TASK_NORMAL))
 		goto out;
 
-	if (!task_on_rq_queued(p))
+	if (!task_on_rq_queued(p)) {
 		u64 wallclock = sched_clock();
 
 		update_task_ravg(rq->curr, rq, TASK_UPDATE, wallclock, NULL);
