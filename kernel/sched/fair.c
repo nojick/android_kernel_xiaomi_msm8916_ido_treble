@@ -6761,6 +6761,7 @@ bail_inter_cluster_balance(struct lb_env *env, struct sd_lb_stats *sds)
 	if ((sds->busiest_stat.group_cpu_load < nr_cpus * sched_spill_load) &&
 		(sds->busiest_stat.sum_nr_running <
 			nr_cpus * sysctl_sched_spill_nr_run))
+		return 1;
 
 	return 0;
 }
