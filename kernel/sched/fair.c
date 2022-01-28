@@ -2412,6 +2412,7 @@ static inline void reset_balance_interval(int cpu)
 static inline int find_new_hmp_ilb(int type)
 {
 	int i;
+	int call_cpu = raw_smp_processor_id();
 	int best_cpu = nr_cpu_ids;
 	struct sched_domain *sd;
 	int min_cost = INT_MAX, cost;
@@ -5949,10 +5950,10 @@ bail_inter_cluster_balance(struct lb_env *env, struct sd_lb_stats *sds)
 {
 	int nr_cpus;
 
-	if (group_rq_capacity(sds->this) <= group_rq_capacity(sds->busiest))
+	if (group_rq_capacity(sds->local) <= group_rq_capacity(sds->busiest))
 		return 0;
 
-	if (sds->busiest_nr_big_tasks)
+	if (sds->busiest_stat.sum_nr_big_tasks)
 		return 0;
 
 	nr_cpus = cpumask_weight(sched_group_cpus(sds->busiest));
@@ -6867,9 +6868,9 @@ static int load_balance(int this_cpu, struct rq *this_rq,
 			struct sched_domain *sd, enum cpu_idle_type idle,
 			int *continue_balancing)
 {
-	int ld_moved, cur_ld_moved, active_balance = 0;
+	int ld_moved = 0, cur_ld_moved, active_balance = 0;
 	struct sched_domain *sd_parent = sd->parent;
-	struct sched_group *group;
+	struct sched_group *group = NULL;
 	struct rq *busiest = NULL;
 	unsigned long flags;
 	struct cpumask *cpus = __get_cpu_var(load_balance_mask);
@@ -6882,6 +6883,7 @@ static int load_balance(int this_cpu, struct rq *this_rq,
 		.idle		= idle,
 		.loop_break	= sched_nr_migrate_break,
 		.cpus		= cpus,
+		.imbalance	= 0,
 		.flags		= 0,
 		.loop		= 0,
 	};
@@ -7125,7 +7127,7 @@ out_one_pinned:
 
 	ld_moved = 0;
 out:
-	trace_sched_load_balance(this_cpu, idle, *balance,
+	trace_sched_load_balance(this_cpu, idle, *continue_balancing,
 				 group ? group->cpumask[0] : 0,
 				 busiest ? busiest->nr_running : 0,
 				 env.imbalance, env.flags, ld_moved,
