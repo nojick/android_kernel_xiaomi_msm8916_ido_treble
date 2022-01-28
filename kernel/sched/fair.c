@@ -8623,10 +8623,12 @@ static inline int _nohz_kick_needed(struct rq *rq, int cpu, int *type)
  */
 static inline int nohz_kick_needed(struct rq *rq, int *type)
 {
+	int cpu = rq->cpu;
+#ifndef CONFIG_SCHED_HMP
 	struct sched_domain *sd;
 	struct sched_group_power *sgp;
-	int nr_busy, cpu = rq->cpu;
-
+	int nr_busy;
+#endif
 	if (unlikely(rq->idle_balance))
 		return 0;
 
@@ -8662,8 +8664,10 @@ static inline int nohz_kick_needed(struct rq *rq, int *type)
 #endif
 	return 0;
 
+#ifndef CONFIG_SCHED_HMP
 need_kick_unlock:
 	rcu_read_unlock();
+#endif
 need_kick:
 	return 1;
 }
