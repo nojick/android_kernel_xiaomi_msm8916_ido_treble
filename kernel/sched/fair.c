@@ -2409,7 +2409,7 @@ static inline void reset_balance_interval(int cpu)
 	rcu_read_unlock();
 }
 
-static inline int find_new_hmp_ilb(int call_cpu, int type)
+static inline int find_new_hmp_ilb(int type)
 {
 	int i;
 	int best_cpu = nr_cpu_ids;
@@ -2588,7 +2588,7 @@ static inline int select_best_cpu(struct task_struct *p, int target, int reason)
 	return 0;
 }
 
-static inline int find_new_hmp_ilb(int call_cpu, int type)
+static inline int find_new_hmp_ilb(int type)
 {
 	return 0;
 }
@@ -5934,12 +5934,9 @@ bail_inter_cluster_balance(struct lb_env *env, struct sd_lb_stats *sds)
 		return 0;
 
 	nr_cpus = cpumask_weight(sched_group_cpus(sds->busiest));
-
-	if ((sds->busiest_scaled_load < nr_cpus * sched_spill_load) &&
-		(sds->busiest_nr_running <
-			nr_cpus * sysctl_sched_spill_nr_run)) {
-			return 1;
-	}
+	if ((sds->busiest_stat.group_cpu_load < nr_cpus * sched_spill_load) &&
+		(sds->busiest_stat.sum_nr_running <
+			nr_cpus * sysctl_sched_spill_nr_run))
 
 	return 0;
 }
@@ -7283,12 +7280,12 @@ static struct {
 	unsigned long next_balance;     /* in jiffy units */
 } nohz ____cacheline_aligned;
 
-static inline int find_new_ilb(int call_cpu, int type)
+static inline int find_new_ilb(int type)
 {
 	int ilb;
 
 	if (sched_enable_hmp)
-		return find_new_hmp_ilb(call_cpu, type);
+		return find_new_hmp_ilb(type);
 
 	ilb = cpumask_first(nohz.idle_cpus_mask);
 
@@ -7303,13 +7300,13 @@ static inline int find_new_ilb(int call_cpu, int type)
  * nohz_load_balancer CPU (if there is one) otherwise fallback to any idle
  * CPU (if there is one).
  */
-static void nohz_balancer_kick(int cpu, int type)
+static void nohz_balancer_kick(int type)
 {
 	int ilb_cpu;
 
 	nohz.next_balance++;
 
-	ilb_cpu = find_new_ilb(cpu, type);
+	ilb_cpu = find_new_ilb(type);
 
 	if (ilb_cpu >= nr_cpu_ids)
 		return;
