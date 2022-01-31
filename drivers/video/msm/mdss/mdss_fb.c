@@ -96,7 +96,7 @@ static int mdss_fb_blank_sub(int blank_mode, struct fb_info *info,
 			     int op_enable);
 static int mdss_fb_suspend_sub(struct msm_fb_data_type *mfd);
 static int mdss_fb_ioctl(struct fb_info *info, unsigned int cmd,
-			 unsigned long arg, struct file *file);
+			 unsigned long arg);
 static int mdss_fb_fbmem_ion_mmap(struct fb_info *info,
 		struct vm_area_struct *vma);
 static int mdss_fb_alloc_fb_ion_memory(struct msm_fb_data_type *mfd,
@@ -1856,9 +1856,9 @@ static struct fb_ops mdss_fb_ops = {
 	.fb_set_par = mdss_fb_set_par,	/* set the video mode */
 	.fb_blank = mdss_fb_blank,	/* blank display */
 	.fb_pan_display = mdss_fb_pan_display,	/* pan display */
-	.fb_ioctl_v2 = mdss_fb_ioctl,	/* perform fb specific ioctl */
+	.fb_ioctl = mdss_fb_ioctl,	/* perform fb specific ioctl */
 #ifdef CONFIG_COMPAT
-	.fb_compat_ioctl_v2 = mdss_fb_compat_ioctl,
+	.fb_compat_ioctl = mdss_fb_compat_ioctl,
 #endif
 	.fb_mmap = mdss_fb_mmap,
 };
@@ -3422,7 +3422,7 @@ static int __ioctl_wait_idle(struct msm_fb_data_type *mfd, u32 cmd)
  * by compat ioctl or regular ioctl to handle the supported commands.
  */
 int mdss_fb_do_ioctl(struct fb_info *info, unsigned int cmd,
-			 unsigned long arg, struct file *file)
+			 unsigned long arg)
 {
 	struct msm_fb_data_type *mfd;
 	void __user *argp = (void __user *)arg;
@@ -3529,12 +3529,12 @@ exit:
 }
 
 static int mdss_fb_ioctl(struct fb_info *info, unsigned int cmd,
-			 unsigned long arg, struct file *file)
+			 unsigned long arg)
 {
 	if (!info || !info->par)
 		return -EINVAL;
 
-	return mdss_fb_do_ioctl(info, cmd, arg, file);
+	return mdss_fb_do_ioctl(info, cmd, arg);
 }
 
 struct fb_info *msm_fb_get_writeback_fb(void)

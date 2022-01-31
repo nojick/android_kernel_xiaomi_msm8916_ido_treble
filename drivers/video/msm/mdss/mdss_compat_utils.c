@@ -104,7 +104,7 @@ static unsigned int __do_compat_ioctl_nr(unsigned int cmd32)
 }
 
 static int mdss_fb_compat_buf_sync(struct fb_info *info, unsigned int cmd,
-			 unsigned long arg, struct file *file)
+			 unsigned long arg)
 {
 	struct mdp_buf_sync32 __user *buf_sync32;
 	struct mdp_buf_sync __user *buf_sync;
@@ -131,7 +131,7 @@ static int mdss_fb_compat_buf_sync(struct fb_info *info, unsigned int cmd,
 	    put_user(compat_ptr(data), &buf_sync->retire_fen_fd))
 		return -EFAULT;
 
-	ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) buf_sync, file);
+	ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) buf_sync);
 	if (ret) {
 		pr_err("%s: failed %d\n", __func__, ret);
 		return ret;
@@ -216,7 +216,7 @@ static int __from_user_fb_image(struct fb_image __user *image,
 }
 
 static int mdss_fb_compat_cursor(struct fb_info *info, unsigned int cmd,
-			unsigned long arg, struct file *file)
+			unsigned long arg)
 {
 	struct fb_cursor32 __user *cursor32;
 	struct fb_cursor __user *cursor;
@@ -244,12 +244,11 @@ static int mdss_fb_compat_cursor(struct fb_info *info, unsigned int cmd,
 	if (__from_user_fb_image(&cursor->image, &cursor32->image))
 		return -EFAULT;
 
-	ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) cursor, file);
+	ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) cursor);
 	return ret;
 }
 
-static int mdss_fb_compat_set_lut(struct fb_info *info, unsigned long arg,
-	struct file *file)
+static int mdss_fb_compat_set_lut(struct fb_info *info, unsigned long arg)
 {
 	struct fb_cmap_user __user *cmap;
 	struct fb_cmap32 __user *cmap32;
@@ -272,7 +271,7 @@ static int mdss_fb_compat_set_lut(struct fb_info *info, unsigned long arg,
 	    put_user(compat_ptr(data), &cmap->transp))
 		return -EFAULT;
 
-	ret = mdss_fb_do_ioctl(info, MSMFB_SET_LUT, (unsigned long) cmap, file);
+	ret = mdss_fb_do_ioctl(info, MSMFB_SET_LUT, (unsigned long) cmap);
 	if (!ret)
 		pr_debug("%s: compat ioctl successful\n", __func__);
 
@@ -1944,7 +1943,7 @@ static int __pp_compat_alloc(struct msmfb_mdp_pp32 __user *pp32,
 }
 
 static int mdss_compat_pp_ioctl(struct fb_info *info, unsigned int cmd,
-			unsigned long arg, struct file *file)
+			unsigned long arg)
 {
 	uint32_t op;
 	int ret = 0;
@@ -1969,7 +1968,7 @@ static int mdss_compat_pp_ioctl(struct fb_info *info, unsigned int cmd,
 			&pp->data.pcc_cfg_data);
 		if (ret)
 			goto pp_compat_exit;
-		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp, file);
+		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp);
 		if (ret)
 			goto pp_compat_exit;
 		ret = __to_user_pcc_cfg_data(
@@ -1982,7 +1981,7 @@ static int mdss_compat_pp_ioctl(struct fb_info *info, unsigned int cmd,
 			&pp->data.csc_cfg_data);
 		if (ret)
 			goto pp_compat_exit;
-		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp, file);
+		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp);
 		if (ret)
 			goto pp_compat_exit;
 		ret = __to_user_csc_cfg_data(
@@ -1995,7 +1994,7 @@ static int mdss_compat_pp_ioctl(struct fb_info *info, unsigned int cmd,
 			&pp->data.lut_cfg_data);
 		if (ret)
 			goto pp_compat_exit;
-		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp, file);
+		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp);
 		if (ret)
 			goto pp_compat_exit;
 		ret = __to_user_lut_cfg_data(
@@ -2008,7 +2007,7 @@ static int mdss_compat_pp_ioctl(struct fb_info *info, unsigned int cmd,
 			&pp->data.qseed_cfg_data);
 		if (ret)
 			goto pp_compat_exit;
-		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp, file);
+		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp);
 		if (ret)
 			goto pp_compat_exit;
 		ret = __to_user_qseed_cfg_data(
@@ -2021,7 +2020,7 @@ static int mdss_compat_pp_ioctl(struct fb_info *info, unsigned int cmd,
 			&pp->data.bl_scale_data);
 		if (ret)
 			goto pp_compat_exit;
-		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp, file);
+		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp);
 		break;
 	case mdp_op_pa_cfg:
 		ret = __from_user_pa_cfg_data(
@@ -2029,7 +2028,7 @@ static int mdss_compat_pp_ioctl(struct fb_info *info, unsigned int cmd,
 			&pp->data.pa_cfg_data);
 		if (ret)
 			goto pp_compat_exit;
-		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp, file);
+		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp);
 		if (ret)
 			goto pp_compat_exit;
 		ret = __to_user_pa_cfg_data(
@@ -2042,7 +2041,7 @@ static int mdss_compat_pp_ioctl(struct fb_info *info, unsigned int cmd,
 			&pp->data.pa_v2_cfg_data);
 		if (ret)
 			goto pp_compat_exit;
-		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp, file);
+		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp);
 		if (ret)
 			goto pp_compat_exit;
 		ret = __to_user_pa_v2_cfg_data(
@@ -2055,7 +2054,7 @@ static int mdss_compat_pp_ioctl(struct fb_info *info, unsigned int cmd,
 			&pp->data.dither_cfg_data);
 		if (ret)
 			goto pp_compat_exit;
-		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp, file);
+		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp);
 		if (ret)
 			goto pp_compat_exit;
 		ret = __to_user_dither_cfg_data(
@@ -2068,7 +2067,7 @@ static int mdss_compat_pp_ioctl(struct fb_info *info, unsigned int cmd,
 			&pp->data.gamut_cfg_data);
 		if (ret)
 			goto pp_compat_exit;
-		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp, file);
+		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp);
 		if (ret)
 			goto pp_compat_exit;
 		ret = __to_user_gamut_cfg_data(
@@ -2081,7 +2080,7 @@ static int mdss_compat_pp_ioctl(struct fb_info *info, unsigned int cmd,
 			&pp->data.calib_cfg);
 		if (ret)
 			goto pp_compat_exit;
-		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp, file);
+		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp);
 		if (ret)
 			goto pp_compat_exit;
 		ret = __to_user_calib_config_data(
@@ -2094,7 +2093,7 @@ static int mdss_compat_pp_ioctl(struct fb_info *info, unsigned int cmd,
 			&pp->data.ad_init_cfg);
 		if (ret)
 			goto pp_compat_exit;
-		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp, file);
+		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp);
 		break;
 	case mdp_op_ad_input:
 		ret = __from_user_ad_input(
@@ -2102,7 +2101,7 @@ static int mdss_compat_pp_ioctl(struct fb_info *info, unsigned int cmd,
 			&pp->data.ad_input);
 		if (ret)
 			goto pp_compat_exit;
-		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp, file);
+		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp);
 		if (ret)
 			goto pp_compat_exit;
 		ret = __to_user_ad_input(
@@ -2115,7 +2114,7 @@ static int mdss_compat_pp_ioctl(struct fb_info *info, unsigned int cmd,
 			&pp->data.mdss_calib_cfg);
 		if (ret)
 			goto pp_compat_exit;
-		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp, file);
+		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp);
 		break;
 	case mdp_op_calib_buffer:
 		ret = __from_user_calib_config_buffer(
@@ -2123,7 +2122,7 @@ static int mdss_compat_pp_ioctl(struct fb_info *info, unsigned int cmd,
 			&pp->data.calib_buffer);
 		if (ret)
 			goto pp_compat_exit;
-		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp, file);
+		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp);
 		if (ret)
 			goto pp_compat_exit;
 		ret = __to_user_calib_config_buffer(
@@ -2136,7 +2135,7 @@ static int mdss_compat_pp_ioctl(struct fb_info *info, unsigned int cmd,
 			&pp->data.calib_dcm);
 		if (ret)
 			goto pp_compat_exit;
-		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp, file);
+		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) pp);
 		break;
 	case mdp_op_pp_init_cfg:
 		ret = __from_user_pp_init_data(
@@ -2344,7 +2343,7 @@ static int __to_user_hist_data(
 }
 
 static int mdss_histo_compat_ioctl(struct fb_info *info, unsigned int cmd,
-			unsigned long arg, struct file *file)
+			unsigned long arg)
 {
 	struct mdp_histogram_data __user *hist;
 	struct mdp_histogram_data32 __user *hist32;
@@ -2367,11 +2366,10 @@ static int mdss_histo_compat_ioctl(struct fb_info *info, unsigned int cmd,
 		ret = __from_user_hist_start_req(hist_req32, hist_req);
 		if (ret)
 			goto histo_compat_err;
-		ret = mdss_fb_do_ioctl(info, cmd,
-			(unsigned long) hist_req, file);
+		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) hist_req);
 		break;
 	case MSMFB_HISTOGRAM_STOP:
-		ret = mdss_fb_do_ioctl(info, cmd, arg, file);
+		ret = mdss_fb_do_ioctl(info, cmd, arg);
 		break;
 	case MSMFB_HISTOGRAM:
 		hist32 = compat_ptr(arg);
@@ -2387,7 +2385,7 @@ static int mdss_histo_compat_ioctl(struct fb_info *info, unsigned int cmd,
 		ret = __from_user_hist_data(hist32, hist);
 		if (ret)
 			goto histo_compat_err;
-		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) hist, file);
+		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) hist);
 		if (ret)
 			goto histo_compat_err;
 		ret = __to_user_hist_data(hist32, hist);
@@ -2628,7 +2626,7 @@ void mdss_compat_align_list(void __user *total_mem_chunk,
 }
 
 int mdss_compat_overlay_ioctl(struct fb_info *info, unsigned int cmd,
-			 unsigned long arg, struct file *file)
+			 unsigned long arg)
 {
 	struct mdp_overlay *ov, **layers_head;
 	struct mdp_overlay32 *ov32;
@@ -2645,12 +2643,12 @@ int mdss_compat_overlay_ioctl(struct fb_info *info, unsigned int cmd,
 
 	switch (cmd) {
 	case MSMFB_MDP_PP:
-		ret = mdss_compat_pp_ioctl(info, cmd, arg, file);
+		ret = mdss_compat_pp_ioctl(info, cmd, arg);
 		break;
 	case MSMFB_HISTOGRAM_START:
 	case MSMFB_HISTOGRAM_STOP:
 	case MSMFB_HISTOGRAM:
-		ret = mdss_histo_compat_ioctl(info, cmd, arg, file);
+		ret = mdss_histo_compat_ioctl(info, cmd, arg);
 		break;
 	case MSMFB_OVERLAY_GET:
 		ov = compat_alloc_user_space(sizeof(*ov));
@@ -2664,8 +2662,7 @@ int mdss_compat_overlay_ioctl(struct fb_info *info, unsigned int cmd,
 		if (ret)
 			pr_err("%s: compat mdp overlay failed\n", __func__);
 		else
-			ret = mdss_fb_do_ioctl(info, cmd,
-				(unsigned long) ov, file);
+			ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) ov);
 		ret = __to_user_mdp_overlay(ov32, ov);
 		break;
 	case MSMFB_OVERLAY_SET:
@@ -2680,8 +2677,7 @@ int mdss_compat_overlay_ioctl(struct fb_info *info, unsigned int cmd,
 		if (ret) {
 			pr_err("%s: compat mdp overlay failed\n", __func__);
 		} else {
-			ret = mdss_fb_do_ioctl(info, cmd,
-				(unsigned long) ov, file);
+			ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) ov);
 			ret = __to_user_mdp_overlay(ov32, ov);
 		}
 		break;
@@ -2721,7 +2717,7 @@ int mdss_compat_overlay_ioctl(struct fb_info *info, unsigned int cmd,
 			pr_err("compat mdp overlaylist failed\n");
 		} else {
 			ret = mdss_fb_do_ioctl(info, cmd,
-				(unsigned long) ovlist, file);
+						(unsigned long) ovlist);
 			if (!ret)
 				ret = __to_user_mdp_overlaylist(ovlist32,
 							 ovlist, layers_head);
@@ -2738,7 +2734,7 @@ int mdss_compat_overlay_ioctl(struct fb_info *info, unsigned int cmd,
 	case MSMFB_METADATA_GET:
 	default:
 		pr_debug("%s: overlay ioctl cmd=[%u]\n", __func__, cmd);
-		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) arg, file);
+		ret = mdss_fb_do_ioctl(info, cmd, (unsigned long) arg);
 		break;
 	}
 	return ret;
@@ -2755,7 +2751,7 @@ int mdss_compat_overlay_ioctl(struct fb_info *info, unsigned int cmd,
  * framebuffer device driven in 64-bit kernel.
  */
 int mdss_fb_compat_ioctl(struct fb_info *info, unsigned int cmd,
-			 unsigned long arg, struct file *file)
+			 unsigned long arg)
 {
 	int ret;
 
@@ -2765,13 +2761,13 @@ int mdss_fb_compat_ioctl(struct fb_info *info, unsigned int cmd,
 	cmd = __do_compat_ioctl_nr(cmd);
 	switch (cmd) {
 	case MSMFB_CURSOR:
-		ret = mdss_fb_compat_cursor(info, cmd, arg, file);
+		ret = mdss_fb_compat_cursor(info, cmd, arg);
 		break;
 	case MSMFB_SET_LUT:
-		ret = mdss_fb_compat_set_lut(info, arg, file);
+		ret = mdss_fb_compat_set_lut(info, arg);
 		break;
 	case MSMFB_BUFFER_SYNC:
-		ret = mdss_fb_compat_buf_sync(info, cmd, arg, file);
+		ret = mdss_fb_compat_buf_sync(info, cmd, arg);
 		break;
 	case MSMFB_MDP_PP:
 	case MSMFB_HISTOGRAM_START:
@@ -2789,12 +2785,12 @@ int mdss_fb_compat_ioctl(struct fb_info *info, unsigned int cmd,
 	case MSMFB_METADATA_SET:
 	case MSMFB_METADATA_GET:
 	case MSMFB_OVERLAY_PREPARE:
-		ret = mdss_compat_overlay_ioctl(info, cmd, arg, file);
+		ret = mdss_compat_overlay_ioctl(info, cmd, arg);
 		break;
 	case MSMFB_NOTIFY_UPDATE:
 	case MSMFB_DISPLAY_COMMIT:
 	default:
-		ret = mdss_fb_do_ioctl(info, cmd, arg, file);
+		ret = mdss_fb_do_ioctl(info, cmd, arg);
 		break;
 	}
 
