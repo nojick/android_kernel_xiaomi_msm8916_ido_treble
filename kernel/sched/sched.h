@@ -1467,8 +1467,10 @@ extern void init_task_runnable_average(struct task_struct *p);
 
 static inline void add_nr_running(struct rq *rq, unsigned count)
 {
-	sched_update_nr_prod(cpu_of(rq), rq->nr_running, true);
 	unsigned prev_nr = rq->nr_running;
+
+	sched_update_nr_prod(cpu_of(rq), rq->nr_running, true);
+
 
 	rq->nr_running = prev_nr + count;
 
