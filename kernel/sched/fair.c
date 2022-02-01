@@ -8280,7 +8280,7 @@ void idle_balance(struct rq *this_rq)
 	raw_spin_lock(&this_rq->lock);
 
 	if (balance_cpu == this_cpu &&
-	    (!pulled_task || time_after(jiffies, this_rq->next_balance))) {
+	    (pulled_task || time_after(jiffies, this_rq->next_balance))) {
 		/*
 		 * We are going idle. next_balance may be set based on
 		 * a busy processor. So reset next_balance.
