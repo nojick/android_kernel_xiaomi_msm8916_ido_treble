@@ -78,10 +78,12 @@ static int cpuidle_idle_call(void)
 
 	/*
 	 * Check if the idle task must be rescheduled. If it is the
-	 * case, exit the function after re-enabling the local irq.
+	 * case, exit the function after re-enabling the local irq and
+	 * set again the polling flag
 	 */
-	if (need_resched()) {
+	if (current_clr_polling_and_test()) {
 		local_irq_enable();
+		__current_set_polling();
 		return 0;
 	}
 
@@ -125,7 +127,7 @@ static int cpuidle_idle_call(void)
 			broadcast = !!(drv->states[next_state].flags &
 				       CPUIDLE_FLAG_TIMER_STOP);
 
-			if (broadcast) {
+			if (broadcast)
 				/*
 				 * Tell the time framework to switch
 				 * to a broadcast timer because our
@@ -137,7 +139,6 @@ static int cpuidle_idle_call(void)
 				ret = clockevents_notify(
 					CLOCK_EVT_NOTIFY_BROADCAST_ENTER,
 					&dev->cpu);
-			}
 
 			if (!ret) {
 				trace_cpu_idle_rcuidle(next_state, dev->cpu);
@@ -174,12 +175,8 @@ static int cpuidle_idle_call(void)
 	 * We can't use the cpuidle framework, let's use the default
 	 * idle routine
 	 */
-	if (ret) {
-		if (!current_clr_polling_and_test())
-			arch_cpu_idle();
-		else
-			local_irq_enable();
-	}
+	if (ret)
+		arch_cpu_idle();
 
 	__current_set_polling();
 
