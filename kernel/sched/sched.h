@@ -705,8 +705,6 @@ extern int migrate_swap(struct task_struct *, struct task_struct *);
 
 #ifdef CONFIG_SMP
 
-extern void sched_ttwu_pending(void);
-
 #define rcu_dereference_check_sched_domain(p) \
 	rcu_dereference_check((p), \
 			      lockdep_is_held(&sched_domains_mutex))
@@ -829,10 +827,6 @@ extern int group_balance_cpu(struct sched_group *sg);
  * well with groups where rq capacity can change independently.
  */
 #define group_rq_capacity(group) capacity(cpu_rq(group_first_cpu(group)))
-
-#else
-
-static inline void sched_ttwu_pending(void) { }
 
 #endif /* CONFIG_SMP */
 
