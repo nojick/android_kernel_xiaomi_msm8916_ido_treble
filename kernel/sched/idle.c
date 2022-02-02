@@ -67,8 +67,9 @@ void __weak arch_cpu_idle(void)
  * cpuidle_idle_call - the main idle function
  *
  * NOTE: no locks or semaphores should be used here
+ * return non-zero on failure
  */
-static void cpuidle_idle_call(void)
+static int cpuidle_idle_call(void)
 {
 	struct cpuidle_device *dev = __this_cpu_read(cpuidle_devices);
 	struct cpuidle_driver *drv = cpuidle_get_cpu_driver(dev);
@@ -81,7 +82,7 @@ static void cpuidle_idle_call(void)
 	 */
 	if (need_resched()) {
 		local_irq_enable();
-		return;
+		return 0;
 	}
 
 	/*
@@ -176,6 +177,8 @@ exit_idle:
 
 	rcu_idle_exit();
 	start_critical_timings();
+
+	return 0;
 }
 
 /*
