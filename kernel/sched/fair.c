@@ -3140,9 +3140,9 @@ void dec_nr_big_small_task(struct rq *rq, struct task_struct *p)
 unsigned int nr_eligible_big_tasks(int cpu)
 {
 	struct rq *rq = cpu_rq(cpu);
-	int nr_big = rq->hmp_stats.nr_big_tasks;
+	int nr_big = rq->nr_big_tasks;
 	int nr = rq->nr_running;
-	int nr_small = rq->hmp_stats.nr_small_tasks;
+	int nr_small = rq->nr_small_tasks;
 
 	if (rq->capacity != max_capacity)
 		return nr_big;
@@ -5310,7 +5310,6 @@ static inline struct cfs_bandwidth *tg_cfs_bandwidth(struct task_group *tg)
 }
 static inline void destroy_cfs_bandwidth(struct cfs_bandwidth *cfs_b) {}
 static inline void unthrottle_offline_cfs_rqs(struct rq *rq) {}
-l
 #endif /* CONFIG_CFS_BANDWIDTH */
 
 /**************************************************
