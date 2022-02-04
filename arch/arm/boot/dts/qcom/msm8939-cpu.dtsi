@@ -49,6 +49,7 @@
 		CPU0: cpu@100 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a53";
+			clock-frequency = <19200000>;
 			reg = <0x100>;
 			enable-method = "qcom,arm-cortex-acc";
 			qcom,acc = <&acc0>;
@@ -63,6 +64,7 @@
 		CPU1: cpu@101 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a53";
+			clock-frequency = <19200000>;
 			reg = <0x101>;
 			enable-method = "qcom,arm-cortex-acc";
 			qcom,acc = <&acc1>;
@@ -72,6 +74,7 @@
 		CPU2: cpu@102 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a53";
+			clock-frequency = <19200000>;
 			reg = <0x102>;
 			enable-method = "qcom,arm-cortex-acc";
 			qcom,acc = <&acc2>;
@@ -81,6 +84,7 @@
 		CPU3: cpu@103 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a53";
+			clock-frequency = <19200000>;
 			reg = <0x103>;
 			enable-method = "qcom,arm-cortex-acc";
 			qcom,acc = <&acc3>;
@@ -90,6 +94,7 @@
 		CPU4: cpu@0 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a53";
+			clock-frequency = <19200000>;
 			reg = <0x0>;
 			enable-method = "qcom,arm-cortex-acc";
 			qcom,acc = <&acc4>;
@@ -104,6 +109,7 @@
 		CPU5: cpu@1 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a53";
+			clock-frequency = <19200000>;
 			reg = <0x1>;
 			enable-method = "qcom,arm-cortex-acc";
 			qcom,acc = <&acc5>;
@@ -113,6 +119,7 @@
 		CPU6: cpu@2 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a53";
+			clock-frequency = <19200000>;
 			reg = <0x2>;
 			enable-method = "qcom,arm-cortex-acc";
 			qcom,acc = <&acc6>;
@@ -122,6 +129,7 @@
 		CPU7: cpu@3 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a53";
+			clock-frequency = <19200000>;
 			reg = <0x3>;
 			enable-method = "qcom,arm-cortex-acc";
 			qcom,acc = <&acc7>;
