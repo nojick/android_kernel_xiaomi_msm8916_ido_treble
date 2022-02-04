@@ -10,7 +10,8 @@
  * GNU General Public License for more details.
  */
 
-/ {
+ 
+/*{
 	memory {
 
 		pstore_reserve_mem: pstore_reserve_region@0 {
@@ -22,7 +23,7 @@
 		};
 	};
 };
-
+*/
 &soc {
 	ramoops {
 		compatible = "ramoops";
@@ -32,6 +33,8 @@
 		android,ramoops-buffer-size = <0x200000>;
 		android,ramoops-console-size = <0x50000>;
 		android,ramoops-record-size = <0x40000>;
+		android,ramoops-ftrace-size = <0x10000>;
+		android,ramoops-pmsg-size = <0x20000>;
 		android,ramoops-annotate-size = <0x1000>;
 		android,ramoops-dump-oops = <0x1>;
 	};
