@@ -1,7 +1,7 @@
 /*
  * Gas_Gauge driver for CW2015/2013
  * Copyright (C) 2012, CellWise
- * Copyright (C) 2016 XiaoMi, Inc.
+ * Copyright (C) 2018 XiaoMi, Inc.
  *
  * Authors: ChenGang <ben.chen@cellwise-semi.com>
  *
@@ -27,22 +27,22 @@
 #include <linux/wakelock.h>
 
 
-#define REG_VERSION			 	0x0
-#define REG_VCELL			   	0x2
-#define REG_SOC				 	0x4
-#define REG_RRT_ALERT		   	0x6
-#define REG_CONFIG			  	0x8
-#define REG_MODE					0xA
-#define REG_BATINFO			 	0x10
+#define REG_VERSION             	0x0
+#define REG_VCELL               	0x2
+#define REG_SOC                 	0x4
+#define REG_RRT_ALERT           	0x6
+#define REG_CONFIG              	0x8
+#define REG_MODE                	0xA
+#define REG_BATINFO             	0x10
 
-#define MODE_SLEEP_MASK		 	(0x3<<6)
-#define MODE_SLEEP			  	(0x3<<6)
-#define MODE_NORMAL			 	(0x0<<6)
-#define MODE_QUICK_START			(0x3<<4)
-#define MODE_RESTART				(0xf<<0)
+#define MODE_SLEEP_MASK         	(0x3<<6)
+#define MODE_SLEEP              	(0x3<<6)
+#define MODE_NORMAL             	(0x0<<6)
+#define MODE_QUICK_START        	(0x3<<4)
+#define MODE_RESTART            	(0xf<<0)
 
-#define CONFIG_UPDATE_FLG	   	(0x1<<1)
-#define ATHD						(0x0<<3)
+#define CONFIG_UPDATE_FLG       	(0x1<<1)
+#define ATHD                    	(0x0<<3)
 
 
 #define BATTERY_UP_MAX_CHANGE   	420
@@ -53,12 +53,12 @@
 
 
 
-#define BAT_LOW_INTERRUPT		0
-#define INVALID_GPIO			(-1)
-#define GPIO_LOW			 	0
-#define GPIO_HIGH				1
-#define USB_CHARGER_MODE			1
-#define AC_CHARGER_MODE		 	2
+#define BAT_LOW_INTERRUPT    	0
+#define INVALID_GPIO        	(-1)
+#define GPIO_LOW             	0
+#define GPIO_HIGH            	1
+#define USB_CHARGER_MODE        	1
+#define AC_CHARGER_MODE         	2
 int cw_capacity;
 
 struct cw_battery {
@@ -70,6 +70,8 @@ struct cw_battery {
 	const struct cw_bat_platform_data *plat_data;
 	struct power_supply rk_bat;
 	struct power_supply	*batt_psy;
+
+
 
 	long sleep_time_capacity_change;
 	long run_time_capacity_change;
@@ -93,6 +95,7 @@ struct cw_battery {
 	struct pinctrl_state *pinctrl_state_release;
 };
 
+
 static u8 config_info[SIZE_BATINFO] = {
 	#include "profile_WT702_88509_NT_DeSai.h"
 };
@@ -112,6 +115,9 @@ static u8 config_info_guanyu[SIZE_BATINFO] = {
 static u8 config_info_feimaotui[SIZE_BATINFO] = {
 	#include "profile_WT1001_88509_NT_Feimaotui.h"
 };
+
+
+
 
 /* write data to address */
 static int cw_i2c_write(
@@ -170,7 +176,7 @@ static int cw_update_config_info(struct cw_battery *cw_bat)
 	int i;
 	u8 reset_val;
 
-	dev_dbg(&cw_bat->client->dev, "func: %s-------\n", __func__);
+	pr_debug("func: %s-------\n", __func__);
 
 	/* make sure no in sleep mode */
 	ret = cw_i2c_read(cw_bat->client, REG_MODE, &reg_val, 1);
@@ -185,8 +191,8 @@ static int cw_update_config_info(struct cw_battery *cw_bat)
 
 	/* update new battery info */
 	for (i = 0; i < SIZE_BATINFO; i++) {
-		dev_dbg(&cw_bat->client->dev, "cw_bat->plat_data->cw_bat_config_info[%d] = 0x%x\n", i, \
-				cw_bat->plat_data->cw_bat_config_info[i]);
+		pr_debug("cw_bat->plat_data->cw_bat_config_info[%d] = 0x%x\n", i, \
+					cw_bat->plat_data->cw_bat_config_info[i]);
 		ret = cw_i2c_write(cw_bat->client, REG_BATINFO + i, &cw_bat->plat_data->cw_bat_config_info[i], 1);
 
 		if (ret < 0)
@@ -206,8 +212,8 @@ static int cw_update_config_info(struct cw_battery *cw_bat)
 		return ret;
 
 	reg_val |= CONFIG_UPDATE_FLG;   /* set UPDATE_FLAG */
-	reg_val &= 0x07;				/* clear ATHD */
-	reg_val |= ATHD;				/* set ATHD */
+	reg_val &= 0x07;                /* clear ATHD */
+	reg_val |= ATHD;                /* set ATHD */
 	ret = cw_i2c_write(cw_bat->client, REG_CONFIG, &reg_val, 1);
 	if (ret < 0)
 		return ret;
@@ -219,16 +225,16 @@ static int cw_update_config_info(struct cw_battery *cw_bat)
 
 	if (!(reg_val & CONFIG_UPDATE_FLG)) {
 
-		dev_dbg(&cw_bat->client->dev, "update flag for new battery info have not set..\n");
+		pr_debug("update flag for new battery info have not set..\n");
 		reg_val = MODE_SLEEP;
 		ret = cw_i2c_write(cw_bat->client, REG_MODE, &reg_val, 1);
-		dev_dbg(&cw_bat->client->dev, "report battery capacity error");
+		pr_debug("report battery capacity error");
 		return -EPERM;
 
 	}
 
 	if ((reg_val & 0xf8) != ATHD) {
-		dev_dbg(&cw_bat->client->dev, "the new ATHD have not set..\n");
+		pr_debug("the new ATHD have not set..\n");
 	}
 
 	/* reset */
@@ -254,14 +260,15 @@ static int cw_check_ic(struct cw_battery *cw_bat)
 	ret = cw_i2c_read(cw_bat->client, REG_MODE/*REG_VERSION*/, &reg_val, 1);
 
 	if (ret < 0) {
-		if (ret == -107)
-			return -107;
-		else
+		if (ret == -107) {
+				return -107;
+		} else {
 			return ret;
-
+		}
 	}
-	if ((reg_val == 0xC0) || (reg_val == 0x00))
+	if ((reg_val == 0xC0) || (reg_val == 0x00)) {
 		ret = 0;
+	}
 
 	return ret;
 }
@@ -280,12 +287,12 @@ static int cw_init(struct cw_battery *cw_bat)
 
 	ret = cw_i2c_read(cw_bat->client, REG_CONFIG, &reg_val, 1);
 	if (ret < 0)
-		return ret;
+			return ret;
 
 	if ((reg_val & 0xf8) != ATHD) {
-		dev_dbg(&cw_bat->client->dev, "the new ATHD have not set\n");
-		reg_val &= 0x07;	/* clear ATHD */
-		reg_val |= ATHD;	/* set ATHD */
+		pr_debug("the new ATHD have not set\n");
+		reg_val &= 0x07;    /* clear ATHD */
+		reg_val |= ATHD;    /* set ATHD */
 		ret = cw_i2c_write(cw_bat->client, REG_CONFIG, &reg_val, 1);
 		if (ret < 0)
 			return ret;
@@ -296,7 +303,7 @@ static int cw_init(struct cw_battery *cw_bat)
 		return ret;
 
 	if (!(reg_val & CONFIG_UPDATE_FLG)) {
-		dev_dbg(&cw_bat->client->dev, "update flag for new battery info have not set\n");
+		pr_debug("update flag for new battery info have not set\n");
 		ret = cw_update_config_info(cw_bat);
 		if (ret < 0)
 			return ret;
@@ -311,7 +318,7 @@ static int cw_init(struct cw_battery *cw_bat)
 		}
 
 		if (i != SIZE_BATINFO) {
-			dev_dbg(&cw_bat->client->dev, "update flag for new battery info have not set\n");
+			pr_debug("update flag for new battery info have not set\n");
 			ret = cw_update_config_info(cw_bat);
 			if (ret < 0)
 				return ret;
@@ -332,9 +339,9 @@ static int cw_init(struct cw_battery *cw_bat)
 	}
 	if (i >= 30) {
 		reg_val = MODE_SLEEP;
-		 ret = cw_i2c_write(cw_bat->client, REG_MODE, &reg_val, 1);
-		 dev_dbg(&cw_bat->client->dev, "report battery capacity error");
-		 return -EPERM;
+		ret = cw_i2c_write(cw_bat->client, REG_MODE, &reg_val, 1);
+		pr_debug("report battery capacity error");
+		return -EPERM;
 	}
 	return 0;
 }
@@ -405,10 +412,13 @@ static int cw_get_capacity(struct cw_battery *cw_bat)
 	int allow_capacity;
 	static int if_quickstart;
 	static int jump_flag;
-	static int jump_flag2;
+		static int jump_flag2;
 	static int reset_loop;
 	int charge_time;
 	u8 reset_val;
+
+
+
 
 	ret = cw_i2c_read(cw_bat->client, REG_SOC, reg_val, 2);
 	if (ret < 0)
@@ -420,7 +430,6 @@ static int cw_get_capacity(struct cw_battery *cw_bat)
 		reset_loop++;
 
 		if (reset_loop > 5) {
-
 			reset_val = MODE_SLEEP;
 			ret = cw_i2c_write(cw_bat->client, REG_MODE, &reset_val, 1);
 			if (ret < 0)
@@ -430,23 +439,23 @@ static int cw_get_capacity(struct cw_battery *cw_bat)
 			ret = cw_i2c_write(cw_bat->client, REG_MODE, &reset_val, 1);
 			if (ret < 0)
 				return ret;
-			dev_dbg(&cw_bat->client->dev, "report battery capacity error");
+			pr_debug("report battery capacity error");
 			ret = cw_update_config_info(cw_bat);
 			if (ret)
 				return ret;
 			reset_loop = 0;
-
 		}
-
 		return cw_capacity;
 	} else {
 		reset_loop = 0;
 	}
 
 	if (cw_capacity == 0)
-		dev_dbg(&cw_bat->client->dev, "the cw201x capacity is 0 !!!!!!!, funciton: %s, line: %d\n", __func__, __LINE__);
+				pr_debug("the cw201x capacity is 0 !!!!!!!, funciton: %s, line: %d\n", __func__, __LINE__);
 	else
-		dev_dbg(&cw_bat->client->dev, "the cw201x capacity is %d, funciton: %s\n", cw_capacity, __func__);
+				pr_debug("the cw201x capacity is %d, funciton: %s\n", cw_capacity, __func__);
+
+
 
 	ktime_get_ts(&ts);
 	new_run_time = ts.tv_sec;
@@ -487,7 +496,7 @@ static int cw_get_capacity(struct cw_battery *cw_bat)
 			if (cw_capacity >= allow_capacity) {
 				jump_flag = 0;
 				jump_flag2 = 0;
-			} else {
+			} else{
 				cw_capacity = (allow_capacity <= 100) ? allow_capacity : 100;
 			}
 		} else if (cw_capacity <= cw_bat->capacity) {
@@ -498,14 +507,15 @@ static int cw_get_capacity(struct cw_battery *cw_bat)
 	if ((cw_capacity == 0) && (cw_bat->capacity > 1)) {
 		allow_change = ((new_run_time - cw_bat->run_time_capacity_change) / BATTERY_DOWN_MIN_CHANGE_RUN);
 		allow_change += ((new_sleep_time - cw_bat->sleep_time_capacity_change) / BATTERY_DOWN_MIN_CHANGE_SLEEP);
+
 		allow_capacity = cw_bat->capacity - allow_change;
 		cw_capacity = (allow_capacity >= cw_capacity) ? allow_capacity : cw_capacity;
-		dev_dbg(&cw_bat->client->dev, "report GGIC POR happened");
+		pr_debug("report GGIC POR happened");
 		reg_val[0] = MODE_NORMAL;
 		ret = cw_i2c_write(cw_bat->client, REG_MODE, reg_val, 1);
 		if (ret < 0)
 			return ret;
-		dev_dbg(&cw_bat->client->dev, "report battery capacity jump 0 ");
+		pr_debug("report battery capacity jump 0 ");
 	}
 
 #if 1
@@ -517,17 +527,17 @@ static int cw_get_capacity(struct cw_battery *cw_bat)
 			ret = cw_i2c_write(cw_bat->client, REG_MODE, &reset_val, 1);
 			if (ret < 0)
 				return ret;
-				reset_val = MODE_NORMAL;
-				msleep(10);
-				ret = cw_i2c_write(cw_bat->client, REG_MODE, &reset_val, 1);
-				if (ret < 0)
-					return ret;
-				dev_dbg(&cw_bat->client->dev, "report battery capacity error");
-				ret = cw_update_config_info(cw_bat);
-				if (ret)
-					return ret;
-				dev_dbg(&cw_bat->client->dev, "report battery capacity still 0 if in changing");
-				if_quickstart = 1;
+			reset_val = MODE_NORMAL;
+			msleep(10);
+			ret = cw_i2c_write(cw_bat->client, REG_MODE, &reset_val, 1);
+			if (ret < 0)
+				return ret;
+			pr_debug("report battery capacity error");
+			ret = cw_update_config_info(cw_bat);
+			if (ret)
+				return ret;
+			pr_debug("report battery capacity still 0 if in changing");
+			if_quickstart = 1;
 		}
 	} else if ((if_quickstart == 1) && (cw_bat->charger_mode == 0)) {
 		if_quickstart = 0;
@@ -552,7 +562,7 @@ static int cw_get_capacity(struct cw_battery *cw_bat)
 			}
 		} else if (if_quickstart <= 10)
 			if_quickstart = if_quickstart+2;
-		dev_dbg(&cw_bat->client->dev, "the cw201x voltage is less than SYSTEM_SHUTDOWN_VOLTAGE !!!!!!!, funciton: %s, line: %d\n", __func__, __LINE__);
+		pr_debug("the cw201x voltage is less than SYSTEM_SHUTDOWN_VOLTAGE !!!!!!!, funciton: %s, line: %d\n", __func__, __LINE__);
 	} else if ((cw_bat->charger_mode > 0) && (if_quickstart <= 12)) {
 		if_quickstart = 0;
 	}
@@ -604,7 +614,7 @@ static int cw_get_vol(struct cw_battery *cw_bat)
 	voltage = value16_1 * 312 / 1024;
 	voltage = voltage * 1000;
 
-	dev_dbg(&cw_bat->client->dev, "get cw_voltage : cw_voltage = %d\n", voltage);
+	pr_debug("get cw_voltage : cw_voltage = %d\n", voltage);
 
 	return voltage;
 }
@@ -658,6 +668,7 @@ static int cw_get_time_to_empty(struct cw_battery *cw_bat)
 static void rk_bat_update_capacity(struct cw_battery *cw_bat)
 {
 
+
 	cw_capacity = cw_get_capacity(cw_bat);
 	if ((cw_capacity >= 0) && (cw_capacity <= 100) && (cw_bat->capacity != cw_capacity)) {
 		cw_bat->capacity = cw_capacity;
@@ -665,7 +676,7 @@ static void rk_bat_update_capacity(struct cw_battery *cw_bat)
 		cw_update_time_member_capacity_change(cw_bat);
 
 		if (cw_bat->capacity == 0)
-			dev_dbg(&cw_bat->client->dev, "report battery capacity 0 and will shutdown if no changing");
+			pr_debug("report battery capacity 0 and will shutdown if no changing");
 	}
 }
 
@@ -680,6 +691,8 @@ static void rk_bat_update_vol(struct cw_battery *cw_bat)
 	}
 }
 
+
+
 extern int power_supply_get_battery_charge_state(struct power_supply *psy);
 static struct power_supply *charge_psy;
 static u8 is_charger_plug;
@@ -690,9 +703,12 @@ static void rk_bat_update_status(struct cw_battery *cw_bat)
 	int status;
 	union power_supply_propval ret = {0,};
 
+
+
+
 	if (!charge_psy) {
 		charge_psy = power_supply_get_by_name("usb");
-	} else {
+	} else{
 		is_charger_plug = (u8)power_supply_get_battery_charge_state(charge_psy);
 	}
 
@@ -709,7 +725,7 @@ static void rk_bat_update_status(struct cw_battery *cw_bat)
 		cw_bat->batt_psy->get_property(cw_bat->batt_psy,
 					POWER_SUPPLY_PROP_STATUS, &ret);
 		status = ret.intval;
-	} else {
+	} else{
 		/* Default to false if the battery power supply is not registered. */
 		pr_debug("battery power supply is not registered\n");
 		status = POWER_SUPPLY_STATUS_UNKNOWN;
@@ -718,7 +734,6 @@ static void rk_bat_update_status(struct cw_battery *cw_bat)
 	if (cw_bat->status != status) {
 		cw_bat->status = status;
 		cw_bat->bat_change = 1;
-
 	}
 }
 
@@ -754,8 +769,8 @@ static void cw_bat_work(struct work_struct *work)
 
 	queue_delayed_work(cw_bat->battery_workqueue, &cw_bat->battery_delay_work, msecs_to_jiffies(10000));
 
-	dev_dbg(&cw_bat->client->dev, "cw_bat->bat_change = %d, cw_bat->time_to_empty = %d, cw_bat->capacity = %d, cw_bat->voltage = %d\n", \
-	cw_bat->bat_change, cw_bat->time_to_empty, cw_bat->capacity, cw_bat->voltage);
+	pr_debug("cw_bat->bat_change = %d, cw_bat->time_to_empty = %d, cw_bat->capacity = %d, cw_bat->voltage = %d\n", \
+						cw_bat->bat_change, cw_bat->time_to_empty, cw_bat->capacity, cw_bat->voltage);
 }
 
 static int rk_battery_get_property(struct power_supply *psy,
@@ -818,7 +833,7 @@ static enum power_supply_property rk_battery_properties[] = {
 
 #ifdef BAT_LOW_INTERRUPT
 
-#define WAKE_LOCK_TIMEOUT	   (10 * HZ)
+#define WAKE_LOCK_TIMEOUT       (10 * HZ)
 static struct wake_lock bat_low_wakelock;
 
 static void bat_low_detect_do_wakeup(struct work_struct *work)
@@ -828,7 +843,7 @@ static void bat_low_detect_do_wakeup(struct work_struct *work)
 
 	delay_work = container_of(work, struct delayed_work, work);
 	cw_bat = container_of(delay_work, struct cw_battery, bat_low_wakeup_work);
-	dev_dbg(&cw_bat->client->dev, "func: %s-------\n", __func__);
+	pr_debug("func: %s-------\n", __func__);
 	cw_get_alt(cw_bat);
 
 }
@@ -848,8 +863,10 @@ static int cw_bat_suspend(struct device *dev)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct cw_battery *cw_bat = i2c_get_clientdata(client);
-	dev_dbg(&cw_bat->client->dev, "%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	cancel_delayed_work(&cw_bat->battery_delay_work);
+
+		pr_debug("cw_bat->capacity:%d\n", cw_bat->capacity);
 	return 0;
 }
 
@@ -857,14 +874,15 @@ static int cw_bat_resume(struct device *dev)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct cw_battery *cw_bat = i2c_get_clientdata(client);
-	dev_dbg(&cw_bat->client->dev, "%s\n", __func__);
-	queue_delayed_work(cw_bat->battery_workqueue, &cw_bat->battery_delay_work, msecs_to_jiffies(10));
-	return 0;
+	pr_debug("%s\n", __func__);
+	queue_delayed_work(cw_bat->battery_workqueue, &cw_bat->battery_delay_work, msecs_to_jiffies(1));
+		pr_debug("cw_bat->capacity:%d\n", cw_bat->capacity);
+		return 0;
 }
 
 static const struct dev_pm_ops cw_bat_pm_ops = {
-	.suspend = cw_bat_suspend,
-	.resume = cw_bat_resume,
+		.suspend = cw_bat_suspend,
+		.resume = cw_bat_resume,
 
 };
 #endif
@@ -899,7 +917,7 @@ static int cw_bat_regulator_configure(struct cw_battery *cw_bat, bool on)
 		goto hw_shutdown;
 
 	cw_bat->vcc_i2c = regulator_get(&cw_bat->client->dev,
-			"vcc_i2c");
+					"vcc_i2c");
 	if (IS_ERR(cw_bat->vcc_i2c)) {
 		dev_err(&cw_bat->client->dev,
 				"%s: Failed to get i2c regulator\n",
@@ -984,7 +1002,7 @@ static int cw_bat_pinctrl_init(struct cw_battery *cw_bat)
 	cw_bat->ts_pinctrl = devm_pinctrl_get(&(cw_bat->client->dev));
 	if (IS_ERR_OR_NULL(cw_bat->ts_pinctrl)) {
 		retval = PTR_ERR(cw_bat->ts_pinctrl);
-		dev_dbg(&cw_bat->client->dev,
+		pr_debug(
 			"%s Target does not use pinctrl  %d\n", __func__, retval);
 		goto err_pinctrl_get;
 	}
@@ -1006,8 +1024,8 @@ static int cw_bat_pinctrl_init(struct cw_battery *cw_bat)
 	if (IS_ERR_OR_NULL(cw_bat->pinctrl_state_suspend)) {
 		retval = PTR_ERR(cw_bat->pinctrl_state_suspend);
 		dev_err(&cw_bat->client->dev,
-				"%s Can not lookup %s pinstate %d\n",
-				__func__, PINCTRL_STATE_SUSPEND, retval);
+			"%s Can not lookup %s pinstate %d\n",
+			__func__, PINCTRL_STATE_SUSPEND, retval);
 		goto err_pinctrl_lookup;
 	}
 
@@ -1038,7 +1056,7 @@ static int cw_bat_pinctrl_select(struct cw_battery *cw_bat, bool on)
 		}
 	} else
 		dev_err(&cw_bat->client->dev,
-				"%s not a valid '%s' pinstate\n", __func__,
+			"%s not a valid '%s' pinstate\n", __func__,
 				on ? "pmx_ts_active" : "pmx_ts_suspend");
 
 	return 0;
@@ -1094,27 +1112,24 @@ static int cw_bat_probe(struct i2c_client *client, const struct i2c_device_id *i
 	int ret;
 	int loop = 0;
 
-	printk("\ncw2015/cw2013 driver v1.2 probe start, battery_type_id is %d\n", battery_type_id);
+	pr_debug("\ncw2015/cw2013 driver v1.2 probe start, battery_type_id is %d\n", battery_type_id);
 
 	cw_bat = kzalloc(sizeof(struct cw_battery), GFP_KERNEL);
 	if (!cw_bat) {
-			dev_err(&cw_bat->client->dev, "fail to allocate memory\n");
-			return -ENOMEM;
+		dev_err(&cw_bat->client->dev, "fail to allocate memory\n");
+		return -ENOMEM;
 	}
 	if (client->dev.of_node) {
 		pdata = devm_kzalloc(&client->dev,
 		sizeof(struct cw_bat_platform_data), GFP_KERNEL);
 		if (!pdata) {
-		dev_err(&client->dev,
-			"GTP Failed to allocate memory for pdata\n");
-		return -ENOMEM;
+			dev_err(&client->dev,
+					"GTP Failed to allocate memory for pdata\n");
+			return -ENOMEM;
 		}
-
 		ret = cw_bat_parse_dt(&client->dev, pdata);
 		if (ret)
 			return ret;
-
-
 	} else {
 		pdata = client->dev.platform_data;
 	}
@@ -1142,6 +1157,8 @@ static int cw_bat_probe(struct i2c_client *client, const struct i2c_device_id *i
 	}
 
 
+
+
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
 		dev_err(&client->dev, "I2C not supported\n");
 		return -ENODEV;
@@ -1160,17 +1177,17 @@ static int cw_bat_probe(struct i2c_client *client, const struct i2c_device_id *i
 
 
 	if (ret != 0) {
-		pr_debug(" wc_check_ic fail , return  ENODEV \n");
+		pr_debug(" wc_check_ic fail ,return  ENODEV \n");
 		return -ENODEV;
 	}
 
 	ret = cw_init(cw_bat);
 	while ((loop++ < 2000) && (ret != 0)) {
-			ret = cw_init(cw_bat);
+		ret = cw_init(cw_bat);
 	}
 
 	if (ret) {
-		return ret;
+			return ret;
 	}
 
 	cw_bat->rk_bat.name = "rk-bat";
@@ -1182,7 +1199,7 @@ static int cw_bat_probe(struct i2c_client *client, const struct i2c_device_id *i
 	ret = power_supply_register(&client->dev, &cw_bat->rk_bat);
 	if (ret < 0) {
 		dev_err(&cw_bat->client->dev, "power supply register rk_bat error\n");
-		printk("rk_bat_register_fail\n");
+		pr_debug("rk_bat_register_fail\n");
 		goto rk_bat_register_fail;
 	}
 
@@ -1218,7 +1235,7 @@ static int cw_bat_probe(struct i2c_client *client, const struct i2c_device_id *i
 	ret = cw_bat_pinctrl_init(cw_bat);
 	if (!ret && cw_bat->ts_pinctrl) {
 		ret = pinctrl_select_state(cw_bat->ts_pinctrl,
-				cw_bat->pinctrl_state_active);
+					cw_bat->pinctrl_state_active);
 		if (ret < 0)
 			goto err_pinctrl_select;
 	}
@@ -1233,8 +1250,8 @@ static int cw_bat_probe(struct i2c_client *client, const struct i2c_device_id *i
 	wake_lock_init(&bat_low_wakelock, WAKE_LOCK_SUSPEND, "bat_low_detect");
 	cw_bat->client->irq = gpio_to_irq(pdata->bat_low_pin);
 	ret = request_threaded_irq(client->irq, NULL,
-			bat_low_detect_irq_handler, pdata->irq_flags,
-			"bat_low_detect", cw_bat);
+			  bat_low_detect_irq_handler, pdata->irq_flags,
+			  "bat_low_detect", cw_bat);
 	if (ret) {
 		dev_err(&client->dev, "request irq failed\n");
 		gpio_free(cw_bat->plat_data->bat_low_pin);
@@ -1258,43 +1275,43 @@ static int cw_bat_probe(struct i2c_client *client, const struct i2c_device_id *i
 	cw_bat_regulator_configure(cw_bat, false);
 #endif
 
-	printk("\ncw2015/cw2013 driver v1.2 probe sucess\n");
+	pr_debug("\ncw2015/cw2013 driver v1.2 probe sucess\n");
 	return 0;
 
 rk_bat_register_fail:
-	dev_dbg(&cw_bat->client->dev, "cw2015/cw2013 driver v1.2 probe error!!!!\n");
+	pr_debug("cw2015/cw2013 driver v1.2 probe error!!!!\n");
 	return ret;
 }
 
 static int cw_bat_remove(struct i2c_client *client)
 {
 	struct cw_battery *cw_bat = i2c_get_clientdata(client);
-	dev_dbg(&cw_bat->client->dev, "%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	cancel_delayed_work(&cw_bat->battery_delay_work);
 	return 0;
 }
 
 static const struct i2c_device_id cw_id[] = {
-	{"cw201x", 0},
+	{ "cw2015", 0 },
 };
 MODULE_DEVICE_TABLE(i2c, cw_id);
 
 static struct of_device_id cw2015_match_table[] = {
-	{.compatible = "cellwise,cw2015",},
-	{},
+	{ .compatible = "cellwise,cw2015", },
+	{ },
 };
 static struct i2c_driver cw_bat_driver = {
-	.driver		 = {
-		.name   = "cw201x",
+			.driver         = {
+			.name   = "cw2015",
 
 #ifdef CONFIG_PM
-		.pm = &cw_bat_pm_ops,
+			.pm = &cw_bat_pm_ops,
 #endif
-		.of_match_table = cw2015_match_table,
+			.of_match_table = cw2015_match_table,
 	},
-	.probe		  = cw_bat_probe,
-	.remove		 = cw_bat_remove,
-	.id_table		= cw_id,
+		.probe          = cw_bat_probe,
+		.remove         = cw_bat_remove,
+		.id_table   = cw_id,
 };
 
 static int __init cw_bat_init(void)

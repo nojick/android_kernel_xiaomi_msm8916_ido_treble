@@ -1,7 +1,7 @@
 /*
  * Gas_Gauge driver for CW2015/2013
  * Copyright (C) 2012, CellWise
- * Copyright (C) 2016 XiaoMi, Inc.
+ * Copyright (C) 2018 XiaoMi, Inc.
  *
  * Authors: ChenGang <ben.chen@cellwise-semi.com>
  *
