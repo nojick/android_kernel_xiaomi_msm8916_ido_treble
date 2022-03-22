@@ -7066,9 +7066,9 @@ static void detach_task(struct task_struct *p, struct lb_env *env)
 
 	deactivate_task(env->src_rq, p, DEQUEUE_MIGRATING);
 	p->on_rq = TASK_ON_RQ_MIGRATING;
+	double_lock_balance(env->src_rq, env->dst_rq);
 	set_task_cpu(p, env->dst_cpu);
-	if (task_notify_on_migrate(p))
-		per_cpu(dbs_boost_needed, env->dst_cpu) = true;
+	double_unlock_balance(env->src_rq, env->dst_rq);
 }
 
 /*
@@ -7211,6 +7211,8 @@ static void attach_task(struct rq *rq, struct task_struct *p)
 	p->on_rq = TASK_ON_RQ_QUEUED;
 	activate_task(rq, p, ENQUEUE_MIGRATING);
 	check_preempt_curr(rq, p, 0);
+	if (task_notify_on_migrate(p))
+		per_cpu(dbs_boost_needed, task_cpu(p)) = true;
 }
 
 /*
@@ -7377,12 +7379,12 @@ struct sg_lb_stats {
 	unsigned long sum_weighted_load; /* Weighted load of group's tasks */
 	unsigned long load_per_task;
 	unsigned long group_capacity;
-	unsigned int group_capacity_factor;
 	unsigned int sum_nr_running; /* Nr tasks running in the group */
 #ifdef CONFIG_SCHED_HMP
 	unsigned long sum_nr_big_tasks;
 	u64 group_cpu_load; /* Scaled load of all CPUs of the group */
 #endif
+	unsigned int group_capacity_factor;
 	unsigned int idle_cpus;
 	unsigned int group_weight;
 	enum group_type group_type;
@@ -7803,7 +7805,6 @@ static inline void update_sg_lb_stats(struct lb_env *env,
 		sgs->nr_numa_running += rq->nr_numa_running;
 		sgs->nr_preferred_running += rq->nr_preferred_running;
 #endif
-
 		sgs->sum_weighted_load += weighted_cpuload(i);
 		if (idle_cpu(i))
 			sgs->idle_cpus++;
@@ -8356,7 +8357,7 @@ static struct rq *find_busiest_queue_hmp(struct lb_env *env,
 }
 #else
 static inline struct rq *find_busiest_queue_hmp(struct lb_env *env,
-				     struct sched_group *group)
+                                    struct sched_group *group)
 {
 	return NULL;
 }
@@ -9046,8 +9047,8 @@ out_unlock:
 	raw_spin_unlock(&busiest_rq->lock);
 
 	if (push_task) {
-	if (push_task_detached)
-		attach_one_task(target_rq, push_task);
+		if (push_task_detached)
+			attach_one_task(target_rq, push_task);
 		put_task_struct(push_task);
 		clear_reserved(target_cpu);
 	}
@@ -9447,6 +9448,7 @@ static inline int nohz_kick_needed(struct rq *rq)
 	struct sched_group_capacity *sgc;
 	int nr_busy;
 #endif
+
 	if (unlikely(rq->idle_balance))
 		return 0;
 
@@ -9480,6 +9482,7 @@ static inline int nohz_kick_needed(struct rq *rq)
 
 	rcu_read_unlock();
 #endif
+
 	return 0;
 
 #ifndef CONFIG_SCHED_HMP
