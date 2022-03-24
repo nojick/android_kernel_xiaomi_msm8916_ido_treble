@@ -446,11 +446,6 @@ static void put_system(struct ftrace_subsystem_dir *dir)
 	mutex_unlock(&event_mutex);
 }
 
-static void *event_file_data(struct file *filp)
-{
-	return ACCESS_ONCE(file_inode(filp)->i_private);
-}
-
 static void remove_subsystem(struct ftrace_subsystem_dir *dir)
 {
 	if (!dir)
