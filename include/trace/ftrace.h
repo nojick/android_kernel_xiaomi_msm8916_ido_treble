@@ -17,7 +17,6 @@
  */
 
 #include <linux/ftrace_event.h>
-#include <linux/coresight-stm.h>
 
 /*
  * DECLARE_EVENT_CLASS can be used to add a generic function
@@ -562,11 +561,8 @@ ftrace_raw_event_##call(void *__data, proto)				\
 									\
 	{ assign; }							\
 									\
-	if (!filter_check_discard(ftrace_file, entry, buffer, event)) { \
-		stm_log(OST_ENTITY_FTRACE_EVENTS, entry,		\
-			sizeof(*entry) + __data_size);			\
+	if (!filter_check_discard(ftrace_file, entry, buffer, event)) \
 		trace_buffer_unlock_commit(buffer, event, irq_flags, pc); \
-	}								\
 }
 /*
  * The ftrace_test_probe is compiled out, it is only here as a build time check
