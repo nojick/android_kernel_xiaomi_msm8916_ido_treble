@@ -686,6 +686,7 @@ void init_task_runnable_average(struct task_struct *p)
 {
 	u32 slice;
 
+	p->se.avg.decay_count = 0;
 	slice = sched_slice(task_cfs_rq(p), &p->se) >> 10;
 	p->se.avg.runnable_avg_sum = slice;
 	p->se.avg.runnable_avg_period = slice;
@@ -5983,6 +5984,7 @@ static inline struct cfs_bandwidth *tg_cfs_bandwidth(struct task_group *tg)
 static inline void destroy_cfs_bandwidth(struct cfs_bandwidth *cfs_b) {}
 static inline void update_runtime_enabled(struct rq *rq) {}
 static inline void unthrottle_offline_cfs_rqs(struct rq *rq) {}
+
 #endif /* CONFIG_CFS_BANDWIDTH */
 
 /**************************************************
@@ -7530,6 +7532,7 @@ static struct task_struct *detach_one_task(struct lb_env *env)
 		 */
 		schedstat_inc(env->sd, lb_gained[env->idle]);
 		per_cpu(dbs_boost_load_moved, env->dst_cpu) += pct_task_load(p);
+
 		return p;
 	}
 	return NULL;
@@ -9387,6 +9390,7 @@ static int idle_balance(struct rq *this_rq)
 out:
 	/* Move the next balance forward */
 	if (time_after(this_rq->next_balance, next_balance))
+		this_rq->next_balance = next_balance;
 
 	/* Is there a task of a high priority class? */
 	if (this_rq->nr_running != this_rq->cfs.h_nr_running)
@@ -9463,6 +9467,7 @@ static int active_load_balance_cpu_stop(void *data)
 		}
 		goto out_unlock;
 	}
+
 	/* Search for an sd spanning us and the target CPU. */
 	rcu_read_lock();
 	for_each_domain(target_cpu, sd) {
