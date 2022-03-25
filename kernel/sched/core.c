@@ -5081,8 +5081,7 @@ static int
 try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
 {
 	unsigned long flags;
-	int cpu, success = 0;
-	unsigned long src_cpu;
+	int cpu, src_cpu, success = 0;
 	int notify = 0;
 	struct migration_notify_data mnd;
 #ifdef CONFIG_SMP
