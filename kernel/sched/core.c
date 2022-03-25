@@ -10771,10 +10771,6 @@ void __init sched_init(void)
 		rq->online = 0;
 		rq->idle_stamp = 0;
 		rq->avg_idle = 2*sysctl_sched_migration_cost;
-		rq->max_idle_balance_cost = sysctl_sched_migration_cost;
-		rq->cstate = 0;
-		rq->wakeup_latency = 0;
-		rq->wakeup_energy = 0;
 #ifdef CONFIG_SCHED_HMP
 		cpumask_set_cpu(i, &rq->freq_domain_cpumask);
 		rq->hmp_stats.cumulative_runnable_avg = 0;
@@ -10804,6 +10800,9 @@ void __init sched_init(void)
 		rq->hmp_stats.pred_demands_sum = 0;
 #endif
 #endif
+		rq->max_idle_balance_cost = sysctl_sched_migration_cost;
+		rq->cstate = 0;
+		rq->wakeup_latency = 0;
 
 		INIT_LIST_HEAD(&rq->cfs_tasks);
 
