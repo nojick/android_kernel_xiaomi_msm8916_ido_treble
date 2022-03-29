@@ -134,6 +134,9 @@ void f2fs_submit_merged_bio(struct f2fs_sb_info *sbi,
 
 	mutex_lock(&io->io_mutex);
 
+	if (!__has_merged_page(io, inode, ino, idx))
+		goto out;
+
 	/* change META to META_FLUSH in the checkpoint procedure */
 	if (type >= META_FLUSH) {
 		io->fio.type = META_FLUSH;
