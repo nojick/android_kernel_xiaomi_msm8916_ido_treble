@@ -2158,16 +2158,8 @@ static int f2fs_write_begin(struct file *file, struct address_space *mapping,
 	block_t blkaddr = NULL_ADDR;
 	int err = 0;
 
-	if (trace_android_fs_datawrite_start_enabled()) {
-		char *path, pathbuf[MAX_TRACE_PATHBUF_LEN];
-
-		path = android_fstrace_get_pathname(pathbuf,
-						    MAX_TRACE_PATHBUF_LEN,
-						    inode);
-		trace_android_fs_datawrite_start(inode, pos, len,
-						 current->pid, path,
-						 current->comm);
-	}
+	trace_android_fs_datawrite_start(inode, pos, len,
+					 current->pid, current->comm);
 	trace_f2fs_write_begin(inode, pos, len, flags);
 
 	if (f2fs_is_atomic_file(inode) &&
@@ -2332,26 +2324,13 @@ static ssize_t f2fs_direct_IO(int rw, struct kiocb *iocb, struct iov_iter *iter,
 	if (__force_buffered_io(inode, rw))
 		return 0;
 
-	if (trace_android_fs_dataread_start_enabled() && (rw == READ)) {
-		char *path, pathbuf[MAX_TRACE_PATHBUF_LEN];
-
-		path = android_fstrace_get_pathname(pathbuf,
-						    MAX_TRACE_PATHBUF_LEN,
-						    inode);
+	if (trace_android_fs_dataread_start_enabled() && (rw == READ))
 		trace_android_fs_dataread_start(inode, offset,
-						count, current->pid, path,
+						count, current->pid,
 						current->comm);
-	}
-	if (trace_android_fs_datawrite_start_enabled() && (rw == WRITE)) {
-		char *path, pathbuf[MAX_TRACE_PATHBUF_LEN];
-
-		path = android_fstrace_get_pathname(pathbuf,
-						    MAX_TRACE_PATHBUF_LEN,
-						    inode);
+	if (trace_android_fs_datawrite_start_enabled() && (rw == WRITE))
 		trace_android_fs_datawrite_start(inode, offset, count,
-						 current->pid, path,
-						 current->comm);
-	}
+						 current->pid, current->comm);
 
 	trace_f2fs_direct_IO_enter(inode, offset, count, rw);
 
