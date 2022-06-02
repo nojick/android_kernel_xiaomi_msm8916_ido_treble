@@ -12,7 +12,7 @@
  */
 
 #include "msm8939-qrd.dtsi"
-#include "msm8939-camera-sensor-qrd-ido.dtsi"
+//#include "msm8939-camera-sensor-qrd-ido.dtsi"
 
 &soc {
 	i2c@78b9000 {/* BLSP1 QUP5 */
@@ -152,7 +152,7 @@
              };
 	};
 
-
+#if 0
 	fpc1020 {
 		status = "ok";
 		compatible = "fpc,fpc1020";
@@ -203,7 +203,7 @@
 		pinctrl-0 = <&goodix_irq_active>;
 
 	};
-
+#endif
 
 	gen-vkeys {
 		compatible = "qcom,gen-vkeys";
@@ -312,67 +312,109 @@
 };
 
 
-&tlmm_pinmux {
+&msm_gpio  {
 	bma2x2_int1_pin {
-		qcom,pins = <&gp 112>;
-		qcom,num-grp-pins = <1>;
-		label = "bma2x2_int1_pin";
 		bma2x2_int1_default: int1_default {
-			drive-strength = <6>;
-			bias-pull-up;
+			mux {
+				pins = "gpio112";
+				function = "gpio";
+			};
+			config {
+				pins = "gpio112";
+				drive-dtrength = <2>;
+				bias-pull-up;
+			};
 		};
-		bma2x2_int1_sleep: int1_sleep {
-			drive-strength = <2>;
-			bias-pull-down;
+	bma2x2_int1_sleep: int1_sleep {
+			mux {
+				pins = "gpio112";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio112";
+				drive-strength = <2>;
+				bias-disable; /* NO pull */
+			};
 		};
 	};
 
 	bma2x2_int2_pin {
-		qcom,pins = <&gp 114>;
-		qcom,num-grp-pins = <1>;
-		label = "bma2x2_int2_pin";
 		bma2x2_int2_default: int2_default {
-			drive-strength = <6>;
-			bias-pull-up;
+			mux {
+				pins = "gpio114";
+				function = "gpio";
+			};
+			config {
+				pins = "gpio114";
+				drive-dtrength = <6>;
+				bias-pull-up;
+			};
 		};
-		bma2x2_int2_sleep: int2_sleep {
-			drive-strength = <2>;
-			bias-pull-down;
-		};
+
+	bma2x2_int2_sleep: int2_sleep {
+		mux {
+				pins = "gpio114";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio114";
+				drive-strength = <2>;
+			};
 	};
+};
 
 	ltr559_int_pin {
-		qcom,pins = <&gp 113>;
-		qcom,pin-func = <0>;
-		qcom,num-grp-pins = <1>;
-		label = "alsps-irq";
-		alsps_default: alsps_default {
-		drive-strength = <6>;
-		bias-pull-up;
+		ltr559_default: ltr559_default {
+			mux {
+				pins = "gpio113";
+				function = "gpio";
+			};
+			config {
+				pins = "gpio113";
+				drive-strength = <6>;
+				bias-pull-up;
+			};
 		};
-		alsps_sleep: alsps_sleep {
-			drive-strength = <2>;
-			bias-pull-down;
+		ltr559_sleep: ltr559_sleep {
+			mux {
+				pins = "gpio113";
+				function = "gpio";
+			};
+			config {
+				pins = "gpio113";
+				drive-strength = <2>;
+				bias-pull-up;
+			};
 		};
 	};
 
 	kxtj9_int1_pin {
-		qcom,pins = <&gp 112>;
-		qcom,num-grp-pins = <1>;
-		label = "kxtj9_int1_pin";
 		kxtj9_int1_default: int1_default {
-			drive-strength = <6>;
-			bias-pull-up;
+		mux {
+				pins = "gpio112";
+				function = "gpio";
+			};
+			config {
+				pins = "gpio113";
+				drive-strength = <6>;
+				bias-pull-up;
+				};
+			};
 		};
-	};
 
 	kxtj9_int2_pin {
-		qcom,pins = <&gp 114>;
-		qcom,num-grp-pins = <1>;
-		label = "kxtj9_int2_pin";
 		kxtj9_int2_default: int2_default {
-			drive-strength = <6>;
-			bias-pull-up;
+		mux {
+				pins = "gpio114";
+				function = "gpio";
+			};
+			config {
+				pins = "gpio113";
+				drive-strength = <6>;
+				bias-pull-up;
+			};
 		};
 	};
 
@@ -423,8 +465,8 @@
 	        compatible = "ltr,ltr559";
 		reg = <0x23>;
 		pinctrl-names = "default","sleep";
-		pinctrl-0 = <&alsps_default>;
-		pinctrl-1 = <&alsps_sleep>;
+		pinctrl-0 = <&ltr559_default>;
+		pinctrl-1 = <&ltr559_sleep>;
 		interrupt-parent = <&msm_gpio>;
 		interrupts = <113 0x2>;
 		vdd-supply = <&pm8916_l17>;
@@ -437,9 +479,6 @@
 	stk@48 {
 		compatible = "stk,stk3x1x";
 		reg = <0x48>;
-		pinctrl-names = "default","sleep";
-		pinctrl-0 = <&alsps_default>;
-		pinctrl-1 = <&alsps_sleep>;
 		interrupt-parent = <&msm_gpio>;
 		interrupts = <113 0x2>;
 		vdd-supply = <&pm8916_l17>;
@@ -497,11 +536,26 @@
 	qcom,mdss-pref-prim-intf = "dsi";
 };
 
-&pmx_mdss {
-	qcom,num-grp-pins = <1>;
-	qcom,pins = <&gp 25>;
+&msm_gpio {
+	pmx_mdss {
+		mdss_dsi_active: mdss_dsi_active {
+			mux {
+				pins = "gpio25";
+			};
+			config {
+				pins = "gpio25";
+			};
+		};
+		mdss_dsi_suspend: mdss_dsi_suspend {
+			mux {
+				pins = "gpio25";
+			};
+			config {
+				pins = "gpio25";
+			};
+		};
+	};
 };
-
 &mdss_dsi0 {
 	pinctrl-names = "mdss_default","mdss_sleep";
 	pinctrl-0 = <&mdss_dsi_active>;

@@ -192,7 +192,7 @@
 				bias-disable;
 			};
 		};
-
+#if 0
 		fpc_reset {
 			qcom,pins = <&gp 52>;
 			qcom,num-grp-pins = <1>;
@@ -272,7 +272,7 @@
 				input-enable;
 			};
 		};
-
+#endif
 		sdhc2_cd_pin {
 			sdc2_cd_on: cd_on {
 								mux {
@@ -651,14 +651,18 @@
 				bias-pull-up;
 			};
 		};
-			gpio_led_pins {
-			qcom,pins = <&gp 9>;
-			qcom,num-grp-pins = <1>;
-			label = "gpio-led-pins";
-			gpio_led_off: led_off {
-				drive-strength = <2>;
-				bias-disable;
-				output-low;
+		gpio_led_pins {
+			gpio_led_off: gpio_led_off {
+				mux {
+					pins = "gpio9";
+					function = "gpio";
+				};
+				config {
+					pins = "gpio9";
+					drive-strength = <2>;
+					bias-disable;
+					output-high;
+				};
 			};
 		};
 
