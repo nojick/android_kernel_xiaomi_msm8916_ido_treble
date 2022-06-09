@@ -773,9 +773,14 @@ static int msm_mpm_dev_probe(struct platform_device *pdev)
 	return 0;
 }
 
-static inline int __init mpm_irq_domain_size(struct irq_domain *d)
+static inline int __init mpm_irq_domain_linear_size(struct irq_domain *d)
 {
-	return d->revmap_size;
+	return d->revmap_data.linear.size;
+}
+
+static inline int __init mpm_irq_domain_legacy_size(struct irq_domain *d)
+{
+	return d->revmap_data.legacy.size;
 }
 
 static const struct mpm_of mpm_of_map[MSM_MPM_NR_IRQ_DOMAINS] = {
@@ -784,7 +789,7 @@ static const struct mpm_of mpm_of_map[MSM_MPM_NR_IRQ_DOMAINS] = {
 		"qcom,gic-map",
 		"gic",
 		&gic_arch_extn,
-		mpm_irq_domain_size,
+		mpm_irq_domain_linear_size,
 	},
 	{
 		"qcom,gpio-parent",
@@ -797,7 +802,7 @@ static const struct mpm_of mpm_of_map[MSM_MPM_NR_IRQ_DOMAINS] = {
 #else
 		NULL,
 #endif
-		mpm_irq_domain_size,
+		mpm_irq_domain_legacy_size,
 	},
 };
 
