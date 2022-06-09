@@ -41,7 +41,7 @@ unsigned int irq_of_parse_and_map(struct device_node *dev, int index)
 	if (of_irq_parse_one(dev, index, &oirq))
 		return 0;
 
-	return irq_create_of_mapping(&oirq);
+	return irq_create_of_mapping(oirq.np, oirq.args, oirq.args_count);
 }
 EXPORT_SYMBOL_GPL(irq_of_parse_and_map);
 
