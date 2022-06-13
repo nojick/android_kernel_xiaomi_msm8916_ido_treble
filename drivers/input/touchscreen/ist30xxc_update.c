@@ -1530,14 +1530,14 @@ ssize_t ist30xx_config_show(struct device *dev,
 #endif
 
 /* sysfs  */
-static DEVICE_ATTR(fw_read, 0664, ist30xx_fw_read_show, NULL);
-static DEVICE_ATTR(firmware, 0664, ist30xx_fw_status_show,
+static DEVICE_ATTR(fw_read, S_IRWXUGO, ist30xx_fw_read_show, NULL);
+static DEVICE_ATTR(firmware, S_IRWXUGO, ist30xx_fw_status_show,
 		   ist30xx_fw_store);
-static DEVICE_ATTR(fw_sdcard, 0664, ist30xx_fw_sdcard_show, NULL);
-static DEVICE_ATTR(version, 0664, ist30xx_fw_version_show, NULL);
+static DEVICE_ATTR(fw_sdcard, S_IRWXUGO, ist30xx_fw_sdcard_show, NULL);
+static DEVICE_ATTR(version, S_IRWXUGO, ist30xx_fw_version_show, NULL);
 #ifdef XIAOMI_PRODUCT
-static DEVICE_ATTR(lockdown, 0664, ist30xx_lockdown_show, NULL);
-static DEVICE_ATTR(config, 0664, ist30xx_config_show, NULL);
+static DEVICE_ATTR(lockdown, S_IRWXUGO, ist30xx_lockdown_show, NULL);
+static DEVICE_ATTR(config, S_IRWXUGO, ist30xx_config_show, NULL);
 #endif
 
 struct class *ist30xx_class;

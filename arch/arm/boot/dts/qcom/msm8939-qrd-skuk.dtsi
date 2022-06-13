@@ -122,31 +122,32 @@
 };
 
 
-&msm_gpio  {
+&tlmm_pinmux {
 	bma2x2_int1_pin {
+		qcom,pins = <&gp 112>;
+		qcom,num-grp-pins = <1>;
+		label = "bma2x2_int1_pin";
 		bma2x2_int1_default: int1_default {
-			mux {
-				pins = "gpio112";
-				function = "gpio";
-			};
-			config {
-				pins = "gpio112";
-				drive-dtrength = <2>;
-				bias-pull-up;
-			};
+			  drive-strength = <6>;
+			  bias-pull-up;
+		};
+		bma2x2_int1_sleep: int1_sleep {
+			  drive-strength = <2>;
+			  bias-pull-down;
 		};
 	};
+
 	bma2x2_int2_pin {
+		qcom,pins = <&gp 114>;
+		qcom,num-grp-pins = <1>;
+		label = "bma2x2_int2_pin";
 		bma2x2_int2_default: int2_default {
-			mux {
-				pins = "gpio114";
-				function = "gpio";
-			};
-			config {
-				pins = "gpio114";
-				drive-dtrength = <6>;
-				bias-pull-up;
-			};
+			  drive-strength = <6>;
+			  bias-pull-up;
+		};
+		bma2x2_int2_sleep: int2_sleep {
+			  drive-strength = <2>;
+			  bias-pull-down;
 		};
 	};
 };
@@ -237,14 +238,9 @@
 	qcom,mdss-pref-prim-intf = "dsi";
 };
 
-&msm_gpio {
-	pmx_mdss {
-		mdss_dsi_active: mdss_dsi_active {
-			mux {
-				pins = "gpio1", "gpio25";
-			};
-		};
-	};
+&pmx_mdss {
+	qcom,num-grp-pins = <2>;
+	qcom,pins = <&gp 1>, <&gp 25>;
 };
 
 &mdss_dsi0 {
