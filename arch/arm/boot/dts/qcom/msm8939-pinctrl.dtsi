@@ -552,7 +552,7 @@
 				mux {
 					pins = "gpio8", "gpio9",
 						"gpio11";
-					function = "gpio";
+					function = "blsp_spi3";
 				};
 				config {
 					pins = "gpio8", "gpio9",
@@ -577,7 +577,7 @@
 			spi0_cs0_sleep: spi0_cs0_sleep {
 				mux {
 					pins = "gpio10";
-					function = "gpio";
+					function = "blsp_spi3";
 				};
 				config {
 					pins = "gpio10";
@@ -597,7 +597,7 @@
 				config {
 					pins = "gpio16", "gpio17",
 							"gpio19";
-					drive-strength = <6>;
+					drive-strength = <16>;
 					bias-disable;
 				};
 			};
@@ -612,7 +612,31 @@
 				config {
 					pins = "gpio16", "gpio17",
 							"gpio19";
-					drive-strength = <6>;
+					drive-strength = <2>;
+					bias-disable;
+				};
+			};
+
+			 spi5_cs0_active: spi5_cs0_active {
+				mux {
+					pins = "gpio18";
+					function = "blsp_spi5";
+				};
+				config {
+					pins = "gpio18";
+					drive-strength = <2>;
+					bias-disable;
+				};
+			};
+
+			spi5_cs0_sleep: spi5_cs0_sleep {
+				mux {
+					pins = "gpio18";
+					function = "gpio";
+				};
+				config {
+					pins = "gpio18";
+					drive-strength = <2>;
 					bias-disable;
 				};
 			};
