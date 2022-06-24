@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2015, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2010-2014, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -19,7 +19,6 @@ enum {
 	MSM_SPM_MODE_RETENTION,
 	MSM_SPM_MODE_GDHS,
 	MSM_SPM_MODE_POWER_COLLAPSE,
-	MSM_SPM_MODE_FASTPC,
 	MSM_SPM_MODE_NR
 };
 
@@ -37,14 +36,11 @@ int msm_spm_turn_on_cpu_rail(struct device_node *l2ccc_node,
 struct msm_spm_device *msm_spm_get_device_by_name(const char *name);
 int msm_spm_config_low_power_mode(struct msm_spm_device *dev,
 		unsigned int mode, bool notify_rpm);
+int msm_spm_config_low_power_mode_addr(struct msm_spm_device *dev,
+		unsigned int mode, bool notify_rpm);
 int msm_spm_device_init(void);
 bool msm_spm_is_mode_avail(unsigned int mode);
 void msm_spm_dump_regs(unsigned int cpu);
-int msm_spm_is_avs_enabled(unsigned int cpu);
-int msm_spm_avs_enable(unsigned int cpu);
-int msm_spm_avs_disable(unsigned int cpu);
-int msm_spm_avs_set_limit(unsigned int cpu, uint32_t min_lvl,
-		uint32_t max_lvl);
 #if defined(CONFIG_MSM_L2_SPM)
 
 /* Public functions */
@@ -101,17 +97,24 @@ static inline void msm_spm_dump_regs(unsigned int cpu)
 	return;
 }
 
-static inline int msm_spm_config_low_power_mode(struct msm_spm_device *dev,
+int msm_spm_config_low_power_mode(struct msm_spm_device *dev,
 		unsigned int mode, bool notify_rpm)
 {
 	return -ENODEV;
 }
-static inline struct msm_spm_device *msm_spm_get_device_by_name(const char *name)
+
+int msm_spm_config_low_power_mode_addr(struct msm_spm_device *dev,
+		unsigned int mode, bool notify_rpm)
+{
+	return -ENODEV;
+}
+
+struct msm_spm_device *msm_spm_get_device_by_name(const char *name)
 {
 	return NULL;
 }
 
-static inline bool msm_spm_is_mode_avail(unsigned int mode)
+bool msm_spm_is_mode_avail(unsigned int mode)
 {
 	return false;
 }

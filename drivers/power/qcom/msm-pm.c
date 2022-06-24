@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2015, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2010-2014, 2017 The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -24,10 +24,11 @@
 #include <linux/delay.h>
 #include <linux/platform_device.h>
 #include <linux/of_platform.h>
-#include <linux/of_address.h>
+#include <linux/cpu_pm.h>
 #include <linux/msm-bus.h>
 #include <linux/uaccess.h>
 #include <linux/dma-mapping.h>
+#include <soc/qcom/avs.h>
 #include <soc/qcom/spm.h>
 #include <soc/qcom/pm.h>
 #include <soc/qcom/scm.h>
@@ -79,7 +80,6 @@ enum msm_pc_count_offsets {
 
 static bool msm_pm_ldo_retention_enabled = true;
 static bool msm_pm_tz_flushes_cache;
-static bool msm_pm_ret_no_pll_switch;
 static bool msm_no_ramp_down_pc;
 static struct msm_pm_sleep_status_data *msm_pm_slp_sts;
 DEFINE_PER_CPU(struct clk *, cpu_clks);
@@ -89,6 +89,7 @@ static long *msm_pc_debug_counters;
 
 static cpumask_t retention_cpus;
 static DEFINE_SPINLOCK(retention_lock);
+static DEFINE_MUTEX(msm_pc_debug_mutex);
 
 static bool msm_pm_is_L1_writeback(void)
 {
@@ -137,8 +138,7 @@ static bool msm_pm_retention(bool from_idle)
 	cpumask_set_cpu(cpu, &retention_cpus);
 	spin_unlock(&retention_lock);
 
-	if (!msm_pm_ret_no_pll_switch)
-		clk_disable(cpu_clk);
+	clk_disable(cpu_clk);
 
 	ret = msm_spm_set_low_power_mode(MSM_SPM_MODE_RETENTION, false);
 	WARN_ON(ret);
@@ -148,9 +148,8 @@ static bool msm_pm_retention(bool from_idle)
 	ret = msm_spm_set_low_power_mode(MSM_SPM_MODE_CLOCK_GATING, false);
 	WARN_ON(ret);
 
-	if (!msm_pm_ret_no_pll_switch)
-		if (clk_enable(cpu_clk))
-			pr_err("%s(): Error restore cpu clk\n", __func__);
+	if (clk_enable(cpu_clk))
+		pr_err("%s(): Error restore cpu clk\n", __func__);
 
 	spin_lock(&retention_lock);
 	cpumask_clear_cpu(cpu, &retention_cpus);
@@ -211,25 +210,6 @@ static bool msm_pm_pc_hotplug(void)
 	return 0;
 }
 
-static bool msm_pm_fastpc(bool from_idle)
-{
-	int ret = 0;
-	unsigned int cpu = smp_processor_id();
-
-	ret = msm_spm_set_low_power_mode(MSM_SPM_MODE_FASTPC, false);
-	WARN_ON(ret);
-
-	if (from_idle || cpu_online(cpu))
-		msm_arch_idle();
-	else
-		msm_pm_pc_hotplug();
-
-	ret = msm_spm_set_low_power_mode(MSM_SPM_MODE_CLOCK_GATING, false);
-	WARN_ON(ret);
-
-	return true;
-}
-
 int msm_pm_collapse(unsigned long unused)
 {
 	uint32_t cpu = smp_processor_id();
@@ -273,6 +253,9 @@ static bool __ref msm_pm_spm_power_collapse(
 		pr_info("CPU%u: %s: notify_rpm %d\n",
 			cpu, __func__, (int) notify_rpm);
 
+	if (from_idle)
+		cpu_pm_enter();
+
 	ret = msm_spm_set_low_power_mode(
 			MSM_SPM_MODE_POWER_COLLAPSE, notify_rpm);
 	WARN_ON(ret);
@@ -302,6 +285,9 @@ static bool __ref msm_pm_spm_power_collapse(
 
 	msm_pm_boot_config_after_pc(cpu);
 
+	if (from_idle)
+		cpu_pm_exit();
+
 	if (MSM_PM_DEBUG_POWER_COLLAPSE & msm_pm_debug_mask)
 		pr_info("CPU%u: %s: msm_pm_collapse returned, collapsed %d\n",
 			cpu, __func__, collapsed);
@@ -315,10 +301,18 @@ static bool msm_pm_power_collapse_standalone(
 		bool from_idle)
 {
 	unsigned int cpu = smp_processor_id();
+	unsigned int avsdscr;
+	unsigned int avscsr;
 	bool collapsed;
+
+	avsdscr = avs_get_avsdscr();
+	avscsr = avs_get_avscsr();
+	avs_set_avscsr(0); /* Disable AVS */
 
 	collapsed = msm_pm_spm_power_collapse(cpu, from_idle, false);
 
+	avs_set_avsdscr(avsdscr);
+	avs_set_avscsr(avscsr);
 	return collapsed;
 }
 
@@ -361,6 +355,8 @@ static bool msm_pm_power_collapse(bool from_idle)
 {
 	unsigned int cpu = smp_processor_id();
 	unsigned long saved_acpuclk_rate = 0;
+	unsigned int avsdscr;
+	unsigned int avscsr;
 	bool collapsed;
 
 	if (MSM_PM_DEBUG_POWER_COLLAPSE & msm_pm_debug_mask)
@@ -378,6 +374,10 @@ static bool msm_pm_power_collapse(bool from_idle)
 			|| (MSM_PM_DEBUG_IDLE_CLK & msm_pm_debug_mask))
 		clock_debug_print_enabled();
 
+	avsdscr = avs_get_avsdscr();
+	avscsr = avs_get_avscsr();
+	avs_set_avscsr(0); /* Disable AVS */
+
 	if (cpu_online(cpu) && !msm_no_ramp_down_pc)
 		saved_acpuclk_rate = ramp_down_last_cpu(cpu);
 
@@ -385,6 +385,9 @@ static bool msm_pm_power_collapse(bool from_idle)
 
 	if (cpu_online(cpu) && !msm_no_ramp_down_pc)
 		ramp_up_first_cpu(cpu, saved_acpuclk_rate);
+
+	avs_set_avsdscr(avsdscr);
+	avs_set_avscsr(avscsr);
 
 	if (MSM_PM_DEBUG_POWER_COLLAPSE & msm_pm_debug_mask)
 		pr_info("CPU%u: %s: post power up\n", cpu, __func__);
@@ -407,7 +410,6 @@ static bool (*execute[MSM_PM_SLEEP_MODE_NR])(bool idle) = {
 	[MSM_PM_SLEEP_MODE_POWER_COLLAPSE_STANDALONE] =
 		msm_pm_power_collapse_standalone,
 	[MSM_PM_SLEEP_MODE_RETENTION] = msm_pm_retention,
-	[MSM_PM_SLEEP_MODE_FASTPC] = msm_pm_fastpc,
 	[MSM_PM_SLEEP_MODE_POWER_COLLAPSE] = msm_pm_power_collapse,
 };
 
@@ -559,10 +561,11 @@ snoc_cl_probe_done:
 
 static int msm_cpu_status_probe(struct platform_device *pdev)
 {
+	struct msm_pm_sleep_status_data *pdata;
+	char *key;
 	u32 cpu;
-	int rc;
 
-	if (!pdev | !pdev->dev.of_node)
+	if (!pdev)
 		return -EFAULT;
 
 	msm_pm_slp_sts = devm_kzalloc(&pdev->dev,
@@ -572,34 +575,59 @@ static int msm_cpu_status_probe(struct platform_device *pdev)
 	if (!msm_pm_slp_sts)
 		return -ENOMEM;
 
+	if (pdev->dev.of_node) {
+		struct resource *res;
+		u32 offset;
+		int rc;
+		u32 mask;
+		bool offset_available = true;
 
-	for_each_possible_cpu(cpu) {
-		struct device_node *cpun, *node;
-		char *key;
-
-		cpun = of_get_cpu_node(cpu, NULL);
-
-		if (!cpun) {
-			__WARN();
-			continue;
-		}
-
-		node = of_parse_phandle(cpun, "qcom,sleep-status", 0);
-		if (!node)
+		res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+		if (!res)
 			return -ENODEV;
 
-		msm_pm_slp_sts[cpu].base_addr = of_iomap(node, 0);
-		if (!msm_pm_slp_sts[cpu].base_addr) {
-			pr_err("%s: Can't find base addr\n", __func__);
-			return -ENODEV;
-		}
+		key = "qcom,cpu-alias-addr";
+		rc = of_property_read_u32(pdev->dev.of_node, key, &offset);
+
+		if (rc)
+			offset_available = false;
 
 		key = "qcom,sleep-status-mask";
-		rc = of_property_read_u32(node, key, &msm_pm_slp_sts[cpu].mask);
-		if (rc) {
-			pr_err("%s: Can't find %s property\n", __func__, key);
-			iounmap(msm_pm_slp_sts[cpu].base_addr);
-			return rc;
+		rc = of_property_read_u32(pdev->dev.of_node, key, &mask);
+
+		if (rc)
+			return -ENODEV;
+
+		for_each_possible_cpu(cpu) {
+			phys_addr_t base_c;
+
+			if (offset_available)
+				base_c = res->start + cpu * offset;
+			else {
+				res = platform_get_resource(pdev,
+							IORESOURCE_MEM, cpu);
+				if (!res)
+					return -ENODEV;
+				base_c = res->start;
+			}
+
+			msm_pm_slp_sts[cpu].base_addr =
+				devm_ioremap(&pdev->dev, base_c,
+						resource_size(res));
+			msm_pm_slp_sts[cpu].mask = mask;
+
+			if (!msm_pm_slp_sts[cpu].base_addr)
+				return -ENOMEM;
+		}
+	} else {
+		pdata = pdev->dev.platform_data;
+		if (!pdev->dev.platform_data)
+			return -EINVAL;
+
+		for_each_possible_cpu(cpu) {
+			msm_pm_slp_sts[cpu].base_addr =
+				pdata->base_addr + cpu * pdata->cpu_offset;
+			msm_pm_slp_sts[cpu].mask = pdata->mask;
 		}
 	}
 
@@ -691,33 +719,48 @@ static ssize_t msm_pc_debug_counters_file_read(struct file *file,
 		char __user *bufu, size_t count, loff_t *ppos)
 {
 	struct msm_pc_debug_counters_buffer *data;
+	ssize_t ret;
 
+	mutex_lock(&msm_pc_debug_mutex);
 	data = file->private_data;
 
-	if (!data)
-		return -EINVAL;
+	if (!data) {
+		ret = -EINVAL;
+		goto exit;
+	}
 
-	if (!bufu)
-		return -EINVAL;
+	if (!bufu) {
+		ret = -EINVAL;
+		goto exit;
+	}
 
-	if (!access_ok(VERIFY_WRITE, bufu, count))
-		return -EFAULT;
+	if (!access_ok(VERIFY_WRITE, bufu, count)) {
+		ret = -EFAULT;
+		goto exit;
+	}
 
 	if (*ppos >= data->len && data->len == 0)
 		data->len = msm_pc_debug_counters_copy(data);
 
-	return simple_read_from_buffer(bufu, count, ppos,
+	ret = simple_read_from_buffer(bufu, count, ppos,
 			data->buf, data->len);
+exit:
+	mutex_unlock(&msm_pc_debug_mutex);
+	return ret;
 }
 
 static int msm_pc_debug_counters_file_open(struct inode *inode,
 		struct file *file)
 {
 	struct msm_pc_debug_counters_buffer *buf;
+	int ret = 0;
 
+	mutex_lock(&msm_pc_debug_mutex);
 
-	if (!inode->i_private)
-		return -EINVAL;
+	if (!inode->i_private) {
+		ret = -EINVAL;
+		goto exit;
+	}
 
 	file->private_data = kzalloc(
 		sizeof(struct msm_pc_debug_counters_buffer), GFP_KERNEL);
@@ -726,19 +769,24 @@ static int msm_pc_debug_counters_file_open(struct inode *inode,
 		pr_err("%s: ERROR kmalloc failed to allocate %zu bytes\n",
 		__func__, sizeof(struct msm_pc_debug_counters_buffer));
 
-		return -ENOMEM;
+		ret = -ENOMEM;
+		goto exit;
 	}
 
 	buf = file->private_data;
 	buf->reg = (long *)inode->i_private;
 
-	return 0;
+exit:
+	mutex_unlock(&msm_pc_debug_mutex);
+	return ret;
 }
 
 static int msm_pc_debug_counters_file_close(struct inode *inode,
 		struct file *file)
 {
+	mutex_lock(&msm_pc_debug_mutex);
 	kfree(file->private_data);
+	mutex_unlock(&msm_pc_debug_mutex);
 	return 0;
 }
 
@@ -756,10 +804,6 @@ static int msm_pm_clk_init(struct platform_device *pdev)
 	char clk_name[] = "cpu??_clk";
 	char *key;
 
-	key = "qcom,saw-turns-off-pll";
-	if (of_property_read_bool(pdev->dev.of_node, key))
-		return 0;
-
 	key = "qcom,synced-clocks";
 	synced_clocks = of_property_read_bool(pdev->dev.of_node, key);
 
@@ -771,7 +815,7 @@ static int msm_pm_clk_init(struct platform_device *pdev)
 			if (cpu && synced_clocks)
 				return 0;
 			else
-				clk = NULL;
+				return PTR_ERR(clk);
 		}
 		per_cpu(cpu_clks, cpu) = clk;
 	}
@@ -831,10 +875,6 @@ skip_save_imem:
 		msm_pm_tz_flushes_cache =
 				of_property_read_bool(pdev->dev.of_node, key);
 
-		key = "qcom,no-pll-switch-for-retention";
-		msm_pm_ret_no_pll_switch =
-				of_property_read_bool(pdev->dev.of_node, key);
-
 		ret = msm_pm_clk_init(pdev);
 		if (ret) {
 			pr_info("msm_pm_clk_init returned error\n");
@@ -870,15 +910,25 @@ static int __init msm_pm_drv_init(void)
 
 	rc = platform_driver_register(&msm_cpu_pm_snoc_client_driver);
 
-	if (rc) {
+	if (rc)
 		pr_err("%s(): failed to register driver %s\n", __func__,
 				msm_cpu_pm_snoc_client_driver.driver.name);
-		return rc;
-	}
-
-	return platform_driver_register(&msm_cpu_pm_driver);
+	return rc;
 }
 late_initcall(msm_pm_drv_init);
+
+static int __init msm_pm_debug_counters_init(void)
+{
+	int rc;
+
+	rc = platform_driver_register(&msm_cpu_pm_driver);
+
+	if (rc)
+		pr_err("%s(): failed to register driver %s\n", __func__,
+				msm_cpu_pm_driver.driver.name);
+	return rc;
+}
+fs_initcall(msm_pm_debug_counters_init);
 
 int __init msm_pm_sleep_status_init(void)
 {
