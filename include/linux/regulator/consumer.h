@@ -97,7 +97,6 @@ struct regmap;
  * FORCE_DISABLE  Regulator forcibly shut down by software.
  * VOLTAGE_CHANGE Regulator voltage changed.
  * DISABLE        Regulator was disabled.
- * ENABLE         Regulator was enabled.
  *
  * NOTE: These events can be OR'ed together when passed into handler.
  */
@@ -110,7 +109,6 @@ struct regmap;
 #define REGULATOR_EVENT_FORCE_DISABLE		0x20
 #define REGULATOR_EVENT_VOLTAGE_CHANGE		0x40
 #define REGULATOR_EVENT_DISABLE 		0x80
-#define REGULATOR_EVENT_ENABLE			0x100
 
 struct regulator;
 
