@@ -162,7 +162,7 @@ static struct gpio_desc *gpiochip_offset_to_desc(struct gpio_chip *chip,
  */
 int desc_to_gpio(const struct gpio_desc *desc)
 {
-	return desc - &gpio_desc[0];
+	return desc->chip->base + gpio_chip_hwgpio(desc);
 }
 EXPORT_SYMBOL_GPL(desc_to_gpio);
 
