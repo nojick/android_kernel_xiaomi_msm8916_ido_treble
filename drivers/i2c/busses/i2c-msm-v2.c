@@ -32,7 +32,6 @@
 #include <linux/dma-mapping.h>
 #include <linux/i2c.h>
 #include <linux/of.h>
-#include <linux/of_i2c.h>
 #include <linux/msm-sps.h>
 #include <linux/msm-bus.h>
 #include <linux/msm-bus-board.h>
@@ -2804,12 +2803,10 @@ static int i2c_msm_frmwrk_reg(struct platform_device *pdev,
 						struct i2c_msm_ctrl *ctrl)
 {
 	int ret;
-
 	i2c_set_adapdata(&ctrl->adapter, ctrl);
 	ctrl->adapter.algo = &i2c_msm_frmwrk_algrtm;
 	strlcpy(ctrl->adapter.name, i2c_msm_adapter_name,
 						sizeof(ctrl->adapter.name));
-
 	ctrl->adapter.nr = pdev->id;
 	ctrl->adapter.dev.parent = &pdev->dev;
 	ret = i2c_add_numbered_adapter(&ctrl->adapter);
@@ -2817,12 +2814,6 @@ static int i2c_msm_frmwrk_reg(struct platform_device *pdev,
 		dev_err(ctrl->dev, "error i2c_add_adapter failed\n");
 		return ret;
 	}
-
-	if (ctrl->dev->of_node) {
-		ctrl->adapter.dev.of_node = pdev->dev.of_node;
-		of_i2c_register_devices(&ctrl->adapter);
-	}
-
 	return ret;
 }
 
