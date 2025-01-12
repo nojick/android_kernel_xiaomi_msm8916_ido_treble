@@ -1,5 +1,5 @@
 
-source "drivers/video/msm/vidc/Kconfig"
+source "drivers/video/fbdev/msm/vidc/Kconfig"
 
 config FB_MSM
 	tristate "MSM Framebuffer support"
@@ -512,6 +512,6 @@ config FB_MSM_QPIC_PANEL_DETECT
 	  Support for Qpic panel auto detect
 
 if FB_MSM_MDSS
-	source "drivers/video/msm/mdss/Kconfig"
+	source "drivers/video/fbdev/msm/mdss/Kconfig"
 endif
 endif
