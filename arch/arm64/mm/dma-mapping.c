@@ -256,17 +256,6 @@ static void arm64_swiotlb_free_coherent(struct device *dev, size_t size,
 	}
 }
 
-static pgprot_t __get_dma_pgprot(pgprot_t prot, struct dma_attrs *attrs)
-{
-	if (dma_get_attr(DMA_ATTR_WRITE_COMBINE, attrs))
-		prot = pgprot_writecombine(prot);
-	/* if non-consistent just pass back what was given */
-	else if (!dma_get_attr(DMA_ATTR_NON_CONSISTENT, attrs))
-		prot = pgprot_dmacoherent(prot);
-
-	return prot;
-}
-
 static void *arm64_swiotlb_alloc_noncoherent(struct device *dev, size_t size,
 					     dma_addr_t *dma_handle, gfp_t flags,
 					     struct dma_attrs *attrs)
@@ -274,7 +263,6 @@ static void *arm64_swiotlb_alloc_noncoherent(struct device *dev, size_t size,
 	struct page *page, **map;
 	void *ptr, *coherent_ptr;
 	int order, i;
-	pgprot_t prot = __get_dma_pgprot(pgprot_default, attrs);
 
 	size = PAGE_ALIGN(size);
 	order = get_order(size);
@@ -302,7 +290,8 @@ static void *arm64_swiotlb_alloc_noncoherent(struct device *dev, size_t size,
 		page = virt_to_page(ptr);
 		for (i = 0; i < (size >> PAGE_SHIFT); i++)
 			map[i] = page + i;
-		coherent_ptr = vmap(map, size >> PAGE_SHIFT, VM_MAP, prot);
+		coherent_ptr = vmap(map, size >> PAGE_SHIFT, VM_MAP,
+			    pgprot_dmacoherent(pgprot_default));
 		kfree(map);
 		if (!coherent_ptr)
 			goto no_map;
