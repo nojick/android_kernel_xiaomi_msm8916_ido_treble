@@ -589,11 +589,12 @@ static void clear_cma_bitmap(struct cma *cma, unsigned long pfn, int count)
  * global one. Requires architecture specific get_dev_cma_area() helper
  * function.
  */
-unsigned long dma_alloc_from_contiguous(struct device *dev, size_t count,
+struct page *dma_alloc_from_contiguous(struct device *dev, size_t count,
 				       unsigned int align)
 {
 	unsigned long mask, pfn = 0, pageno, start = 0;
 	struct cma *cma = dev_get_cma_area(dev);
+	struct page *page = NULL;
 	int ret = 0;
 	int tries = 0;
 	int retry_after_sleep = 0;
@@ -674,8 +675,8 @@ unsigned long dma_alloc_from_contiguous(struct device *dev, size_t count,
 		start = pageno + mask + 1;
 	}
 
-	pr_debug("%s(): returned %lx\n", __func__, pfn);
-	return pfn;
+	pr_debug("%s(): returned %p\n", __func__, page);
+	return page;
 }
 
 /**
@@ -688,15 +689,16 @@ unsigned long dma_alloc_from_contiguous(struct device *dev, size_t count,
  * It returns false when provided pages do not belong to contiguous area and
  * true otherwise.
  */
-bool dma_release_from_contiguous(struct device *dev, unsigned long pfn,
+bool dma_release_from_contiguous(struct device *dev, struct page *pages,
 				 int count)
 {
 	struct cma *cma = dev_get_cma_area(dev);
+	unsigned long pfn;
 
-	if (!cma || !pfn)
+	if (!cma || !pages)
 		return false;
 
-	pr_debug("%s(pfn %lx)\n", __func__, pfn);
+	pr_debug("%s(page %p)\n", __func__, (void *)pages);
 
 	if (pfn < cma->base_pfn || pfn >= cma->base_pfn + cma->count)
 		return false;
