@@ -934,20 +934,6 @@ size_t default_iommu_map_sg(struct iommu_domain *domain, unsigned long iova,
 }
 EXPORT_SYMBOL_GPL(default_iommu_map_sg);
 
-/* DEPRECATED */
-int iommu_map_range(struct iommu_domain *domain, unsigned int iova,
-		    struct scatterlist *sg, unsigned int len, int opt)
-{
-	return -ENODEV;
-}
-
-/* DEPRECATED */
-int iommu_unmap_range(struct iommu_domain *domain, unsigned int iova,
-		      unsigned int len)
-{
-	return -ENODEV;
-}
-
 int iommu_domain_window_enable(struct iommu_domain *domain, u32 wnd_nr,
 			       phys_addr_t paddr, u64 size, int prot)
 {
