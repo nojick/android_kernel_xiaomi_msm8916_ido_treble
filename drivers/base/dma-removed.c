@@ -32,7 +32,7 @@ void *removed_alloc(struct device *dev, size_t size, dma_addr_t *handle,
 	bool no_kernel_mapping = dma_get_attr(DMA_ATTR_NO_KERNEL_MAPPING,
 					attrs);
 	bool skip_zeroing = dma_get_attr(DMA_ATTR_SKIP_ZEROING, attrs);
-	unsigned long pfn;
+	struct page *pfn;
 	unsigned long order = get_order(size);
 	void *addr = NULL;
 
@@ -82,8 +82,6 @@ void removed_free(struct device *dev, size_t size, void *cpu_addr,
 
 	if (!no_kernel_mapping)
 		iounmap(cpu_addr);
-	dma_release_from_contiguous(dev, __phys_to_pfn(handle),
-					size >> PAGE_SHIFT);
 }
 
 static dma_addr_t removed_map_page(struct device *dev, struct page *page,
