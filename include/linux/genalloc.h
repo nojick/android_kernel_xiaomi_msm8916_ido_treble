@@ -41,7 +41,7 @@ struct device_node;
  * @nr: The number of zeroed bits we're looking for
  * @data: optional additional data used by @genpool_algo_t
  */
-typedef u64 (*genpool_algo_t)(unsigned long *map,
+typedef unsigned long (*genpool_algo_t)(unsigned long *map,
 			unsigned long size,
 			unsigned long start,
 			unsigned int nr,
