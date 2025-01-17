@@ -173,7 +173,7 @@
 };
 
 &qcom_tzlog {
-	status = "okay";
+	status = "diabled";
 };
 
 &qcom_rng {
