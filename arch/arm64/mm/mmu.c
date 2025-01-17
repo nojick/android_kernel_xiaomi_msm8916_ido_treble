@@ -27,6 +27,7 @@
 #include <linux/fs.h>
 #include <linux/io.h>
 #include <linux/dma-contiguous.h>
+#include <linux/cma.h>
 
 #include <asm/cputype.h>
 #include <asm/sections.h>
