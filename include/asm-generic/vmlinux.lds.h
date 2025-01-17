@@ -539,7 +539,7 @@
 	CPU_DISCARD(init.rodata)					\
 	MEM_DISCARD(init.rodata)					\
 	CLK_OF_TABLES()							\
-	RESERVEDMEM_OF_TABLES()	
+	RESERVEDMEM_OF_TABLES()						\
 	CPU_METHOD_OF_TABLES()						\
 	CLKSRC_OF_TABLES()						\
 	KERNEL_DTB()							\
