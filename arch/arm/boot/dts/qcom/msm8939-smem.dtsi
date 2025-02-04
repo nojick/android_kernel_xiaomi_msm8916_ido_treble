@@ -18,7 +18,7 @@
 			<0x60000 0x8000>,
 			<0x193D000 0x8>;
 		reg-names = "smem", "irq-reg-base", "aux-mem1", "smem_targ_info_reg";
-		//qcom,mpu-enabled;
+		qcom,mpu-enabled;
 
 		qcom,smd-modem {
 			compatible = "qcom,smd";

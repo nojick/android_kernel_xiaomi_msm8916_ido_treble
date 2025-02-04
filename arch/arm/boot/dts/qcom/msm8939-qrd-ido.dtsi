@@ -12,7 +12,7 @@
  */
 
 #include "msm8939-qrd.dtsi"
-//#include "msm8939-camera-sensor-qrd-ido.dtsi"
+#include "msm8939-camera-sensor-qrd-ido.dtsi"
 
 &soc {
 	i2c@78b9000 {/* BLSP1 QUP5 */
@@ -491,7 +491,7 @@
 	};
 
 };
-#if 0
+
 
 &mdss_mdp {
 	qcom,mdss-pref-prim-intf = "dsi";
@@ -510,7 +510,7 @@
 	qcom,platform-reset-gpio = <&msm_gpio 25 0>;
 
 };
-#endif
+
 #include "lineage-xiaomi-ido.dtsi"
 &firmware {
 	android {

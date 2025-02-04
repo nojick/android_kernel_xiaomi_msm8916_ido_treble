@@ -34,54 +34,87 @@
 		spi0 = &spi_0;
 		spi5 = &spi_5;
 	};
-	memory { device_type = "memory"; reg = <0 0 0 0>; };
-	reserved-memory {
+
+	memory {
 		#address-cells = <2>;
 		#size-cells = <2>;
-		ranges;
 
 		external_image_mem: external_image__region@0 {
+			linux,reserve-contiguous-region;
+			linux,reserve-region;
+			linux,remove-completely;
 			reg = <0x0 0x86000000 0x0 0x0800000>;
+			label = "external_image_mem";
 		};
 
 		modem_adsp_mem: modem_adsp_region@0 {
+			linux,reserve-contiguous-region;
+			linux,reserve-region;
+			linux,remove-completely;
 			reg = <0x0 0x86800000 0x0 0x05600000>;
+			label = "modem_adsp_mem";
 		};
 
 		peripheral_mem: pheripheral_region@0 {
+			linux,reserve-contiguous-region;
+			linux,reserve-region;
+			linux,remove-completely;
 			reg = <0x0 0x8be00000 0x0 0x0600000>;
+			label = "peripheral_mem";
 		};
 
 		pstore_reserve_mem: pstore_reserve_mem_region@0 {
+			linux,reserve-contiguous-region;
+			linux,reserve-region;
+			linux,remove-completely;
 			reg = <0x0 0xdfe00000 0x0 0x00200000>;
+			label = "pstore_reserve_mem";
 		};
 
 		mba_mem: mba_region@0 {
+			linux,reserve-contiguous-region;
 			reg = <0 0 0 0x0200000>;
+			label = "mba_mem";
 		};
 
 		venus_mem: venus_region@0 {
+			linux,reserve-contiguous-region;
+			linux,memory-limit = <0x90000000>;
 			reg = <0 0 0 0x0500000>;
+			label = "venus_mem";
 		};
 
 		secure_mem: secure_region@0 {
+			linux,reserve-contiguous-region;
 			reg = <0 0 0 0x6D00000>;
+			label = "secure_mem";
 		};
 
 		qseecom_mem: qseecom_region@0 {
+			linux,reserve-contiguous-region;
 			reg = <0 0 0 0x1900000>;
+			label = "qseecom_mem";
 		};
 
 		audio_mem: audio_region@0 {
+			linux,reserve-contiguous-region;
 			reg = <0 0 0 0x314000>;
+			label = "audio_mem";
 		};
 
 		cont_splash_mem: splash_region@83000000 {
+			linux,reserve-contiguous-region;
+			linux,reserve-region;
 			reg = <0x0 0x83000000 0x0 0x2000000>;
+			label = "cont_splash_mem";
 		};
 
 		tzapp_mem: tzapp_region@0 {
+			linux,reserve-contiguous-region;
+			linux,reserve-region;
+			linux,remove-completely;
 			reg = <0 0x8C400000 0 0x1900000>;
+			label = "tzapp_mem";
 		};
 
 	};
@@ -89,15 +122,15 @@
 	soc: soc { };
 };
 
-//#include "msm8939-ipcrouter.dtsi"
-//#include "msm8939-ion.dtsi"
-//#include "msm-gdsc-8916.dtsi"
-//#include "msm8939-iommu.dtsi"
+#include "msm8939-ipcrouter.dtsi"
+#include "msm8939-ion.dtsi"
+#include "msm-gdsc-8916.dtsi"
+#include "msm8939-iommu.dtsi"
 #include "msm8939-bus.dtsi"
-//#include "msm8939-mdss.dtsi"
-//#include "msm8939-iommu-domains.dtsi"
-//#include "msm8939-camera.dtsi"
-//#include "msm8939-mdss-pll.dtsi"
+#include "msm8939-mdss.dtsi"
+#include "msm8939-iommu-domains.dtsi"
+#include "msm8939-camera.dtsi"
+#include "msm8939-mdss-pll.dtsi"
 
 &soc {
 	#address-cells = <1>;
@@ -598,7 +631,7 @@
 		clock-names = "xo", "xo_a";
 		#clock-cells = <1>;
 	};
-#if 0
+
 	clock_gcc_mdss: qcom,gcc-mdss@1a98300 {
 		compatible = "qcom,gcc-mdss-8936";
 		clocks = <&mdss_dsi0_pll clk_pixel_clk_src>,
@@ -609,7 +642,7 @@
 				 "byte1_src";
 		#clock-cells = <1>;
 	};
-#endif
+
 	clock_debug: qcom,cc-debug@1874000 {
 		compatible = "qcom,cc-debug-8936";
 		reg = <0x1874000 0x4>;
@@ -618,7 +651,7 @@
 		clock-names = "rpm_debug_mux";
 		#clock-cells = <1>;
 	};
-#if 0
+
 	qcom,cpu-bwmon {
 		compatible = "qcom,bimc-bwmon";
 		reg = <0x408000 0x300>, <0x401000 0x200>;
@@ -627,7 +660,7 @@
 		qcom,mport = <0>;
 		qcom,target-dev = <&cpubw>;
 	};
-#endif
+
 	qcom_tzlog: tz-log@8600720 {
 		compatible = "qcom,tz-log";
 		reg = <0x08600720 0x1000>;
@@ -648,13 +681,13 @@
 		clock-names = "iface_clk";
 		status = "disabled";
 	};
-#if 0
+
 	qcom,msm-adsp-loader {
 		compatible = "qcom,adsp-loader";
 		qcom,adsp-state = <0>;
 		qcom,proc-img-to-load = "modem";
 	};
-#endif
+
 	qcom_crypto: qcrypto@720000 {
 		compatible = "qcom,qcrypto";
 		reg = <0x720000 0x20000>,
@@ -1029,7 +1062,7 @@
 		#size-cells = <0>;
 		cell-index = <0>;
 	};
-#if 0
+
 	qcom,rmtfs_sharedmem@8e580000 {
 		compatible = "qcom,sharedmem-uio";
 		reg = <0x86700000 0x160000>;
@@ -1050,7 +1083,7 @@
 		reg-names = "rfsa_mdm";
 		qcom,client-id = <0x011013ed>;
 	};
-#endif
+
 	sdhc_1: sdhci@7824000 {
 		compatible = "qcom,sdhci-msm";
 		reg = <0x7824900 0x11c>, <0x7824000 0x800>;
@@ -1190,7 +1223,7 @@
 		pinctrl-1 = <&hsuart_sleep>;
 		status = "disabled";
 	};
-#if 0
+
 	qcom,venus@1de0000 {
 		compatible = "qcom,pil-tz-generic";
 		reg = <0x1de0000 0x4000>;
@@ -1266,7 +1299,7 @@
 			linux,contiguous-region = <&mba_mem>;
 		};
 	};
-#endif
+
 	pcm0: qcom,msm-pcm {
 		compatible = "qcom,msm-pcm-dsp";
 		qcom,msm-pcm-dsp-id = <0>;
@@ -1489,7 +1522,7 @@
 		qcom,msm-cpudai-auxpcm-pcm-clk-rate = <2048000>, <2048000>;
 		qcom,msm-auxpcm-interface = "primary";
 	};
-#if 0
+
 	qcom,vidc@1d00000 {
 		compatible = "qcom,msm-vidc";
 		reg = <0x01d00000 0xff000>;
@@ -1609,8 +1642,7 @@
 			};
 		};
 	};
-#endif
-#if 0
+
 	qcom,pronto@a21b000 {
 		compatible = "qcom,pil-tz-generic";
 		reg = <0x0a21b000 0x3000>;
@@ -1648,15 +1680,15 @@
 		qcom,gpio-force-stop = <&smp2pgpio_ssr_smp2p_4_out 0 0>;
 		linux,contiguous-region = <&peripheral_mem>;
 	};
-#endif
+
 	qcom,avtimer@7706000 {
 		compatible = "qcom,avtimer";
 		reg = <0x0770600C 0x4>,
 			<0x07706010 0x4>;
 		reg-names = "avtimer_lsb_addr", "avtimer_msb_addr";
 		qcom,clk_div = <27>;
-	};};
-#if 0
+	};
+
 	mcd {
 		compatible = "qcom,mcd";
 		qcom,ce-hw-instance = <0>;
@@ -1669,7 +1701,7 @@
 				"iface_clk", "bus_clk";
 		qcom,ce-opp-freq = <100000000>;
 	};
-
+};
 
 &gdsc_venus {
 	clock-names = "bus_clk", "core_clk";
@@ -1725,7 +1757,7 @@
 	clocks = <&clock_gcc clk_gcc_venus0_core1_vcodec0_clk>;
 	status = "okay";
 };
-#endif
+
 #include "msm-pm8916-rpm-regulator.dtsi"
 #include "msm-pm8916.dtsi"
 #include "msm8939-regulator.dtsi"

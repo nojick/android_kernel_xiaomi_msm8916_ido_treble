@@ -575,7 +575,7 @@
 			<50  66>,
 			<51  68>;
 	};
-#if 0
+
 	qcom,pm@8600664 {
 		compatible = "qcom,pm";
 		#address-cells = <1>;
@@ -598,7 +598,7 @@
 
 		qcom,tz-flushes-cache;
 	};
-#endif
+
 	qcom,cpu-sleep-status@b088008{
 		compatible = "qcom,cpu-sleep-status";
 		reg = <0xb088008 0x100>,
