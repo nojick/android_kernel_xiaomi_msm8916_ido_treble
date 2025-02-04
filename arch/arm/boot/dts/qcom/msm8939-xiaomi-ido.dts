@@ -11,7 +11,7 @@
 #include "msm-gdsc-8916.dtsi"
 #include "msm8939-mdss.dtsi"
 #include "msm8939-mdss-pll.dtsi"
-//#include "msm8939-ion.dtsi"
+#include "msm8939-ion.dtsi"
 
 / {
 	model = "Xiaomi Redmi 3";
@@ -74,7 +74,6 @@
 			no-map;
 		};
 	};
-
 };
 
 &sdhc_1 {
@@ -123,6 +122,14 @@
 	cd-gpios = <&msm_gpio 38 0x1>;
 
 	status = "ok";
+};
+
+&usb_otg {
+	   qcom,hsusb-otg-mode = <3>;
+	   qcom,usbid-gpio = <&msm_gpio 110 0>;
+	   pinctrl-names = "default";
+	   pinctrl-0 = <&usbid_default>;
+	   //vbus_otg-supply = <&smb358_otg_vreg>;
 };
 
 &bam_dmux {

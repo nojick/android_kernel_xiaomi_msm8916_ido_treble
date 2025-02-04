@@ -49,56 +49,74 @@
 		ranges;
 
 		external_image_mem: external_image__region@0 {
-			compatible = "removed-dma-pool";
-			no-map;
+			linux,reserve-contiguous-region;
+			linux,reserve-region;
+			linux,remove-completely;
 			reg = <0x0 0x86000000 0x0 0x0800000>;
+			label = "external_image_mem";
 		};
 
 		modem_adsp_mem: modem_adsp_region@0 {
-			compatible = "removed-dma-pool";
-			no-map;
+			linux,reserve-contiguous-region;
+			linux,reserve-region;
+			linux,remove-completely;
 			reg = <0x0 0x86800000 0x0 0x05600000>;
+			label = "modem_adsp_mem";
 		};
 
 		peripheral_mem: pheripheral_region@0 {
-			compatible = "removed-dma-pool";
-			no-map;
+			linux,reserve-contiguous-region;
+			linux,reserve-region;
+			linux,remove-completely;
 			reg = <0x0 0x8be00000 0x0 0x0600000>;
+			label = "peripheral_mem";
+		};
+
+		pstore_reserve_mem: pstore_reserve_mem_region@0 {
+			linux,reserve-contiguous-region;
+			linux,reserve-region;
+			linux,remove-completely;
+			reg = <0x0 0xdfe00000 0x0 0x00200000>;
+			label = "pstore_reserve_mem";
 		};
 
 		mba_mem: mba_region@0 {
-			compatible = "removed-dma-pool";
-			no-map;
+			linux,reserve-contiguous-region;
 			reg = <0 0 0 0x0200000>;
+			label = "mba_mem";
 		};
 
 		venus_mem: venus_region@0 {
-			compatible = "shared-dma-pool";
-			reusable;
-			alloc-ranges = <0x0 0x80000000 0x0 0x10000000>;
-			alignment = <0 0x400000>;
-			size = <0 0x0800000>;
+			linux,reserve-contiguous-region;
+			linux,memory-limit = <0x90000000>;
+			reg = <0 0 0 0x0500000>;
+			label = "venus_mem";
 		};
 
 		secure_mem: secure_region@0 {
-			compatible = "shared-dma-pool";
-			reusable;
-			alignment = <0 0x400000>;
-			size = <0 0x7000000>;
+			linux,reserve-contiguous-region;
+			reg = <0 0 0 0x6D00000>;
+			label = "secure_mem";
 		};
 
 		qseecom_mem: qseecom_region@0 {
-			compatible = "shared-dma-pool";
-			reusable;
-			alignment = <0 0x400000>;
-			size = <0 0x1000000>;
+			linux,reserve-contiguous-region;
+			reg = <0 0 0 0x1900000>;
+			label = "qseecom_mem";
 		};
 
 		audio_mem: audio_region@0 {
-			compatible = "shared-dma-pool";
-			reusable;
-			alignment = <0 0x400000>;
-			size = <0 0x400000>;
+			linux,reserve-contiguous-region;
+			reg = <0 0 0 0x314000>;
+			label = "audio_mem";
+		};
+
+		tzapp_mem: tzapp_region@0 {
+			linux,reserve-contiguous-region;
+			linux,reserve-region;
+			linux,remove-completely;
+			reg = <0 0x8C400000 0 0x1900000>;
+			label = "tzapp_mem";
 		};
 	};
 
@@ -132,7 +150,7 @@
 			     <1 1 0xff08>;
 		clock-frequency = <19200000>;
 	};
-#if 0
+
 	clock_cpu: qcom,cpu-clock-8939@b111050 {
 		compatible = "qcom,cpu-clock-8939";
 		reg =   <0xb111050 0x8>,
@@ -326,7 +344,7 @@
 			<  400000 >,
 			<  595200 >;
 	};
-
+#if 0
 	cpubw: qcom,cpubw {
 		label = "cpubw";
 		compatible = "qcom,devbw";
@@ -1265,7 +1283,6 @@
                 compatible = "qcom,rpm-smd";
                 rpm-channel-name = "rpm_requests";
                 rpm-channel-type = <15>; /* SMD_APPS_RPM */
-                rpm-standalone;
         };
 
 	timer@b120000 {
