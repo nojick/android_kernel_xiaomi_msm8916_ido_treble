@@ -72,7 +72,7 @@
 		};
 	};
 };
-
+#if 0
 /* CoreSight */
 &tpiu {
 	pinctrl-names = "sdcard", "trace", "swduart",
@@ -96,7 +96,7 @@
 	pinctrl-5 = <&qdsd_clk_spmi &qdsd_cmd_spmi
 		     &qdsd_data0_spmi &qdsd_data3_spmi>;
 };
-
+#endif
 &soc {
 	gpio_keys {
 		compatible = "gpio-keys";

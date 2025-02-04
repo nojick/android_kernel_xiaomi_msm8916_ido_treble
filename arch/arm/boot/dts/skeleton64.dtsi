@@ -11,5 +11,4 @@
 	soc { };
 	chosen { };
 	aliases { };
-	memory { device_type = "memory"; reg = <0 0 0 0>; };
 };
