@@ -211,9 +211,9 @@ int __init cma_fdt_scan(unsigned long node, const char *uname,
 				int depth, void *data)
 {
 	phys_addr_t base, size;
-	int len;
-	const __be32 *prop;
-	const char *name;
+	unsigned long len;
+	__be32 *prop;
+	char *name;
 	bool in_system;
 
 	if (!of_get_flat_dt_prop(node, "linux,contiguous-region", NULL))

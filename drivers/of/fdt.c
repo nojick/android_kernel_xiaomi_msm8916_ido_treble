@@ -40,8 +40,7 @@ int of_fdt_is_compatible(const void *blob,
 		      unsigned long node, const char *compat)
 {
 	const char *cp;
-	int cplen;
-	unsigned long l, score = 0;
+	unsigned long cplen, l, score = 0;
 
 	cp = fdt_getprop(blob, node, "compatible", &cplen);
 	if (cp == NULL)
@@ -386,8 +385,8 @@ static int __init __reserved_mem_reserve_reg(unsigned long node,
 {
 	int t_len = (dt_root_addr_cells + dt_root_size_cells) * sizeof(__be32);
 	phys_addr_t base, size;
-	int len;
-	const __be32 *prop;
+	unsigned long len;
+	__be32 *prop;
 	int nomap, first = 1;
 
 	prop = of_get_flat_dt_prop(node, "reg", &len);
@@ -430,7 +429,7 @@ static int __init __reserved_mem_reserve_reg(unsigned long node,
  */
 static int __reserved_mem_check_root(unsigned long node)
 {
-	const __be32 *prop;
+	__be32 *prop;
 
 	prop = of_get_flat_dt_prop(node, "#size-cells", NULL);
 	if (!prop || be32_to_cpup(prop) != dt_root_size_cells)
@@ -569,8 +568,8 @@ int __init of_get_flat_dt_size(void)
  * This function can be used within scan_flattened_dt callback to get
  * access to properties
  */
-const void *__init of_get_flat_dt_prop(unsigned long node, const char *name,
-				       int *size)
+void *__init of_get_flat_dt_prop(unsigned long node, const char *name,
+				 unsigned long *size)
 {
 	return fdt_getprop(initial_boot_params, node, name, size);
 }
@@ -632,7 +631,7 @@ const void * __init of_flat_dt_match_machine(const void *default_match,
 	}
 	if (!best_data) {
 		const char *prop;
-		int size;
+		long size;
 
 		pr_err("\n unrecognized device tree list:\n[ ");
 
@@ -661,8 +660,8 @@ const void * __init of_flat_dt_match_machine(const void *default_match,
 void __init early_init_dt_check_for_initrd(unsigned long node)
 {
 	u64 start, end;
-	int len;
-	const __be32 *prop;
+	unsigned long len;
+	__be32 *prop;
 
 	pr_debug("Looking for initrd properties... ");
 
@@ -747,7 +746,7 @@ early_param("earlycon", setup_of_earlycon);
 int __init early_init_dt_scan_root(unsigned long node, const char *uname,
 				   int depth, void *data)
 {
-	const __be32 *prop;
+	__be32 *prop;
 
 	if (depth != 0)
 		return 0;
@@ -769,9 +768,9 @@ int __init early_init_dt_scan_root(unsigned long node, const char *uname,
 	return 1;
 }
 
-u64 __init dt_mem_next_cell(int s, const __be32 **cellp)
+u64 __init dt_mem_next_cell(int s, __be32 **cellp)
 {
-	const __be32 *p = *cellp;
+	__be32 *p = *cellp;
 
 	*cellp = p + s;
 	return of_read_number(p, s);
@@ -783,9 +782,9 @@ u64 __init dt_mem_next_cell(int s, const __be32 **cellp)
 int __init early_init_dt_scan_memory(unsigned long node, const char *uname,
 				     int depth, void *data)
 {
-	const char *type = of_get_flat_dt_prop(node, "device_type", NULL);
-	const __be32 *reg, *endp;
-	int l;
+	char *type = of_get_flat_dt_prop(node, "device_type", NULL);
+	__be32 *reg, *endp;
+	unsigned long l;
 
 	/* We are scanning "memory" nodes only */
 	if (type == NULL) {
@@ -806,7 +805,7 @@ int __init early_init_dt_scan_memory(unsigned long node, const char *uname,
 
 	endp = reg + (l / sizeof(__be32));
 
-	pr_debug("memory scan node %s, reg size %d, data: %x %x %x %x,\n",
+	pr_debug("memory scan node %s, reg size %ld, data: %x %x %x %x,\n",
 	    uname, l, reg[0], reg[1], reg[2], reg[3]);
 
 	while ((endp - reg) >= (dt_root_addr_cells + dt_root_size_cells)) {
@@ -852,8 +851,8 @@ static const char *config_cmdline = "";
 int __init early_init_dt_scan_chosen(unsigned long node, const char *uname,
 				     int depth, void *data)
 {
-	int l;
-	const char *p = NULL;
+	unsigned long l = 0;
+	char *p = NULL;
 	char *cmdline = data;
 
 	pr_debug("search \"chosen\", depth: %d, uname: %s\n", depth, uname);

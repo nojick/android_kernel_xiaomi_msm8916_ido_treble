@@ -66,7 +66,7 @@ extern char *of_fdt_get_string(const void *blob, u32 offset);
 extern void *of_fdt_get_property(const void *blob,
 				 unsigned long node,
 				 const char *name,
-				 int *size);
+				 unsigned long *size);
 extern int of_fdt_is_compatible(const void *blob,
 				unsigned long node,
 				const char *compat);
@@ -84,8 +84,8 @@ extern void *initial_boot_params;
 extern int of_scan_flat_dt(int (*it)(unsigned long node, const char *uname,
 				     int depth, void *data),
 			   void *data);
-extern const void *of_get_flat_dt_prop(unsigned long node, const char *name,
-				       int *size);
+extern void *of_get_flat_dt_prop(unsigned long node, const char *name,
+				 unsigned long *size);
 extern int of_flat_dt_is_compatible(unsigned long node, const char *name);
 extern int of_flat_dt_match(unsigned long node, const char *const *matches);
 extern unsigned long of_get_flat_dt_root(void);
@@ -122,7 +122,7 @@ extern void early_init_dt_add_memory_arch(u64 base, u64 size);
 extern int early_init_dt_reserve_memory_arch(phys_addr_t base, phys_addr_t size,
 					     bool no_map);
 extern void * early_init_dt_alloc_memory_arch(u64 size, u64 align);
-extern u64 dt_mem_next_cell(int s, const __be32 **cellp);
+extern u64 dt_mem_next_cell(int s, __be32 **cellp);
 
 /*
  * If BLK_DEV_INITRD, the fdt early init code will call this function,
