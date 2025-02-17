@@ -37,7 +37,6 @@
 #include <linux/hugetlb_cgroup.h>
 #include <linux/gfp.h>
 #include <linux/balloon_compaction.h>
-#include <trace/events/kmem.h>
 
 #include <asm/tlbflush.h>
 
@@ -1139,7 +1138,6 @@ int migrate_pages(struct list_head *from, new_page_t get_new_page,
 	int swapwrite = current->flags & PF_SWAPWRITE;
 	int rc;
 
-	trace_migrate_pages_start(mode);
 	if (!swapwrite)
 		current->flags |= PF_SWAPWRITE;
 
@@ -1162,7 +1160,6 @@ int migrate_pages(struct list_head *from, new_page_t get_new_page,
 				goto out;
 			case -EAGAIN:
 				retry++;
-				trace_migrate_retry(retry);
 				break;
 			case MIGRATEPAGE_SUCCESS:
 				nr_succeeded++;
@@ -1190,7 +1187,6 @@ out:
 	if (!swapwrite)
 		current->flags &= ~PF_SWAPWRITE;
 
-	trace_migrate_pages_end(mode);
 	return rc;
 }
 
