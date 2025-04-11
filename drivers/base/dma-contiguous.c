@@ -33,7 +33,6 @@
 #include <linux/mm_types.h>
 #include <linux/dma-contiguous.h>
 #include <linux/log2.h>
-#include <trace/events/kmem.h>
 
 struct cma {
 	unsigned long	base_pfn;
@@ -405,8 +404,6 @@ static struct page *__dma_alloc_from_contiguous(struct cma *cma, int count,
 			break;
 		}
 		cma_clear_bitmap(cma, pfn, count);
-		tries++;
-		trace_dma_alloc_contiguous_retry(tries);
 
 		pr_debug("%s(): memory range at %p is busy, retrying\n",
 			 __func__, pfn_to_page(pfn));
