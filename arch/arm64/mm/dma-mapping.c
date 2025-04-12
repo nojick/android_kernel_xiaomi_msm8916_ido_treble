@@ -471,7 +471,7 @@ static void *arm64_dma_remap(struct device *dev, void *cpu_addr,
 			struct dma_attrs *attrs)
 {
 	struct page *page = phys_to_page(dma_to_phys(dev, handle));
-	pgprot_t prot = __get_dma_pgprot(PAGE_KERNEL, attrs);
+	pgprot_t prot = __get_dma_pgprot(attrs, PAGE_KERNEL, false);
 	unsigned long offset = handle & ~PAGE_MASK;
 	struct vm_struct *area;
 	unsigned long addr;
