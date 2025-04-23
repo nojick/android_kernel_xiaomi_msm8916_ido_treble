@@ -37,15 +37,11 @@
 	chosen { };
 
 	memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
 		device_type = "memory";
 		/* We expect the bootloader to fill in the reg */
 		reg = <0 0 0 0>;
-	};
-
-	reserved-memory {
-		#address-cells = <2>;
-		#size-cells = <2>;
-		ranges;
 
 		external_image_mem: external_image__region@0 {
 			linux,reserve-contiguous-region;
@@ -108,6 +104,13 @@
 			linux,reserve-contiguous-region;
 			reg = <0 0 0 0x314000>;
 			label = "audio_mem";
+		};
+
+		cont_splash_mem: splash_region@83000000 {
+			linux,reserve-contiguous-region;
+			linux,reserve-region;
+			reg = <0x0 0x83000000 0x0 0x2000000>;
+			label = "cont_splash_mem";
 		};
 
 		tzapp_mem: tzapp_region@0 {
