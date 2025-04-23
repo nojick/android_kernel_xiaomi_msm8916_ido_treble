@@ -71,14 +71,6 @@
 
 	};
 
-    reserved-memory {
-		cont_splash_mem: framebuffer@83000000 {
-			compatible = "removed-dma-pool";
-			reg = <0x0 0x83000000 0x0 0x2000000>;
-			no-map;
-		};
-	};
-
 	qrd_batterydata: qcom,battery-data {
 		qcom,rpull-up-kohm = <68>;
 		qcom,vref-batt-therm = <1800000>;
