@@ -151,7 +151,7 @@ static inline __maybe_unused phys_addr_t cma_early_percent_memory(void)
 
 #endif
 
-static int __init cma_activate_area(unsigned long base_pfn, unsigned long count)
+static __init int cma_activate_area(unsigned long base_pfn, unsigned long count)
 {
 	unsigned long pfn = base_pfn;
 	unsigned i = count >> pageblock_order;
@@ -173,7 +173,7 @@ static int __init cma_activate_area(unsigned long base_pfn, unsigned long count)
 	return 0;
 }
 
-static struct cma * __init *cma_create_area(unsigned long base_pfn,
+static __init struct cma *cma_create_area(unsigned long base_pfn,
 				     unsigned long count, bool system)
 {
 	int bitmap_size = BITS_TO_LONGS(count) * sizeof(long);
