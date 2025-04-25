@@ -4,13 +4,14 @@
 #include <dt-bindings/clock/msm-clocks-8936.h>
 #include <dt-bindings/clock/msm-cpu-clocks-8939.h>
 #include "ido/msm8939.dtsi"
-#include "msm8939-pinctrl.dtsi"
 #include "msm8939-coresight.dtsi"
-#include "msm8939-smp2p.dtsi"
-#include "msm8939-v3.0-pm.dtsi"
-#include "msm8939-v3.0-gpu.dtsi"
-#include "msm8939-camera-sensor-qrd-ido.dtsi"
 #include "msm8939-cpu.dtsi"
+#include "msm8939-v3.0-pm.dtsi"
+#include "msm8939-smem.dtsi"
+#include "msm8939-smp2p.dtsi"
+#include "msm8939-v3.0-gpu.dtsi"
+#include "msm8939-pinctrl.dtsi"
+#include "msm8939-camera-sensor-qrd-ido.dtsi"
 #include "dsi-panel-nt35596-1080p-skuk-video.dtsi"
 #include "dsi-panel-r63350-tianma-1080p-video.dtsi"
 #include "dsi-panel-nt35596-1080p-video.dtsi"
@@ -54,7 +55,7 @@
 
 	chosen {
 		stdout-path = "serial0";
-		bootargs = "fbcon=nodefer earlycon=tty0 console=tty0";
+		bootargs = "fbcon=nodefer earlycon=tty0 console=tty0 boot_cpus=0,4,5,6,7 sched_enable_hmp=1";
 		#address-cells = <2>;
 		#size-cells = <2>;
 		ranges;
@@ -484,6 +485,10 @@
 	status = "okay";
 };
 
+&qcom_rng {
+	status = "okay";
+};
+
 &qcom_crypto {
 	status = "okay";
 };
@@ -507,61 +512,6 @@
 	qcom,cpr-step-quotient = <26>;
 	qcom,cpr-apc-volt-step = <12500>;
 	qcom,cpr-up-threshold = <2>;
-};
-
-&gdsc_venus {
-	clock-names = "bus_clk", "core_clk";
-	clocks = <&clock_gcc clk_gcc_venus0_axi_clk>,
-		 <&clock_gcc clk_gcc_venus0_vcodec0_clk>;
-	status = "okay";
-};
-
-&gdsc_mdss {
-	clock-names = "core_clk", "bus_clk";
-	clocks = <&clock_gcc clk_gcc_mdss_mdp_clk>,
-		 <&clock_gcc clk_gcc_mdss_axi_clk>;
-	status = "okay";
-};
-
-&gdsc_jpeg {
-	clock-names = "core_clk", "bus_clk";
-	clocks = <&clock_gcc clk_gcc_camss_jpeg0_clk>,
-		 <&clock_gcc clk_gcc_camss_jpeg_axi_clk>;
-	status = "okay";
-};
-
-&gdsc_vfe {
-	clock-names = "core_clk", "bus_clk", "micro_clk",
-			"cpp_clk", "csi_clk";
-	clocks = <&clock_gcc clk_gcc_camss_vfe0_clk>,
-		 <&clock_gcc clk_gcc_camss_vfe_axi_clk>,
-		 <&clock_gcc clk_gcc_camss_micro_ahb_clk>,
-		 <&clock_gcc clk_gcc_camss_cpp_clk>,
-		 <&clock_gcc clk_gcc_camss_csi_vfe0_clk>;
-	status = "okay";
-};
-
-&gdsc_oxili_gx {
-	clock-names = "core_root_clk", "core_clk", "gmem_clk";
-	clocks = <&clock_gcc clk_gfx3d_clk_src>,
-		 <&clock_gcc clk_gcc_oxili_gfx3d_clk>,
-		 <&clock_gcc clk_gcc_oxili_gmem_clk>;
-	qcom,enable-root-clk;
-	status = "okay";
-};
-
-&gdsc_venus_core0 {
-	qcom,support-hw-trigger;
-	clock-names ="core0_clk";
-	clocks = <&clock_gcc clk_gcc_venus0_core0_vcodec0_clk>;
-	status = "okay";
-};
-
-&gdsc_venus_core1 {
-	qcom,support-hw-trigger;
-	clock-names ="core1_clk";
-	clocks = <&clock_gcc clk_gcc_venus0_core1_vcodec0_clk>;
-	status = "okay";
 };
 
 &soc {
