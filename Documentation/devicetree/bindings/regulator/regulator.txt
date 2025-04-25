@@ -34,7 +34,6 @@ Example:
 		regulator-max-microvolt = <2500000>;
 		regulator-always-on;
 		vin-supply = <&vin>;
-		qcom,consumer-supplies = "pll_vdd", "", "lcd_vcc", "foo.1";
 	};
 
 Regulator Consumers:
