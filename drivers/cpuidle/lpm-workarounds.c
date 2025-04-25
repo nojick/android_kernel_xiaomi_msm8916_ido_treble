@@ -132,16 +132,6 @@ static void process_lpm_workarounds(struct work_struct *w)
 	}
 }
 
-/*
- * lpm_wa_skip_l2_spm: Dont program the l2 SPM as TZ is programming the
- * L2 SPM as a workaround for SDI fix.
- */
-bool lpm_wa_get_skip_l2_spm(void)
-{
-	return skip_l2_spm;
-}
-EXPORT_SYMBOL(lpm_wa_get_skip_l2_spm);
-
 static ssize_t store_clock_gating_enabled(struct kobject *kobj,
 		struct kobj_attribute *attr, const char *buf, size_t count)
 {
