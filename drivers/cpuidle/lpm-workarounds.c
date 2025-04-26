@@ -1,4 +1,4 @@
-/* Copyright (c) 2014, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2014-2016, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -53,17 +53,6 @@ void lpm_wa_cx_unvote_send(void)
 }
 EXPORT_SYMBOL(lpm_wa_cx_unvote_send);
 
-/*
- * lpm_wa_skip_l2_spm: Dont program the l2 SPM as TZ is programming the
- * L2 SPM as a workaround for SDI fix.
- */
-bool lpm_wa_get_skip_l2_spm(void)
-{
-	return skip_l2_spm;
-}
-EXPORT_SYMBOL(lpm_wa_get_skip_l2_spm);
-
-
 static int lpm_wa_cx_unvote_init(struct platform_device *pdev)
 {
 	int ret = 0;
@@ -92,6 +81,12 @@ static int lpm_wa_cx_unvote_exit(void)
 	return 0;
 }
 
+bool lpm_wa_get_skip_l2_spm(void)
+{
+	return skip_l2_spm;
+}
+EXPORT_SYMBOL(lpm_wa_get_skip_l2_spm);
+
 static int lpm_wa_probe(struct platform_device *pdev)
 {
 	int ret = 0;
@@ -108,7 +103,8 @@ static int lpm_wa_probe(struct platform_device *pdev)
 	}
 
 	skip_l2_spm = of_property_read_bool(pdev->dev.of_node,
-					"qcom,lpm-wa-skip-l2-spm");
+						"qcom,lpm-wa-skip-l2-spm");
+
 	return ret;
 }
 
