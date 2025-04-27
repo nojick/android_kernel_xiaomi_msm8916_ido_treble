@@ -12,6 +12,7 @@
 #include "msm8939-v3.0-gpu.dtsi"
 #include "msm8939-pinctrl.dtsi"
 #include "msm8939-camera-sensor-qrd-ido.dtsi"
+#include "lineage-xiaomi-ido.dtsi"
 #include "dsi-panel-nt35596-1080p-skuk-video.dtsi"
 #include "dsi-panel-r63350-tianma-1080p-video.dtsi"
 #include "dsi-panel-nt35596-1080p-video.dtsi"

@@ -25,27 +25,18 @@
 		qcom,saw2-spm-dly= <0x3c102800>;
 		qcom,saw2-spm-ctl = <0xe>;
 
-		qcom,mode0 {
+		qcom,mode0 { 
 			qcom,label = "qcom,saw2-spm-cmd-wfi";
 			qcom,sequence = [60 03 60 0b 0f];
 			qcom,spm_en;
 		};
 
 		qcom,mode1 {
-			qcom,label = "qcom,saw2-spm-cmd-spc";
-			qcom,sequence = [20 10 80 30 90 5b 60 03 60 3b 76 76
-						0b 94 5b 80 10 26 30 0f];
-			qcom,spm_en;
-			qcom,pc_mode;
-		};
-
-		qcom,mode2 {
 			qcom,label = "qcom,saw2-spm-cmd-pc";
 			qcom,sequence = [20 50 1b 10 80 30 90 5b 60 50 03 60
 				76 76 0b 50 1b 94 5B 80 10 26 30 50 0f];
 			qcom,spm_en;
 			qcom,pc_mode;
-			qcom,slp_cmd_mode;
 		};
 	};
 
@@ -63,27 +54,18 @@
 		qcom,saw2-spm-dly= <0x3c102800>;
 		qcom,saw2-spm-ctl = <0xe>;
 
-		qcom,mode0 {
+		qcom,mode0 { 
 			qcom,label = "qcom,saw2-spm-cmd-wfi";
 			qcom,sequence = [60 03 60 0b 0f];
 			qcom,spm_en;
 		};
 
 		qcom,mode1 {
-			qcom,label = "qcom,saw2-spm-cmd-spc";
-			qcom,sequence = [20 10 80 30 90 5b 60 03 60 3b 76 76
-						0b 94 5b 80 10 26 30 0f];
-			qcom,spm_en;
-			qcom,pc_mode;
-		};
-
-		qcom,mode2 {
 			qcom,label = "qcom,saw2-spm-cmd-pc";
 			qcom,sequence = [20 50 1b 10 80 30 90 5b 60 50 03 60
 				76 76 0b 50 1b 94 5B 80 10 26 30 50 0f];
 			qcom,spm_en;
 			qcom,pc_mode;
-			qcom,slp_cmd_mode;
 		};
 	};
 
@@ -101,27 +83,18 @@
 		qcom,saw2-spm-dly= <0x3c102800>;
 		qcom,saw2-spm-ctl = <0xe>;
 
-		qcom,mode0 {
+		qcom,mode0 { 
 			qcom,label = "qcom,saw2-spm-cmd-wfi";
 			qcom,sequence = [60 03 60 0b 0f];
 			qcom,spm_en;
 		};
 
 		qcom,mode1 {
-			qcom,label = "qcom,saw2-spm-cmd-spc";
-			qcom,sequence = [20 10 80 30 90 5b 60 03 60 3b 76 76
-						0b 94 5b 80 10 26 30 0f];
-			qcom,spm_en;
-			qcom,pc_mode;
-		};
-
-		qcom,mode2 {
 			qcom,label = "qcom,saw2-spm-cmd-pc";
 			qcom,sequence = [20 50 1b 10 80 30 90 5b 60 50 03 60
 				76 76 0b 50 1b 94 5B 80 10 26 30 50 0f];
 			qcom,spm_en;
 			qcom,pc_mode;
-			qcom,slp_cmd_mode;
 		};
 	};
 
@@ -139,27 +112,18 @@
 		qcom,saw2-spm-dly= <0x3c102800>;
 		qcom,saw2-spm-ctl = <0xe>;
 
-		qcom,mode0 {
+		qcom,mode0 { 
 			qcom,label = "qcom,saw2-spm-cmd-wfi";
 			qcom,sequence = [60 03 60 0b 0f];
 			qcom,spm_en;
 		};
 
 		qcom,mode1 {
-			qcom,label = "qcom,saw2-spm-cmd-spc";
-			qcom,sequence = [20 10 80 30 90 5b 60 03 60 3b 76 76
-						0b 94 5b 80 10 26 30 0f];
-			qcom,spm_en;
-			qcom,pc_mode;
-		};
-
-		qcom,mode2 {
 			qcom,label = "qcom,saw2-spm-cmd-pc";
 			qcom,sequence = [20 50 1b 10 80 30 90 5b 60 50 03 60
 				76 76 0b 50 1b 94 5B 80 10 26 30 50 0f];
 			qcom,spm_en;
 			qcom,pc_mode;
-			qcom,slp_cmd_mode;
 		};
 	};
 
@@ -177,27 +141,18 @@
 		qcom,saw2-spm-dly= <0x3c102800>;
 		qcom,saw2-spm-ctl = <0xe>;
 
-		qcom,mode0 {
+		qcom,mode0 { 
 			qcom,label = "qcom,saw2-spm-cmd-wfi";
 			qcom,sequence = [60 03 60 0b 0f];
 			qcom,spm_en;
 		};
 
 		qcom,mode1 {
-			qcom,label = "qcom,saw2-spm-cmd-spc";
-			qcom,sequence = [20 10 80 30 90 5b 60 03 60 3b 76 76
-						0b 94 5b 80 10 26 30 0f];
-			qcom,spm_en;
-			qcom,pc_mode;
-		};
-
-		qcom,mode2 {
 			qcom,label = "qcom,saw2-spm-cmd-pc";
 			qcom,sequence = [20 50 1b 10 80 30 90 5b 60 50 03 60
 				76 76 0b 50 1b 94 5B 80 10 26 30 50 0f];
 			qcom,spm_en;
 			qcom,pc_mode;
-			qcom,slp_cmd_mode;
 		};
 	};
 
@@ -215,27 +170,18 @@
 		qcom,saw2-spm-dly= <0x3c102800>;
 		qcom,saw2-spm-ctl = <0xe>;
 
-		qcom,mode0 {
+		qcom,mode0 { 
 			qcom,label = "qcom,saw2-spm-cmd-wfi";
 			qcom,sequence = [60 03 60 0b 0f];
 			qcom,spm_en;
 		};
 
 		qcom,mode1 {
-			qcom,label = "qcom,saw2-spm-cmd-spc";
-			qcom,sequence = [20 10 80 30 90 5b 60 03 60 3b 76 76
-						0b 94 5b 80 10 26 30 0f];
-			qcom,spm_en;
-			qcom,pc_mode;
-		};
-
-		qcom,mode2 {
 			qcom,label = "qcom,saw2-spm-cmd-pc";
 			qcom,sequence = [20 50 1b 10 80 30 90 5b 60 50 03 60
 				76 76 0b 50 1b 94 5B 80 10 26 30 50 0f];
 			qcom,spm_en;
 			qcom,pc_mode;
-			qcom,slp_cmd_mode;
 		};
 	};
 
@@ -253,27 +199,18 @@
 		qcom,saw2-spm-dly= <0x3c102800>;
 		qcom,saw2-spm-ctl = <0xe>;
 
-		qcom,mode0 {
+		qcom,mode0 { 
 			qcom,label = "qcom,saw2-spm-cmd-wfi";
 			qcom,sequence = [60 03 60 0b 0f];
 			qcom,spm_en;
 		};
 
 		qcom,mode1 {
-			qcom,label = "qcom,saw2-spm-cmd-spc";
-			qcom,sequence = [20 10 80 30 90 5b 60 03 60 3b 76 76
-						0b 94 5b 80 10 26 30 0f];
-			qcom,spm_en;
-			qcom,pc_mode;
-		};
-
-		qcom,mode2 {
 			qcom,label = "qcom,saw2-spm-cmd-pc";
 			qcom,sequence = [20 50 1b 10 80 30 90 5b 60 50 03 60
 				76 76 0b 50 1b 94 5B 80 10 26 30 50 0f];
 			qcom,spm_en;
 			qcom,pc_mode;
-			qcom,slp_cmd_mode;
 		};
 	};
 
@@ -291,27 +228,18 @@
 		qcom,saw2-spm-dly= <0x3c102800>;
 		qcom,saw2-spm-ctl = <0xe>;
 
-		qcom,mode0 {
+		qcom,mode0 { 
 			qcom,label = "qcom,saw2-spm-cmd-wfi";
 			qcom,sequence = [60 03 60 0b 0f];
 			qcom,spm_en;
 		};
 
 		qcom,mode1 {
-			qcom,label = "qcom,saw2-spm-cmd-spc";
-			qcom,sequence = [20 10 80 30 90 5b 60 03 60 3b 76 76
-						0b 94 5b 80 10 26 30 0f];
-			qcom,spm_en;
-			qcom,pc_mode;
-		};
-
-		qcom,mode2 {
 			qcom,label = "qcom,saw2-spm-cmd-pc";
 			qcom,sequence = [20 50 1b 10 80 30 90 5b 60 50 03 60
 				76 76 0b 50 1b 94 5B 80 10 26 30 50 0f];
 			qcom,spm_en;
 			qcom,pc_mode;
-			qcom,slp_cmd_mode;
 		};
 	};
 
@@ -323,12 +251,28 @@
 		qcom,saw2-cfg = <0x1>;
 		qcom,saw2-spm-dly= <0x3C11840A>;
 		qcom,saw2-spm-ctl = <0xe>;
-		qcom,saw2-spm-cmd-ret = [00 03 00 0f];
-		qcom,saw2-spm-cmd-gdhs = [00 b0 7b 20 32 6b c0 e0 d0 50 42 f0 b0
-			03 1f 1b b0 7b 4e 02 02 d0 e0 c0 22 6b 02 32 52
-			f0 b0 0f];
-		qcom,saw2-spm-cmd-pc = [00 b0 7b 32 10 e0 d0 6b c0 50 42 b0 03
-			1f 1b b0 7b 4e 02 02 c0 d0 12 e0 6b 02 32 50 b0 0f];
+
+		qcom,mode0 {
+			qcom,label = "qcom,saw2-spm-cmd-ret";
+			qcom,sequence = [00 03 00 0f];
+			qcom,spm_en;
+		};
+
+		qcom,mode1 { 
+			qcom,label = "qcom,saw2-spm-cmd-gdhs";
+			qcom,sequence = [00 b0 7b 20 32 6b c0 e0 d0 50 42 f0 b0
+				03 1f 1b b0 7b 4e 02 02 d0 e0 c0 22 6b 02 32 52
+				f0 b0 0f];
+			qcom,spm_en;
+		};
+
+		qcom,mode2 {
+			qcom,label = "qcom,saw2-spm-cmd-pc";
+			qcom,sequence = [00 b0 7b 32 10 e0 d0 6b c0 50 42 b0 03
+				1f 1b b0 7b 4e 02 02 c0 d0 12 e0 6b 02 32 50 b0 0f];
+			qcom,spm_en;
+			qcom,pc_mode;
+		};
 	};
 
 	qcom,spm@b112000 {
@@ -339,12 +283,28 @@
 		qcom,saw2-cfg = <0x1>;
 		qcom,saw2-spm-dly= <0x3C11840A>;
 		qcom,saw2-spm-ctl = <0xe>;
-		qcom,saw2-spm-cmd-ret = [00 03 00 0f];
-		qcom,saw2-spm-cmd-gdhs = [00 b0 7b 20 32 6b c0 e0 d0 50 42 f0 b0
-			03 1f 1b b0 7b 4e 02 02 d0 e0 c0 22 6b 02 32 52
-			f0 b0 0f];
-		qcom,saw2-spm-cmd-pc = [00 b0 7b 32 10 e0 d0 6b c0 50 42 b0 03
-			1f 1b b0 7b 4e 02 02 c0 d0 12 e0 6b 02 32 50 b0 0f];
+
+		qcom,mode0 {
+			qcom,label = "qcom,saw2-spm-cmd-ret";
+			qcom,sequence = [00 03 00 0f];
+			qcom,spm_en;
+		};
+
+		qcom,mode1 { 
+			qcom,label = "qcom,saw2-spm-cmd-gdhs";
+			qcom,sequence = [00 b0 7b 20 32 6b c0 e0 d0 50 42 f0 b0
+				03 1f 1b b0 7b 4e 02 02 d0 e0 c0 22 6b 02 32 52
+				f0 b0 0f];
+			qcom,spm_en;
+		};
+
+		qcom,mode2 {
+			qcom,label = "qcom,saw2-spm-cmd-pc";
+			qcom,sequence = [00 b0 7b 32 10 e0 d0 6b c0 50 42 b0 03
+				1f 1b b0 7b 4e 02 02 c0 d0 12 e0 6b 02 32 50 b0 0f];
+			qcom,spm_en;
+			qcom,pc_mode;
+		};
 	};
 
 	qcom,spm@b1d2000 {
@@ -358,9 +318,21 @@
 		qcom,saw2-spm-ctl = <0xe>;
 		qcom,saw2-pmic-data0 = <0x07030011>;
 		qcom,saw2-pmic-data1 = <0x00030010>;
-                qcom,saw2-spm-cmd-ret = [00 03 00 0f];
-                qcom,saw2-spm-cmd-pc = [00 60 50 11 03 70 7B 01 50
+
+                qcom,mode0 {
+			qcom,label = "qcom,saw2-spm-cmd-ret";
+			qcom,sequence = [00 03 00 0f];
+			qcom,spm_en;
+		};
+
+                qcom,mode1 { 
+			qcom,label = "qcom,saw2-spm-cmd-pc";
+			qcom,sequence = [00 60 50 11 03 70 7B 01 50
                                 02 62 72 0f];
+			qcom,pc_mode;
+			qcom,slp_cmd_mode;
+			qcom,spm_en;
+		};
 	};
 
 	qcom,lpm-levels {
@@ -744,17 +716,8 @@
 		qcom,tz-flushes-cache;
 	};
 
-	qcom,cpu-sleep-status@b088008{
+	qcom,cpu-sleep-status {
 		compatible = "qcom,cpu-sleep-status";
-		reg = <0xb088008 0x100>,
-			<0xb098008 0x100>,
-			<0xb0a8008 0x100>,
-			<0xb0b8008 0x100>,
-			<0xb188008 0x100>,
-			<0xb198008 0x100>,
-			<0xb1a8008 0x100>,
-			<0xb1b8008 0x100>;
-		qcom,sleep-status-mask= <0x40000>;
 	};
 
 	qcom,rpm-log@29dc00 {
