@@ -326,7 +326,13 @@ static int cpu_power_select(struct cpuidle_device *dev,
 	if (sleep_disabled)
 		return 0;
 
-	next_event_us = (uint32_t)(ktime_to_us(get_next_event_time(dev->cpu)));
+	/*
+	 * TODO:
+	 * Assumes event happens always on Core0. Need to check for validity
+	 * of this scenario on cluster low power modes
+	 */
+	if (!dev->cpu)
+		next_event_us = (uint32_t)(ktime_to_us(get_next_event_time()));
 
 	for (i = 0; i < cpu->nlevels; i++) {
 		struct lpm_cpu_level *level = &cpu->levels[i];
@@ -387,7 +393,7 @@ static int cpu_power_select(struct cpuidle_device *dev,
 		}
 	}
 
-	if (modified_time_us)
+	if (modified_time_us && !dev->cpu)
 		msm_pm_set_timer(modified_time_us);
 
 	trace_cpu_power_select(best_level, sleep_us, latency_us, next_event_us);
