@@ -181,7 +181,7 @@ static int kick_l2spm_8994(struct device_node *l2ccc_node,
 	while (readl_relaxed(l2spm_base + L2_SPM_STS) & 0xFFFF0000) {
 		BUG_ON(!timeout--);
 		cpu_relax();
-		usleep(100);
+		usleep_range(100, 100);
 	}
 
 bail_l2_pwr_bit:
