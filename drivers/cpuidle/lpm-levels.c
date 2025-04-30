@@ -422,10 +422,7 @@ int set_l3_mode(struct low_power_ops *ops, int mode, bool notify_rpm)
 
 int set_system_mode(struct low_power_ops *ops, int mode, bool notify_rpm)
 {
-	int lpm = mode;
-	if (mode == MSM_SPM_MODE_CLOCK_GATING)
-		lpm = MSM_SPM_MODE_DISABLED;
-	return msm_spm_config_low_power_mode(ops->spm, lpm, notify_rpm);
+	return msm_spm_config_low_power_mode(ops->spm, mode, notify_rpm);
 }
 
 static int set_device_mode(struct lpm_cluster *cluster, int ndevice,
