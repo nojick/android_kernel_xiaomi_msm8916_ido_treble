@@ -49,7 +49,7 @@
 #include <trace/events/power.h>
 #define CREATE_TRACE_POINTS
 #include <trace/events/trace_msm_low_power.h>
-#include "../../drivers/clk/qcom/clock.h"
+#include "../../drivers/clk/msm/clock.h"
 
 #define SCLK_HZ (32768)
 #define SCM_HANDOFF_LOCK_ID "S:7"
