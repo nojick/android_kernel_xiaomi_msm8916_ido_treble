@@ -16,6 +16,7 @@
 	qcom,spm@b089000 {
 		compatible = "qcom,spm-v2";
 		reg = <0xb089000 0x1000>;
+		reg-names = "saw-base";
 		qcom,name = "cpu0";
 		qcom,cpu = <&CPU0>;
 		qcom,saw2-ver-reg = <0xfd0>;
@@ -45,6 +46,7 @@
 	qcom,spm@b099000 {
 		compatible = "qcom,spm-v2";
 		reg = <0xb099000 0x1000>;
+		reg-names = "saw-base";
 		qcom,name = "cpu1";
 		qcom,cpu = <&CPU1>;
 		qcom,saw2-ver-reg = <0xfd0>;
@@ -74,6 +76,7 @@
 	qcom,spm@b0a9000 {
 		compatible = "qcom,spm-v2";
 		reg = <0xb0a9000 0x1000>;
+		reg-names = "saw-base";
 		qcom,name = "cpu2";
 		qcom,cpu = <&CPU2>;
 		qcom,saw2-ver-reg = <0xfd0>;
@@ -103,6 +106,7 @@
 	qcom,spm@b0b9000 {
 		compatible = "qcom,spm-v2";
 		reg = <0xb0b9000 0x1000>;
+		reg-names = "saw-base";
 		qcom,name = "cpu3";
 		qcom,cpu = <&CPU3>;
 		qcom,saw2-ver-reg = <0xfd0>;
@@ -132,6 +136,7 @@
 	qcom,spm@b189000 {
 		compatible = "qcom,spm-v2";
 		reg = <0xb189000 0x1000>;
+		reg-names = "saw-base";
 		qcom,name = "cpu4";
 		qcom,cpu = <&CPU4>;
 		qcom,saw2-ver-reg = <0xfd0>;
@@ -161,6 +166,7 @@
 	qcom,spm@b199000 {
 		compatible = "qcom,spm-v2";
 		reg = <0xb199000 0x1000>;
+		reg-names = "saw-base";
 		qcom,name = "cpu5";
 		qcom,cpu = <&CPU5>;
 		qcom,saw2-ver-reg = <0xfd0>;
@@ -190,6 +196,7 @@
 	qcom,spm@b1a9000 {
 		compatible = "qcom,spm-v2";
 		reg = <0xb1a9000 0x1000>;
+		reg-names = "saw-base";
 		qcom,name = "cpu6";
 		qcom,cpu = <&CPU6>;
 		qcom,saw2-ver-reg = <0xfd0>;
@@ -219,6 +226,7 @@
 	qcom,spm@b1b9000 {
 		compatible = "qcom,spm-v2";
 		reg = <0xb1b9000 0x1000>;
+		reg-names = "saw-base";
 		qcom,name = "cpu7";
 		qcom,cpu = <&CPU7>;
 		qcom,saw2-ver-reg = <0xfd0>;
@@ -248,6 +256,7 @@
 	qcom,spm@b012000 {
 		compatible = "qcom,spm-v2";
 		reg = <0xb012000 0x1000>;
+		reg-names = "saw-base";
 		qcom,name = "performance-l2";
 		qcom,saw2-ver-reg = <0xfd0>;
 		qcom,saw2-cfg = <0x1>;
@@ -280,6 +289,7 @@
 	qcom,spm@b112000 {
 		compatible = "qcom,spm-v2";
 		reg = <0xb112000 0x1000>;
+		reg-names = "saw-base";
 		qcom,name = "power-l2";
 		qcom,saw2-ver-reg = <0xfd0>;
 		qcom,saw2-cfg = <0x1>;
@@ -312,6 +322,7 @@
 	qcom,spm@b1d2000 {
 		compatible = "qcom,spm-v2";
 		reg = <0xb1d2000 0x1000>;
+		reg-names = "saw-base";
 		qcom,name = "system-cci";
 		qcom,supports-rpm-hs;
 		qcom,saw2-ver-reg = <0xfd0>;
