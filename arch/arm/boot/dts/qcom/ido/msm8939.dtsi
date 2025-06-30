@@ -1058,9 +1058,9 @@
 		qcom,has-pronto-hw;
 		qcom,wcnss-adc_tm = <&pm8916_adc_tm>;
 	};
-
+#if 0
 	tsens: tsens@4a8000 {
-		compatible = "qcom,msm8939-tsens";
+		//compatible = "qcom,msm8939-tsens";
 		reg = <0x4a8000 0x2000>,
 		      <0x5c000  0x1000>;
 		reg-names = "tsens_physical", "tsens_eeprom_physical";
@@ -1072,7 +1072,7 @@
 	};
 
 	qcom,msm-thermal {
-		compatible = "qcom,msm-thermal";
+		//compatible = "qcom,msm-thermal";
 		qcom,sensor-id = <5>;
 		qcom,poll-ms = <250>;
 		qcom,limit-temp = <60>;
@@ -1112,7 +1112,7 @@
 			qcom,freq-req;
 		};
 	};
-
+#endif
 	qcom,bcl {
 		compatible = "qcom,bcl";
 		qcom,bcl-no-bms;

@@ -100,7 +100,7 @@
 			coresight-name = "coresight-snoc";
 			coresight-nr-inports = <0>;
 			coresight-outports = <0>;
-			coresight-child-list = <&funnel_in2>;
+			//coresight-child-list = <&funnel_in2>;
 			coresight-child-ports = <5>;
 		};
 
@@ -131,7 +131,7 @@
 			coresight-name = "coresight-bimc";
 			coresight-nr-inports = <0>;
 			coresight-outports = <0>;
-			coresight-child-list = <&funnel_in2>;
+			//coresight-child-list = <&funnel_in2>;
 			coresight-child-ports = <3>;
 		};
 
@@ -151,7 +151,7 @@
 			coresight-name = "coresight-pnoc";
 			coresight-nr-inports = <0>;
 			coresight-outports = <0>;
-			coresight-child-list = <&funnel_in2>;
+			//coresight-child-list = <&funnel_in2>;
 			coresight-child-ports = <6>;
 		};
 

@@ -11,6 +11,7 @@
  */
 
 &soc {
+#if 0
 	qcom,spm@b089000 {
 		compatible = "qcom,spm-v2";
 		reg = <0xb089000 0x1000>;
@@ -218,9 +219,9 @@
                 qcom,saw2-spm-cmd-pc = [00 60 50 11 03 70 7B 01 50
                                 02 62 72 0f];
 	};
-
+#endif
 	qcom,lpm-levels {
-		compatible = "qcom,lpm-levels";
+		//compatible = "qcom,lpm-levels";
 		#address-cells = <1>;
 		#size-cells = <0>;
 
@@ -421,7 +422,7 @@
 	};
 
 	qcom,lpm-workarounds {
-		compatible = "qcom,lpm-workarounds";
+		//compatible = "qcom,lpm-workarounds";
 		reg = <0x0B1D1500 0x4>,
 		      <0x0B1D1500 0x4>;
 		reg-names = "l2-pwr-sts", "l1-l2-gcc";

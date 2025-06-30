@@ -4,7 +4,7 @@
 #include <dt-bindings/clock/msm-clocks-8936.h>
 #include <dt-bindings/clock/msm-cpu-clocks-8939.h>
 #include "ido/msm8939.dtsi"
-#include "msm8939-coresight.dtsi"
+//#include "msm8939-coresight.dtsi"
 #include "msm8939-cpu.dtsi"
 #include "msm8939-v3.0-pm.dtsi"
 #include "msm8939-smem.dtsi"
@@ -500,13 +500,13 @@
 &qcom_seecom {
 	status = "okay";
 };
-
+#if 0
 &tsens {
 	qcom,sensors = <10>;
 	qcom,slope = <2911 2789 2906 2763 2922 2867 2833 2838 2840 2852>;
 	qcom,sensor-id = <0 1 2 3 5 6 7 8 9 10>;
 };
-
+#endif
 &apc_vreg_corner {
 	/*vdd-apc-supply = <&ncp6335d>;*/
 	qcom,cpr-step-quotient = <26>;
@@ -865,7 +865,7 @@
 		};
 	};
 };
-
+#if 0
 /* CoreSight */
 &tpiu {
 	pinctrl-names = "sdcard", "trace", "swduart",
@@ -889,7 +889,7 @@
 	pinctrl-5 = <&qdsd_clk_spmi &qdsd_cmd_spmi
 		     &qdsd_data0_spmi &qdsd_data3_spmi>;
 };
-
+#endif
 &tlmm_pinmux {
 	tps65132-en-pin {
 		qcom,pins = <&gp 97>, <&gp 98>;
