@@ -493,6 +493,16 @@ static const char *compat_hwcap_str[] = {
 	"evtstrm",
 	NULL
 };
+
+static const char *compat_hwcap2_str[] = {
+	"aes",
+	"pmull",
+	"sha1",
+	"sha2",
+	"crc32",
+	NULL
+};
+
 #endif /* CONFIG_COMPAT */
 
 static int c_show(struct seq_file *m, void *v)
