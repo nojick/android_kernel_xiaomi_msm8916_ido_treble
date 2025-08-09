@@ -260,9 +260,9 @@ static void __init alloc_init_pte(pmd_t *pmd, unsigned long addr,
 	} while (pte++, addr += PAGE_SIZE, addr != end);
 }
 
-static void __init alloc_init_pmd(struct mm_struct *mm, pud_t *pud, unsigned long addr,
-				  unsigned long end, phys_addr_t phys,
-				  int map_io, bool pages)
+static void __init alloc_init_pmd(struct mm_struct *mm, pud_t *pud,
+				  unsigned long addr, unsigned long end,
+				  phys_addr_t phys, pgprot_t prot)
 {
 	pmd_t *pmd;
 	unsigned long next;
@@ -279,7 +279,7 @@ static void __init alloc_init_pmd(struct mm_struct *mm, pud_t *pud, unsigned lon
 	do {
 		next = pmd_addr_end(addr, end);
 		/* try section mapping first */
-		if (!pages && ((addr | next | phys) & ~SECTION_MASK) == 0) {
+		if (((addr | next | phys) & ~SECTION_MASK) == 0) {
 			pmd_t old_pmd =*pmd;
 			set_pmd(pmd, __pmd(phys |
 					   pgprot_val(mk_sect_prot(prot))));
@@ -297,9 +297,9 @@ static void __init alloc_init_pmd(struct mm_struct *mm, pud_t *pud, unsigned lon
 	} while (pmd++, addr = next, addr != end);
 }
 
-static void __init alloc_init_pud(struct mm_struct *mm, pgd_t *pgd, unsigned long addr,
-				  unsigned long end, phys_addr_t phys,
-				  pgprot_t prot, bool force_pages)
+static void __init alloc_init_pud(struct mm_struct *mm, pgd_t *pgd,
+				  unsigned long addr, unsigned long end,
+				  phys_addr_t phys, pgprot_t prot)
 {
 	pud_t *pud;
 	unsigned long next;
@@ -336,7 +336,7 @@ static void __init alloc_init_pud(struct mm_struct *mm, pgd_t *pgd, unsigned lon
 				flush_tlb_all();
 			}
 		} else {
-			alloc_init_pmd(mm, pud, addr, next, phys, prot, force_pages);
+			alloc_init_pmd(mm, pud, addr, next, phys, prot);
 		}
 		phys += next - addr;
 	} while (pud++, addr = next, addr != end);
@@ -346,9 +346,9 @@ static void __init alloc_init_pud(struct mm_struct *mm, pgd_t *pgd, unsigned lon
  * Create the page directory entries and any necessary page tables for the
  * mapping specified by 'md'.
  */
-static void __init __create_mapping(struct mm_struct *mm, pgd_t *pgd, phys_addr_t phys,
-				    unsigned long virt, phys_addr_t size,
-				    pgprot_t prot, bool force_pages)
+static void __init __create_mapping(struct mm_struct *mm, pgd_t *pgd,
+				    phys_addr_t phys, unsigned long virt,
+				    phys_addr_t size, pgprot_t prot)
 {
 	unsigned long addr, length, end, next;
 
@@ -358,7 +358,7 @@ static void __init __create_mapping(struct mm_struct *mm, pgd_t *pgd, phys_addr_
 	end = addr + length;
 	do {
 		next = pgd_addr_end(addr, end);
-		alloc_init_pud(mm, pgd, addr, next, phys, prot, force_pages);
+		alloc_init_pud(mm, pgd, addr, next, phys, prot);
 		phys += next - addr;
 	} while (pgd++, addr = next, addr != end);
 }
