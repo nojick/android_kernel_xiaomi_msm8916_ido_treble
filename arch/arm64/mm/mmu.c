@@ -449,7 +449,8 @@ void __init create_pgd_mapping(struct mm_struct *mm, phys_addr_t phys,
 			       unsigned long virt, phys_addr_t size,
 			       pgprot_t prot)
 {
-	__create_mapping(mm, pgd_offset(mm, virt), phys, virt, size, prot);
+	__create_mapping(mm, pgd_offset(mm, virt), phys, virt, size, prot,
+				early_alloc, false);
 }
 
 static void create_mapping_late(phys_addr_t phys, unsigned long virt,
