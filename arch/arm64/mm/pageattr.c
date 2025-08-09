@@ -17,18 +17,6 @@
 #include <asm/pgtable.h>
 #include <asm/tlbflush.h>
 
-static pte_t clear_pte_bit(pte_t pte, pgprot_t prot)
-{
-	pte_val(pte) &= ~pgprot_val(prot);
-	return pte;
-}
-
-static pte_t set_pte_bit(pte_t pte, pgprot_t prot)
-{
-	pte_val(pte) |= pgprot_val(prot);
-	return pte;
-}
-
 static int __change_memory(pte_t *ptep, pgtable_t token, unsigned long addr,
 			pgprot_t prot, bool set)
 {
