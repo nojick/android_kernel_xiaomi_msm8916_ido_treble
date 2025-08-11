@@ -473,7 +473,7 @@ void __init setup_arch(char **cmdline_p)
 	relocate_initrd();
 	request_standard_resources();
 
-	efi_idmap_init();
+	early_ioremap_reset();
 
 	unflatten_device_tree();
 
