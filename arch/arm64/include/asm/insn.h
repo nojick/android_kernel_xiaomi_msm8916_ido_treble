@@ -18,14 +18,12 @@
  */
 #ifndef	__ASM_INSN_H
 #define	__ASM_INSN_H
-
 #include <linux/types.h>
 
 /* A64 instructions are always 32 bits. */
 #define	AARCH64_INSN_SIZE		4
 
 #ifndef __ASSEMBLY__
-
 /*
  * ARM Architecture Reference Manual for ARMv8 Profile-A, Issue A.a
  * Section C3.1 "A64 instruction index by encoding":
