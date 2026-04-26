@@ -500,7 +500,7 @@
 &qcom_seecom {
 	status = "okay";
 };
-#if 0
+#if 1
 &tsens {
 	qcom,sensors = <10>;
 	qcom,slope = <2911 2789 2906 2763 2922 2867 2833 2838 2840 2852>;
