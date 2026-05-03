@@ -41,7 +41,9 @@ ffffffbffb000000	ffffffbffbbfffff	  12MB		[guard]
 
 ffffffbffbc00000	ffffffbffbdfffff	   2MB		fixed mappings
 
-ffffffbffbe00000	ffffffbffbffffff	   2MB		[guard]
+ffffffbffbe00000	ffffffbffbe0ffff	  64KB		PCI I/O space
+
+ffffffbbffff0000	ffffffbcffffffff	  ~2MB		[guard]
 
 ffffffbffc000000	ffffffbfffffffff	  64MB		modules
 
@@ -62,7 +64,6 @@ Start			End			Size		Use
 -----------------------------------------------------------------------
 0000000000000000	0000ffffffffffff	 256TB		user
 ffff000000000000	ffffffffffffffff	 256TB		kernel
-
 
 For details of the virtual kernel memory layout please see the kernel
 booting log.
