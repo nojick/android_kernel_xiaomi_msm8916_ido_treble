@@ -333,25 +333,6 @@ config ARM64_PGTABLE_LEVELS
 	default 3 if ARM64_4K_PAGES && ARM64_VA_BITS_39
 	default 4 if ARM64_4K_PAGES && ARM64_VA_BITS_48
 
-config ARM64_DCACHE_DISABLE
-	bool "Disable CPU Data Caches"
-	help
-	  Disable CPU data cache usage by setting the SCTLR[C] bit during
-	  kernel initialization. This will result in a considerable
-	  performance impact, but may be useful in certain situations.
-
-	  If you are not sure what to do, select 'N' here.
-
-config ARM64_ICACHE_DISABLE
-	bool "Disable CPU Instruction Caches"
-	help
-	  Disable CPU instruction cache usage by setting the SCTLR[I]
-	  bit during kernel initialization. This will result in a
-	  considerable performance impact, but may be useful in certain
-	  situations.
-
-	  If you are not sure what to do, select 'N' here.
-
 config CPU_BIG_ENDIAN
        bool "Build big-endian kernel"
        help
