@@ -204,8 +204,7 @@ static void *arm64_swiotlb_alloc_coherent(struct device *dev, size_t size,
 		page = pfn_to_page(pfn);
 		addr = page_address(page);
 
-		if (dma_get_attr(DMA_ATTR_NO_KERNEL_MAPPING, attrs) ||
-		    dma_get_attr(DMA_ATTR_STRONGLY_ORDERED, attrs)) {
+		if (dma_get_attr(DMA_ATTR_NO_KERNEL_MAPPING, attrs)) {
 			/*
 			 * flush the caches here because we can't do it later
 			 */
@@ -236,8 +235,7 @@ static void arm64_swiotlb_free_coherent(struct device *dev, size_t size,
 	} else if (IS_ENABLED(CONFIG_CMA)) {
 		phys_addr_t paddr = dma_to_phys(dev, dma_handle);
 
-		if (dma_get_attr(DMA_ATTR_NO_KERNEL_MAPPING, attrs) ||
-		    dma_get_attr(DMA_ATTR_STRONGLY_ORDERED, attrs))
+		if (dma_get_attr(DMA_ATTR_NO_KERNEL_MAPPING, attrs))
 			__dma_remap(phys_to_page(paddr), size, PAGE_KERNEL,
 					false);
 
@@ -285,9 +283,8 @@ static void *arm64_swiotlb_alloc_noncoherent(struct device *dev, size_t size,
 		coherent_ptr = (void *)NO_KERNEL_MAPPING_DUMMY;
 
 	} else {
-		if (!dma_get_attr(DMA_ATTR_STRONGLY_ORDERED, attrs))
-			/* remove any dirty cache lines on the kernel alias */
-			__dma_flush_range(ptr, ptr + size);
+		/* remove any dirty cache lines on the kernel alias */
+		__dma_flush_range(ptr, ptr + size);
 
 		map = kmalloc(sizeof(struct page *) << order, flags & ~GFP_DMA);
 		if (!map)
