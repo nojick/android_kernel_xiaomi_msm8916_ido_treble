@@ -22,6 +22,7 @@
 #include <linux/slab.h>
 #include <linux/dma-mapping.h>
 #include <linux/dma-contiguous.h>
+#include <asm/dma-contiguous.h>
 #include <linux/of.h>
 #include <linux/platform_device.h>
 #include <linux/vmalloc.h>
