@@ -26,6 +26,7 @@
 #include <asm/assembler.h>
 #include <asm/ptrace.h>
 #include <asm/asm-offsets.h>
+#include <asm/cache.h>
 #include <asm/cputype.h>
 #include <asm/memory.h>
 #include <asm/thread_info.h>
@@ -351,8 +352,9 @@ ENDPROC(set_cpu_boot_mode_flag)
  * This is not in .bss, because we set it sufficiently early that the boot-time
  * zeroing of .bss would clobber it.
  */
-	.pushsection	.data
+	.pushsection	.data..cacheline_aligned
 ENTRY(__boot_cpu_mode)
+	.align	L1_CACHE_SHIFT
 	.long	BOOT_CPU_MODE_EL2
 	.long	0
 	.popsection
