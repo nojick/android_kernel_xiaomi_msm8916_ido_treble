@@ -11,7 +11,7 @@
  * GNU General Public License for more details.
  *
  */
-
+#include <linux/cpu.h>
 #include <linux/delay.h>
 #include <linux/err.h>
 #include <linux/init.h>
@@ -65,11 +65,7 @@ static bool scm_dload_supported;
 
 static int dload_set(const char *val, struct kernel_param *kp);
 
-#ifdef WT_DLOAD_MODE_SUPPORT
-static int download_mode = 1;
-#else
 static int download_mode;
-#endif
 
 module_param_call(download_mode, dload_set, param_get_int,
 			&download_mode, 0644);
@@ -172,7 +168,7 @@ static int dload_set(const char *val, struct kernel_param *kp)
 	}
 
 	set_dload_mode(download_mode);
-
+	qpnp_pon_system_pwr_off(PON_POWER_OFF_WARM_RESET);
 	return 0;
 }
 #else
@@ -240,6 +236,7 @@ static void msm_restart_prepare(const char *cmd)
 		 */
 		if (get_dload_mode() ||
 			((cmd != NULL && cmd[0] != '\0') &&
+			!strcmp(cmd, "edl") &&
 			strcmp(cmd, "recovery") &&
 			strcmp(cmd, "bootloader") &&
 			strcmp(cmd, "rtc")))
@@ -249,9 +246,7 @@ static void msm_restart_prepare(const char *cmd)
 				(cmd != NULL && cmd[0] != '\0'));
 	}
 
-#ifdef CONFIG_MSM_PRESERVE_MEM
 	need_warm_reset = true;
-#endif
 
 	/* Hard reset the PMIC unless memory contents must be maintained. */
 	if (need_warm_reset) {
@@ -268,7 +263,7 @@ static void msm_restart_prepare(const char *cmd)
 		} else if (!strncmp(cmd, "recovery", 8)) {
 			qpnp_pon_set_restart_reason(
 				PON_RESTART_REASON_RECOVERY);
-			__raw_writel(0x77665502, restart_reason);
+			__raw_writel(0x6f656d46, restart_reason);
 		} else if (!strcmp(cmd, "rtc")) {
 			qpnp_pon_set_restart_reason(
 				PON_RESTART_REASON_RTC);
@@ -285,8 +280,8 @@ static void msm_restart_prepare(const char *cmd)
                         qpnp_pon_set_restart_reason(
                                 PON_RESTART_REASON_KEYS_CLEAR);
                         __raw_writel(0x7766550a, restart_reason);
-		} else if (!strncmp(cmd, "fastmmi", 7)) {
-				   __raw_writel(0x77665505, restart_reason);
+		} else if (!strncmp(cmd, "s1bootloader", 12)) {
+				   __raw_writel(0x6f656d53, restart_reason);
 		} else if (!strncmp(cmd, "oem-", 4)) {
 			unsigned long code;
 			int ret;
@@ -297,9 +292,14 @@ static void msm_restart_prepare(const char *cmd)
 		} else if (!strncmp(cmd, "edl", 3)) {
 			enable_emergency_dload_mode();
 		} else {
+			pr_notice("%s : cmd is %s, set to reboot mode\n", __func__, cmd);
 			qpnp_pon_set_restart_reason(PON_RESTART_REASON_UNKNOWN);
 			__raw_writel(0x77665501, restart_reason);
 		}
+	} else {
+		pr_notice("%s : cmd is NULL, set to reboot mode\n", __func__);
+		qpnp_pon_set_restart_reason(PON_RESTART_REASON_UNKNOWN);
+		__raw_writel(0x77665501, restart_reason);
 	}
 
 	flush_cache_all();
@@ -406,6 +406,19 @@ static void do_msm_poweroff(void)
 	return;
 }
 
+static int msm_reboot_call(struct notifier_block *this,
+			   unsigned long code, void *_cmd)
+{
+	if (code == SYS_DOWN)
+		disable_nonboot_cpus();
+
+	return NOTIFY_DONE;
+}
+
+static struct notifier_block msm_reboot_notifier = {
+	.notifier_call = msm_reboot_call,
+};
+
 static int msm_restart_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -413,11 +426,12 @@ static int msm_restart_probe(struct platform_device *pdev)
 	struct device_node *np;
 	int ret = 0;
 
+atomic_notifier_chain_register(&panic_notifier_list, &panic_blk);
+
 #ifdef CONFIG_MSM_DLOAD_MODE
 	if (scm_is_call_available(SCM_SVC_BOOT, SCM_DLOAD_CMD) > 0)
 		scm_dload_supported = true;
 
-	atomic_notifier_chain_register(&panic_notifier_list, &panic_blk);
 	np = of_find_compatible_node(NULL, NULL, DL_MODE_PROP);
 	if (!np) {
 		pr_err("unable to find DT imem DLOAD mode node\n");
@@ -437,6 +451,8 @@ static int msm_restart_probe(struct platform_device *pdev)
 	}
 
 #endif
+
+register_reboot_notifier(&msm_reboot_notifier);
 	np = of_find_compatible_node(NULL, NULL,
 				"qcom,msm-imem-restart_reason");
 	if (!np) {
@@ -469,7 +485,7 @@ static int msm_restart_probe(struct platform_device *pdev)
 		scm_deassert_ps_hold_supported = true;
 
 	set_dload_mode(download_mode);
-
+qpnp_pon_system_pwr_off(PON_POWER_OFF_WARM_RESET);
 	return 0;
 
 err_restart_reason:
@@ -498,4 +514,4 @@ static int __init msm_restart_init(void)
 {
 	return platform_driver_register(&msm_restart_driver);
 }
-device_initcall(msm_restart_init);
+pure_initcall(msm_restart_init);
