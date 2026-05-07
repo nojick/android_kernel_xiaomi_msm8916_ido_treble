@@ -1228,10 +1228,8 @@ static int spmi_pmic_arb_probe(struct platform_device *pdev)
 					"qcom,not-wakeup");
 	if (pmic_arb->allow_wakeup) {
 		ret = irq_set_irq_wake(pmic_arb->pic_irq, 1);
-		if (unlikely(ret)) {
+		if (unlikely(ret))
 			pr_err("Unable to set wakeup irq, err=%d\n", ret);
-			return -ENODEV;
-		}
 	}
 
 	ret = spmi_pmic_arb_get_property(pdev,
