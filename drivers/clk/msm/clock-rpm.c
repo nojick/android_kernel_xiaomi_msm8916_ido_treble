@@ -377,7 +377,8 @@ static struct rpm_clk *rpm_clk_dt_parser_common(struct device *dev,
 		dt_err(np, "missing qcom,res-type dt property\n");
 		return ERR_PTR(rc);
 	}
-	sscanf(str, "%4c", (char *) &rpm->rpm_res_type);
+	if (sscanf(str, "%4c", (char *) &rpm->rpm_res_type) <= 0)
+		return ERR_PTR(-EINVAL);
 
 	rc = of_property_read_u32(np, "qcom,res-id", &rpm->rpm_clk_id);
 	if (rc) {
@@ -390,7 +391,8 @@ static struct rpm_clk *rpm_clk_dt_parser_common(struct device *dev,
 		dt_err(np, "missing qcom,key dt property\n");
 		return ERR_PTR(rc);
 	}
-	sscanf(str, "%4c", (char *) &rpm->rpm_key);
+	if (sscanf(str, "%4c", (char *) &rpm->rpm_key) <= 0)
+		return ERR_PTR(-EINVAL);
 	return rpm;
 }
 
