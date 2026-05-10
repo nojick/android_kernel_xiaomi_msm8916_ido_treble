@@ -537,12 +537,6 @@ static int c_show(struct seq_file *m, void *v)
 		seq_printf(m, "CPU part\t: 0x%03x\n", ((midr >> 4) & 0xfff));
 		seq_printf(m, "CPU revision\t: %d\n\n", (midr & 0xf));
 	}
-#ifdef CONFIG_ARMV7_COMPAT_CPUINFO
-	/* Print out the non-optional ARMv8 HW capabilities */
-	seq_printf(m, "wp half thumb fastmult vfp edsp neon vfpv3d16 tlsi ");
-	seq_printf(m, "vfpv4 idiva idivt ");
-#endif
-
 	return 0;
 }
 
