@@ -538,11 +538,9 @@ static int c_show(struct seq_file *m, void *v)
 		seq_printf(m, "CPU revision\t: %d\n\n", (midr & 0xf));
 	}
 #ifdef CONFIG_ARMV7_COMPAT_CPUINFO
-	if (is_compat_task()) {
-		/* Print out the non-optional ARMv8 HW capabilities */
-		seq_printf(m, "wp half thumb fastmult vfp edsp neon vfpv3 tlsi ");
-		seq_printf(m, "vfpv4 idiva idivt ");
-	}
+	/* Print out the non-optional ARMv8 HW capabilities */
+	seq_printf(m, "wp half thumb fastmult vfp edsp neon vfpv3 tlsi ");
+	seq_printf(m, "vfpv4 idiva idivt ");
 #endif
 
 	return 0;
