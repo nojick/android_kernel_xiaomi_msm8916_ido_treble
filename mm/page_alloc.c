@@ -5241,9 +5241,6 @@ static void __init find_zone_movable_pfns_for_nodes(void)
 		goto out2;
 	}
 
-#ifdef CONFIG_FIX_MOVABLE_ZONE
-	required_movablecore = movable_reserved_size >> PAGE_SHIFT;
-#endif
 	/*
 	 * If movablecore=nn[KMG] was specified, calculate what size of
 	 * kernelcore that corresponds so that memory usable for
