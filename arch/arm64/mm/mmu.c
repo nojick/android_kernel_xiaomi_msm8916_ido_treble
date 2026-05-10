@@ -274,8 +274,8 @@ static void __init alloc_init_pmd(struct mm_struct *mm, pud_t *pud, unsigned lon
 			    PMD_ATTRINDX(MT_DEVICE_nGnRE);
 		prot_pte = __pgprot(PROT_DEVICE_nGnRE);
 	} else {
-		prot_sect = prot_sect_kernel;
-		prot_pte = PAGE_KERNEL_EXEC;
+		prot_sect = PROT_SECT_NORMAL;
+		prot_pte = PAGE_KERNEL;
 	}
 
 	/*
@@ -587,9 +587,6 @@ void __init paging_init(void)
 	bootmem_init();
 
 	empty_zero_page = virt_to_page(zero_page);
-
-	/* Ensure the zero page is visible to the page table walker */
-	dsb(ishst);
 
 	/*
 	 * TTBR0 is only used for the identity mapping at this stage. Make it
