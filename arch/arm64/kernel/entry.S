@@ -345,7 +345,6 @@ el1_dbg:
 	mrs	x0, far_el1
 	mov	x2, sp				// struct pt_regs
 	bl	do_debug_exception
-	enable_dbg
 	kernel_exit 1
 el1_inv:
 	// TODO: add support for undefined instructions in kernel mode
@@ -551,12 +550,12 @@ el0_dbg:
 	 * Debug exception handling
 	 */
 	tbnz	x24, #0, el0_inv		// EL0 only
-	ct_user_exit
 	mrs	x0, far_el1
 	mov	x1, x25
 	mov	x2, sp
 	bl	do_debug_exception
 	enable_dbg
+	ct_user_exit
 	b	ret_to_user
 el0_inv:
 	enable_dbg
