@@ -118,18 +118,8 @@
 	.if	\el == 0
 	ct_user_enter
 	ldr	x23, [sp, #S_SP]		// load return stack pointer
-	msr	sp_el0, x23
-#ifdef CONFIG_ARM64_ERRATUM_845719
-	tbz x22, #4, 1f
-#ifdef CONFIG_PID_IN_CONTEXTIDR
-	mrs x29, contextidr_el1
-	msr contextidr_el1, x29
-#else
-	msr contextidr_el1, xzr
-#endif
-#endif
 	.endif
-1:	.if	\ret
+	.if	\ret
 	ldr	x1, [sp, #S_X1]			// preserve x0 (syscall return)
 	add	sp, sp, S_X2
 	.else
