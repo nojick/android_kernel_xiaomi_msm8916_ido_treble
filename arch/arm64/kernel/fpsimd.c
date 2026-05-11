@@ -34,7 +34,6 @@
 #define FPEXC_IXF	(1 << 4)
 #define FPEXC_IDF	(1 << 7)
 
-
 /*
  * Trapped FP/ASIMD access.
  */
@@ -73,9 +72,9 @@ void do_fpsimd_exc(unsigned int esr, struct pt_regs *regs)
 
 void fpsimd_thread_switch(struct task_struct *next)
 {
+	/* check if not kernel threads */
 	if (current->mm)
 		fpsimd_save_state(&current->thread.fpsimd_state);
-
 	if (next->mm)
 		fpsimd_load_state(&next->thread.fpsimd_state);
 }
@@ -85,27 +84,6 @@ void fpsimd_flush_thread(void)
 	preempt_disable();
 	memset(&current->thread.fpsimd_state, 0, sizeof(struct fpsimd_state));
 	fpsimd_load_state(&current->thread.fpsimd_state);
-	preempt_enable();
-}
-
-/*
- * Save the userland FPSIMD state of 'current' to memory, but only if the state
- * currently held in the registers does in fact belong to 'current'
- */
-void fpsimd_preserve_current_state(void)
-{
-	preempt_disable();
-	fpsimd_save_state(&current->thread.fpsimd_state);
-	preempt_enable();
-}
-
-/*
- * Load an updated userland FPSIMD state for 'current' from memory
- */
-void fpsimd_update_current_state(struct fpsimd_state *state)
-{
-	preempt_disable();
-	fpsimd_load_state(state);
 	preempt_enable();
 }
 
@@ -188,6 +166,26 @@ static void fpsimd_pm_init(void)
 #else
 static inline void fpsimd_pm_init(void) { }
 #endif /* CONFIG_CPU_PM */
+
+/*
+ * Save the userland FPSIMD state of 'current' to memory
+ */
+void fpsimd_preserve_current_state(void)
+{
+	preempt_disable();
+	fpsimd_save_state(&current->thread.fpsimd_state);
+	preempt_enable();
+}
+
+/*
+ * Load an updated userland FPSIMD state for 'current' from memory
+ */
+void fpsimd_update_current_state(struct fpsimd_state *state)
+{
+	preempt_disable();
+	fpsimd_load_state(state);
+	preempt_enable();
+}
 
 /*
  * FP/SIMD support code initialisation.
