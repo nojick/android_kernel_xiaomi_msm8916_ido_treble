@@ -74,8 +74,9 @@ static bool arch_timer_mem_use_virtual;
  * Architected system timer support.
  */
 
-static inline void arch_timer_reg_write(int access, int reg, u32 val,
-					struct clock_event_device *clk)
+static __always_inline
+void arch_timer_reg_write(int access, enum arch_timer_reg reg, u32 val,
+			  struct clock_event_device *clk)
 {
 	if (access == ARCH_TIMER_MEM_PHYS_ACCESS) {
 		struct arch_timer *timer = to_arch_timer(clk);
@@ -86,8 +87,6 @@ static inline void arch_timer_reg_write(int access, int reg, u32 val,
 		case ARCH_TIMER_REG_TVAL:
 			writel_relaxed_no_log(val, timer->base + CNTP_TVAL);
 			break;
-		default:
-			BUILD_BUG();
 		}
 	} else if (access == ARCH_TIMER_MEM_VIRT_ACCESS) {
 		struct arch_timer *timer = to_arch_timer(clk);
@@ -98,16 +97,15 @@ static inline void arch_timer_reg_write(int access, int reg, u32 val,
 		case ARCH_TIMER_REG_TVAL:
 			writel_relaxed_no_log(val, timer->base + CNTV_TVAL);
 			break;
-		default:
-			BUILD_BUG();
 		}
 	} else {
 		arch_timer_reg_write_cp15(access, reg, val);
 	}
 }
 
-static inline u32 arch_timer_reg_read(int access, int reg,
-				      struct clock_event_device *clk)
+static __always_inline
+u32 arch_timer_reg_read(int access, enum arch_timer_reg reg,
+			struct clock_event_device *clk)
 {
 	u32 val;
 
@@ -120,8 +118,6 @@ static inline u32 arch_timer_reg_read(int access, int reg,
 		case ARCH_TIMER_REG_TVAL:
 			val = readl_relaxed_no_log(timer->base + CNTP_TVAL);
 			break;
-		default:
-			BUILD_BUG();
 		}
 	} else if (access == ARCH_TIMER_MEM_VIRT_ACCESS) {
 		struct arch_timer *timer = to_arch_timer(clk);
@@ -132,8 +128,6 @@ static inline u32 arch_timer_reg_read(int access, int reg,
 		case ARCH_TIMER_REG_TVAL:
 			val = readl_relaxed_no_log(timer->base + CNTV_TVAL);
 			break;
-		default:
-			BUILD_BUG();
 		}
 	} else {
 		val = arch_timer_reg_read_cp15(access, reg);
@@ -146,6 +140,7 @@ static __always_inline irqreturn_t timer_handler(const int access,
 					struct clock_event_device *evt)
 {
 	unsigned long ctrl;
+
 	ctrl = arch_timer_reg_read(access, ARCH_TIMER_REG_CTRL, evt);
 	if (ctrl & ARCH_TIMER_CTRL_IT_STAT) {
 		ctrl |= ARCH_TIMER_CTRL_IT_MASK;
@@ -185,7 +180,8 @@ static irqreturn_t arch_timer_handler_virt_mem(int irq, void *dev_id)
 	return timer_handler(ARCH_TIMER_MEM_VIRT_ACCESS, evt);
 }
 
-static __always_inline void timer_set_mode(const int access, int mode)
+static __always_inline void timer_set_mode(const int access, int mode,
+				  struct clock_event_device *clk)
 {
 	unsigned long ctrl;
 	switch (mode) {
@@ -224,7 +220,8 @@ static void arch_timer_set_mode_phys_mem(enum clock_event_mode mode,
 	timer_set_mode(ARCH_TIMER_MEM_PHYS_ACCESS, mode, clk);
 }
 
-static __always_inline void set_next_event(const int access, unsigned long evt)
+static __always_inline void set_next_event(const int access, unsigned long evt,
+					   struct clock_event_device *clk)
 {
 	unsigned long ctrl;
 	ctrl = arch_timer_reg_read(access, ARCH_TIMER_REG_CTRL, clk);
@@ -263,7 +260,7 @@ static int arch_timer_set_next_event_phys_mem(unsigned long evt,
 }
 
 static void __arch_timer_setup(unsigned type,
-				       struct clock_event_device *clk)
+			       struct clock_event_device *clk)
 {
 	clk->features = CLOCK_EVT_FEAT_ONESHOT;
 
@@ -429,12 +426,12 @@ u64 (*arch_timer_read_counter)(void) = arch_counter_get_cntvct_cp15;
 
 static cycle_t arch_counter_read(struct clocksource *cs)
 {
-	return arch_counter_get_cntvct();
+	return arch_timer_read_counter();
 }
 
 static cycle_t arch_counter_read_cc(const struct cyclecounter *cc)
 {
-	return arch_counter_get_cntvct();
+	return arch_timer_read_counter();
 }
 
 u64 arch_counter_get_cntpct(void)
@@ -775,7 +772,7 @@ static void __init arch_timer_mem_init(struct device_node *np)
 	of_node_put(best_frame);
 	if (!irq) {
 		pr_err("arch_timer: Frame missing %s irq",
-				arch_timer_mem_use_virtual ? "virt" : "phys");
+		       arch_timer_mem_use_virtual ? "virt" : "phys");
 		return;
 	}
 
