@@ -12,8 +12,6 @@
 
 #include "image.h"
 
-#include "image.h"
-
 #define ARM_EXIT_KEEP(x)
 #define ARM_EXIT_DISCARD(x)	x
 
