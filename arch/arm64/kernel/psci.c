@@ -496,6 +496,5 @@ static struct cpu_operations cpu_psci_ops = {
 	.cpu_die	= cpu_psci_cpu_die,
 	.cpu_kill	= cpu_psci_cpu_kill,
 #endif
-#endif
 };
 CPU_METHOD_OF_DECLARE(psci, "psci", &cpu_psci_ops);
