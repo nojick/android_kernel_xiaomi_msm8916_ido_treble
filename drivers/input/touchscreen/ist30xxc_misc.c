@@ -1346,51 +1346,51 @@ ssize_t intr_debug3_show(struct device *dev, struct device_attribute *attr,
 }
 
 /* sysfs : node */
-static DEVICE_ATTR(refresh, S_IRWXUGO, ist30xx_frame_refresh, NULL);
-static DEVICE_ATTR(nocp, S_IRWXUGO, ist30xx_frame_nocp, NULL);
-static DEVICE_ATTR(filter, S_IRWXUGO, ist30xx_filter_show, NULL);
-static DEVICE_ATTR(raw, S_IRWXUGO, ist30xx_raw_show, NULL);
-static DEVICE_ATTR(base, S_IRWXUGO, ist30xx_base_show, NULL);
-static DEVICE_ATTR(diff, S_IRWXUGO, ist30xx_diff_show, NULL);
+static DEVICE_ATTR(refresh, 0664, ist30xx_frame_refresh, NULL);
+static DEVICE_ATTR(nocp, 0664, ist30xx_frame_nocp, NULL);
+static DEVICE_ATTR(filter, 0664, ist30xx_filter_show, NULL);
+static DEVICE_ATTR(raw, 0664, ist30xx_raw_show, NULL);
+static DEVICE_ATTR(base, 0664, ist30xx_base_show, NULL);
+static DEVICE_ATTR(diff, 0664, ist30xx_diff_show, NULL);
 
 /* sysfs : sys */
-static DEVICE_ATTR(debug_mode, S_IRWXUGO, NULL, ist30xx_debug_mode_store);
-static DEVICE_ATTR(printk, S_IRWXUGO,
+static DEVICE_ATTR(debug_mode, 0664, NULL, ist30xx_debug_mode_store);
+static DEVICE_ATTR(printk, 0664,
 		   ist30xx_printk_show, ist30xx_printk_store);
-static DEVICE_ATTR(printk5, S_IRWXUGO, ist30xx_printk5_show, NULL);
-static DEVICE_ATTR(printk6, S_IRWXUGO, ist30xx_printk6_show, NULL);
+static DEVICE_ATTR(printk5, 0664, ist30xx_printk5_show, NULL);
+static DEVICE_ATTR(printk6, 0664, ist30xx_printk6_show, NULL);
 #if IST30XX_GESTURE
-static DEVICE_ATTR(gesture, S_IRWXUGO, NULL, ist30xx_gesture_store);
+static DEVICE_ATTR(gesture, 0664, NULL, ist30xx_gesture_store);
 #endif
-static DEVICE_ATTR(direct, S_IRWXUGO,
+static DEVICE_ATTR(direct, 0664,
 		   ist30xx_direct_show, ist30xx_direct_store);
-static DEVICE_ATTR(clb_time, S_IRWXUGO, NULL, ist30xx_calib_time_store);
-static DEVICE_ATTR(clb, S_IRWXUGO, ist30xx_calib_show, NULL);
-static DEVICE_ATTR(clb_result, S_IRWXUGO, ist30xx_calib_result_show, NULL);
-static DEVICE_ATTR(tsp_power_on, S_IRWXUGO, ist30xx_power_on_show, NULL);
-static DEVICE_ATTR(tsp_power_off, S_IRWXUGO, ist30xx_power_off_show, NULL);
-static DEVICE_ATTR(errcnt, S_IRWXUGO, NULL, ist30xx_errcnt_store);
-static DEVICE_ATTR(scancnt, S_IRWXUGO, NULL, ist30xx_scancnt_store);
-static DEVICE_ATTR(timerms, S_IRWXUGO, NULL, ist30xx_timerms_store);
-static DEVICE_ATTR(report_rate, S_IRWXUGO, NULL, ist30xx_report_rate_store);
-static DEVICE_ATTR(idle_rate, S_IRWXUGO, NULL, ist30xx_idle_scan_rate_store);
-static DEVICE_ATTR(mode_ta, S_IRWXUGO, NULL, ist30xx_ta_mode_store);
-static DEVICE_ATTR(mode_call, S_IRWXUGO, NULL, ist30xx_call_mode_store);
-static DEVICE_ATTR(mode_cover, S_IRWXUGO, NULL, ist30xx_cover_mode_store);
-static DEVICE_ATTR(mode_secure, S_IRWXUGO, NULL, ist30xx_secure_mode_store);
+static DEVICE_ATTR(clb_time, 0664, NULL, ist30xx_calib_time_store);
+static DEVICE_ATTR(clb, 0664, ist30xx_calib_show, NULL);
+static DEVICE_ATTR(clb_result, 0664, ist30xx_calib_result_show, NULL);
+static DEVICE_ATTR(tsp_power_on, 0664, ist30xx_power_on_show, NULL);
+static DEVICE_ATTR(tsp_power_off, 0664, ist30xx_power_off_show, NULL);
+static DEVICE_ATTR(errcnt, 0664, NULL, ist30xx_errcnt_store);
+static DEVICE_ATTR(scancnt, 0664, NULL, ist30xx_scancnt_store);
+static DEVICE_ATTR(timerms, 0664, NULL, ist30xx_timerms_store);
+static DEVICE_ATTR(report_rate, 0664, NULL, ist30xx_report_rate_store);
+static DEVICE_ATTR(idle_rate, 0664, NULL, ist30xx_idle_scan_rate_store);
+static DEVICE_ATTR(mode_ta, 0664, NULL, ist30xx_ta_mode_store);
+static DEVICE_ATTR(mode_call, 0664, NULL, ist30xx_call_mode_store);
+static DEVICE_ATTR(mode_cover, 0664, NULL, ist30xx_cover_mode_store);
+static DEVICE_ATTR(mode_secure, 0664, NULL, ist30xx_secure_mode_store);
 static DEVICE_ATTR(ic_inform, S_IRUGO, ist30xx_read_ic_inform, NULL);
 
 /* sysfs : tunes */
-static DEVICE_ATTR(node_info, S_IRWXUGO, tunes_node_info_show, NULL);
-static DEVICE_ATTR(regcmd, S_IRWXUGO, tunes_regcmd_show, tunes_regcmd_store);
-static DEVICE_ATTR(reg, S_IRWXUGO, tunes_reg_show, tunes_reg_store);
-static DEVICE_ATTR(adb, S_IRWXUGO, tunes_adb_show, tunes_adb_store);
+static DEVICE_ATTR(node_info, 0664, tunes_node_info_show, NULL);
+static DEVICE_ATTR(regcmd, 0664, tunes_regcmd_show, tunes_regcmd_store);
+static DEVICE_ATTR(reg, 0664, tunes_reg_show, tunes_reg_store);
+static DEVICE_ATTR(adb, 0664, tunes_adb_show, tunes_adb_store);
 #if IST30XX_ALGORITHM_MODE
-static DEVICE_ATTR(algorithm, S_IRWXUGO, ist30xx_algr_show, ist30xx_algr_store);
+static DEVICE_ATTR(algorithm, 0664, ist30xx_algr_show, ist30xx_algr_store);
 #endif
-static DEVICE_ATTR(intr_debug, S_IRWXUGO, intr_debug_show, intr_debug_store);
-static DEVICE_ATTR(intr_debug2, S_IRWXUGO, intr_debug2_show, intr_debug2_store);
-static DEVICE_ATTR(intr_debug3, S_IRWXUGO, intr_debug3_show, intr_debug3_store);
+static DEVICE_ATTR(intr_debug, 0664, intr_debug_show, intr_debug_store);
+static DEVICE_ATTR(intr_debug2, 0664, intr_debug2_show, intr_debug2_store);
+static DEVICE_ATTR(intr_debug3, 0664, intr_debug3_show, intr_debug3_store);
 
 static struct attribute *node_attributes[] = {
 	&dev_attr_refresh.attr,
