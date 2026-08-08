@@ -531,14 +531,14 @@
 
 };
 
-#if 0
+
 &mdss_mdp {
 	qcom,mdss-pref-prim-intf = "dsi";
 };
 
 &msm_gpio {
 	pmx_mdss {
-		mdss_dsi_active1: mdss_dsi_active1 {
+		mdss_dsi_active: mdss_dsi_active {
 			mux {
 				pins = "gpio25";
 			};
@@ -546,7 +546,7 @@
 				pins = "gpio25";
 			};
 		};
-		mdss_dsi_suspend1: mdss_dsi_suspend1 {
+		mdss_dsi_suspend: mdss_dsi_suspend {
 			mux {
 				pins = "gpio25";
 			};
@@ -558,13 +558,13 @@
 };
 &mdss_dsi0 {
 	pinctrl-names = "mdss_default","mdss_sleep";
-	pinctrl-0 = <&mdss_dsi_active1>;
-	pinctrl-1 = <&mdss_dsi_suspend1>;
+	pinctrl-0 = <&mdss_dsi_active>;
+	pinctrl-1 = <&mdss_dsi_suspend>;
 
 	qcom,platform-reset-gpio = <&msm_gpio 25 0>;
 
 };
-#endif
+
 #include "lineage-xiaomi-ido.dtsi"
 &firmware {
 	android {
