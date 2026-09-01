@@ -420,9 +420,6 @@ struct cpp_hw_info_32_t {
 #define VIDIOC_MSM_CPP_IOMMU_DETACH32 \
 	_IOWR('V', BASE_VIDIOC_PRIVATE + 19, struct msm_camera_v4l2_ioctl32_t)
 
-#define VIDIOC_MSM_CPP_DELETE_STREAM_BUFF32\
-	_IOWR('V', BASE_VIDIOC_PRIVATE + 20, struct msm_camera_v4l2_ioctl32_t)
-
 struct msm_camera_v4l2_ioctl32_t {
 	uint32_t id;
 	uint32_t len;
