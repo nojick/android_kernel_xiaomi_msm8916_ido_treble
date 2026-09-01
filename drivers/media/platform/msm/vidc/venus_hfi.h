@@ -17,16 +17,15 @@
 #include <linux/clk.h>
 #include <linux/mutex.h>
 #include <linux/platform_device.h>
-#include <linux/pm_qos.h>
 #include <linux/spinlock.h>
 #include <linux/msm_iommu_domains.h>
 #include <soc/qcom/ocmem.h>
+#include "vmem/vmem.h"
 #include "vidc_hfi_api.h"
 #include "vidc_hfi_helper.h"
 #include "vidc_hfi_api.h"
 #include "vidc_hfi.h"
 #include "msm_vidc_resources.h"
-#include "hfi_packetization.h"
 
 #define HFI_MASK_QHDR_TX_TYPE			0xFF000000
 #define HFI_MASK_QHDR_RX_TYPE			0x00FF0000
@@ -81,8 +80,8 @@ struct hfi_mem_map_table {
 };
 
 struct hfi_mem_map {
-	u32 virtual_addr;
-	u32 physical_addr;
+	ion_phys_addr_t virtual_addr;
+	phys_addr_t physical_addr;
 	u32 size;
 	u32 attr;
 };
@@ -117,8 +116,8 @@ enum vidc_hw_reg {
 };
 
 enum bus_index {
-	BUS_IDX_ENC_OCMEM,
-	BUS_IDX_DEC_OCMEM,
+	BUS_IDX_ENC_IMEM,
+	BUS_IDX_DEC_IMEM,
 	BUS_IDX_ENC_DDR,
 	BUS_IDX_DEC_DDR,
 	BUS_IDX_MAX
@@ -150,20 +149,23 @@ struct hal_data {
 	u32 register_size;
 };
 
-struct venus_bus_info {
-	u32 ddr_handle[MSM_VIDC_MAX_DEVICES];
-	u32 ocmem_handle[MSM_VIDC_MAX_DEVICES];
-};
-
 struct on_chip_mem {
 	struct ocmem_buf *buf;
 	struct notifier_block vidc_ocmem_nb;
 	void *handle;
 };
 
+struct imem {
+	enum imem_type type;
+	union {
+		struct on_chip_mem ocmem;
+		phys_addr_t vmem;
+	};
+};
+
 struct venus_resources {
 	struct msm_vidc_fw fw;
-	struct on_chip_mem ocmem;
+	struct imem imem;
 };
 
 enum venus_hfi_state {
@@ -204,9 +206,6 @@ struct venus_hfi_device {
 	struct venus_resources resources;
 	struct msm_vidc_platform_resources *res;
 	enum venus_hfi_state state;
-	struct hfi_packetization_ops *pkt_ops;
-	enum hfi_packetization_type packetization_type;
-	struct pm_qos_request qos;
 };
 
 void venus_hfi_delete_device(void *device);

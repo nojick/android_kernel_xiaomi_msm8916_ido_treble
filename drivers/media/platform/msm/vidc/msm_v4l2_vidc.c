@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2017, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2014, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -23,21 +23,19 @@
 #include <linux/qcom_iommu.h>
 #include <linux/msm_iommu_domains.h>
 #include <media/msm_vidc.h>
-#include "msm_vidc_common.h"
-#include "msm_vidc_debug.h"
 #include "msm_vidc_internal.h"
+#include "msm_vidc_debug.h"
+#include "vidc_hfi_api.h"
+#include "vidc_hfi_api.h"
 #include "msm_vidc_resources.h"
 #include "msm_vidc_res_parse.h"
 #include "venus_boot.h"
-#include "vidc_hfi_api.h"
-
 
 #define BASE_DEVICE_NUMBER 32
-#define EARLY_FIRMWARE_LOAD_DELAY 1000
 
 struct msm_vidc_drv *vidc_driver;
 
-uint32_t msm_vidc_pwr_collapse_delay = 10000;
+uint32_t msm_vidc_pwr_collapse_delay = 2000;
 
 static inline struct msm_vidc_inst *get_vidc_inst(struct file *filp, void *fh)
 {
@@ -296,7 +294,7 @@ static int read_platform_resources(struct msm_vidc_core *core,
 		struct platform_device *pdev)
 {
 	if (!core || !pdev) {
-		dprintk(VIDC_ERR, "%s: Invalid params %pK %pK\n",
+		dprintk(VIDC_ERR, "%s: Invalid params %p %p\n",
 			__func__, core, pdev);
 		return -EINVAL;
 	}
@@ -434,61 +432,6 @@ static struct attribute_group msm_vidc_core_attr_group = {
 		.attrs = msm_vidc_core_attrs,
 };
 
-struct fw_load_handler_data {
-	struct msm_vidc_core *core;
-	struct delayed_work work;
-};
-
-
-static void fw_load_handler(struct work_struct *work)
-{
-	struct msm_vidc_core *core = NULL;
-	struct fw_load_handler_data *handler = NULL;
-	int rc = 0;
-
-	handler = container_of(work, struct fw_load_handler_data,
-			work.work);
-	if (!handler || !handler->core) {
-		dprintk(VIDC_ERR, "%s - invalid work or core handle\n",
-				__func__);
-		goto exit;
-	}
-	core = handler->core;
-
-	rc = msm_comm_load_fw(core);
-	if (rc) {
-		dprintk(VIDC_ERR, "%s - failed to load fw\n", __func__);
-		goto exit;
-	}
-
-	rc = msm_comm_check_core_init(core);
-	if (rc) {
-		dprintk(VIDC_ERR, "%s - failed to init core\n", __func__);
-		goto exit;
-	}
-	dprintk(VIDC_DBG, "%s - firmware loaded successfully\n", __func__);
-
-exit:
-	kfree(handler);
-}
-
-static void load_firmware(struct msm_vidc_core *core)
-{
-	struct fw_load_handler_data *handler = NULL;
-
-	handler = kzalloc(sizeof(*handler), GFP_KERNEL);
-	if (!handler) {
-		dprintk(VIDC_ERR,
-			"%s - failed to allocate sys error handler\n",
-			__func__);
-		return;
-	}
-	handler->core = core;
-	INIT_DELAYED_WORK(&handler->work, fw_load_handler);
-	schedule_delayed_work(&handler->work,
-			msecs_to_jiffies(EARLY_FIRMWARE_LOAD_DELAY));
-}
-
 static int msm_vidc_probe(struct platform_device *pdev)
 {
 	int rc = 0;
@@ -496,16 +439,12 @@ static int msm_vidc_probe(struct platform_device *pdev)
 	struct device *dev;
 	int nr = BASE_DEVICE_NUMBER;
 
-	if (!vidc_driver) {
-		dprintk(VIDC_ERR, "Invalid vidc driver\n");
-		return -EINVAL;
-	}
-
 	core = kzalloc(sizeof(*core), GFP_KERNEL);
-	if (!core) {
+	if (!core || !vidc_driver) {
 		dprintk(VIDC_ERR,
 			"Failed to allocate memory for device core\n");
-		return -ENOMEM;
+		rc = -ENOMEM;
+		goto err_no_mem;
 	}
 	rc = msm_vidc_initialize_core(pdev, core);
 	if (rc) {
@@ -537,6 +476,7 @@ static int msm_vidc_probe(struct platform_device *pdev)
 	core->vdev[MSM_VIDC_DECODER].vdev.ioctl_ops = &msm_v4l2_ioctl_ops;
 	core->vdev[MSM_VIDC_DECODER].vdev.vfl_dir = VFL_DIR_M2M;
 	core->vdev[MSM_VIDC_DECODER].type = MSM_VIDC_DECODER;
+	core->vdev[MSM_VIDC_DECODER].vdev.v4l2_dev = &core->v4l2_dev;
 	rc = video_register_device(&core->vdev[MSM_VIDC_DECODER].vdev,
 					VFL_TYPE_GRABBER, nr);
 	if (rc) {
@@ -558,6 +498,7 @@ static int msm_vidc_probe(struct platform_device *pdev)
 	core->vdev[MSM_VIDC_ENCODER].vdev.ioctl_ops = &msm_v4l2_ioctl_ops;
 	core->vdev[MSM_VIDC_ENCODER].vdev.vfl_dir = VFL_DIR_M2M;
 	core->vdev[MSM_VIDC_ENCODER].type = MSM_VIDC_ENCODER;
+	core->vdev[MSM_VIDC_ENCODER].vdev.v4l2_dev = &core->v4l2_dev;
 	rc = video_register_device(&core->vdev[MSM_VIDC_ENCODER].vdev,
 				VFL_TYPE_GRABBER, nr + 1);
 	if (rc) {
@@ -612,10 +553,6 @@ static int msm_vidc_probe(struct platform_device *pdev)
 	core->debugfs_root = msm_vidc_debugfs_init_core(
 		core, vidc_driver->debugfs_root);
 	pdev->dev.platform_data = core;
-
-	if (core->resources.early_fw_load)
-		load_firmware(core);
-
 	return rc;
 err_non_sec_pil_init:
 	vidc_hfi_deinitialize(core->hfi_type, core->device);
@@ -635,6 +572,7 @@ err_v4l2_register:
 	sysfs_remove_group(&pdev->dev.kobj, &msm_vidc_core_attr_group);
 err_core_init:
 	kfree(core);
+err_no_mem:
 	return rc;
 }
 
@@ -644,7 +582,7 @@ static int msm_vidc_remove(struct platform_device *pdev)
 	struct msm_vidc_core *core;
 
 	if (!pdev) {
-		dprintk(VIDC_ERR, "%s invalid input %pK", __func__, pdev);
+		dprintk(VIDC_ERR, "%s invalid input %p", __func__, pdev);
 		return -EINVAL;
 	}
 	core = pdev->dev.platform_data;
@@ -740,7 +678,6 @@ static int __init msm_vidc_init(void)
 	if (rc) {
 		dprintk(VIDC_ERR,
 			"Failed to register platform driver\n");
-		debugfs_remove_recursive(vidc_driver->debugfs_root);
 		kfree(vidc_driver);
 		vidc_driver = NULL;
 	}

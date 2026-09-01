@@ -46,6 +46,19 @@ fail_read:
 	return 0;
 }
 
+static inline enum imem_type read_imem_type(struct platform_device *pdev)
+{
+	bool is_compatible(char *compat)
+	{
+		return !!of_find_compatible_node(NULL, NULL, compat);
+	}
+
+	return is_compatible("qcom,msm-ocmem") ? IMEM_OCMEM :
+		is_compatible("qcom,msm-vmem") ? IMEM_VMEM :
+						IMEM_NONE;
+
+}
+
 int read_hfi_type(struct platform_device *pdev)
 {
 	struct device_node *np = pdev->dev.of_node;
@@ -59,9 +72,9 @@ int read_hfi_type(struct platform_device *pdev)
 				"Failed to read hfi from device tree\n");
 			goto err_hfi_read;
 		}
-		if (!strcmp(hfi_name, "venus"))
+		if (!strcasecmp(hfi_name, "venus"))
 			rc = VIDC_HFI_VENUS;
-		else if (!strcmp(hfi_name, "q6"))
+		else if (!strcasecmp(hfi_name, "q6"))
 			rc = VIDC_HFI_Q6;
 		else
 			rc = -EINVAL;
@@ -82,12 +95,6 @@ static inline void msm_vidc_free_reg_table(
 			struct msm_vidc_platform_resources *res)
 {
 	res->reg_set.reg_tbl = NULL;
-}
-
-static inline void msm_vidc_free_qdss_addr_table(
-			struct msm_vidc_platform_resources *res)
-{
-	res->qdss_addr_set.addr_tbl = NULL;
 }
 
 static inline void msm_vidc_free_bus_vectors(
@@ -114,9 +121,13 @@ static inline void msm_vidc_free_regulator_table(
 		struct regulator_info *rinfo =
 			&res->regulator_set.regulator_tbl[c];
 
+		kfree(rinfo->name);
 		rinfo->name = NULL;
 	}
 
+	/* The regulator table is one the few allocs that aren't managed, hence
+	 * free it manually */
+	kfree(res->regulator_set.regulator_tbl);
 	res->regulator_set.regulator_tbl = NULL;
 	res->regulator_set.count = 0;
 }
@@ -135,7 +146,6 @@ void msm_vidc_free_platform_resources(
 	msm_vidc_free_regulator_table(res);
 	msm_vidc_free_freq_table(res);
 	msm_vidc_free_reg_table(res);
-	msm_vidc_free_qdss_addr_table(res);
 	msm_vidc_free_bus_vectors(res);
 	msm_vidc_free_iommu_groups(res);
 }
@@ -186,58 +196,6 @@ static int msm_vidc_load_reg_table(struct msm_vidc_platform_resources *res)
 	}
 	return rc;
 }
-static int msm_vidc_load_qdss_table(struct msm_vidc_platform_resources *res)
-{
-	struct addr_set *qdss_addr_set;
-	struct platform_device *pdev = res->pdev;
-	int i;
-	int rc = 0;
-
-	if (!of_find_property(pdev->dev.of_node, "qcom,qdss-presets", NULL)) {
-		/* qcom,qdss-presets is an optional property. It likely won't be
-		 * present if we don't have any register settings to program */
-		dprintk(VIDC_DBG, "qcom,qdss-presets not found\n");
-		return rc;
-	}
-
-	qdss_addr_set = &res->qdss_addr_set;
-	qdss_addr_set->count = get_u32_array_num_elements(pdev,
-					"qcom,qdss-presets");
-	qdss_addr_set->count /= sizeof(*qdss_addr_set->addr_tbl) / sizeof(u32);
-
-	if (qdss_addr_set->count == 0) {
-		dprintk(VIDC_DBG, "no elements in qdss reg set\n");
-		return rc;
-	}
-
-	qdss_addr_set->addr_tbl = devm_kzalloc(&pdev->dev,
-			qdss_addr_set->count * sizeof(*qdss_addr_set->addr_tbl),
-			GFP_KERNEL);
-	if (!qdss_addr_set->addr_tbl) {
-		dprintk(VIDC_ERR, "%s Failed to alloc register table\n",
-			__func__);
-		rc = -ENOMEM;
-		goto err_qdss_addr_tbl;
-	}
-
-	rc = of_property_read_u32_array(pdev->dev.of_node, "qcom,qdss-presets",
-		(u32 *)qdss_addr_set->addr_tbl, qdss_addr_set->count * 2);
-	if (rc) {
-		dprintk(VIDC_ERR, "Failed to read qdss address table\n");
-		msm_vidc_free_qdss_addr_table(res);
-		rc = -EINVAL;
-		goto err_qdss_addr_tbl;
-	}
-
-	for (i = 0; i < qdss_addr_set->count; i++) {
-		dprintk(VIDC_DBG, "qdss addr = %x, value = %x\n",
-				qdss_addr_set->addr_tbl[i].start,
-				qdss_addr_set->addr_tbl[i].size);
-	}
-err_qdss_addr_tbl:
-	return rc;
-}
-
 static int msm_vidc_load_freq_table(struct msm_vidc_platform_resources *res)
 {
 	int rc = 0;
@@ -311,11 +269,9 @@ static int msm_vidc_load_bus_vectors(struct msm_vidc_platform_resources *res)
 	c = 0;
 
 	for_each_child_of_node(bus_node, child_node) {
-		bool passive = false;
 		u32 configs = 0;
 		struct bus_info *bus = &buses->bus_tbl[c];
 
-		passive = of_property_read_bool(child_node, "qcom,bus-passive");
 		rc = of_property_read_u32(child_node, "qcom,bus-configs",
 				&configs);
 		if (rc) {
@@ -323,9 +279,14 @@ static int msm_vidc_load_bus_vectors(struct msm_vidc_platform_resources *res)
 					"Failed to read qcom,bus-configs in %s: %d\n",
 					child_node->name, rc);
 			break;
+		} else if (!configs) {
+			dprintk(VIDC_ERR,
+					"qcom,bus-configs in %s needs to be applicable for some codec\n",
+					child_node->name);
+			rc = -EINVAL;
+			break;
 		}
 
-		bus->passive = passive;
 		bus->sessions_supported = configs;
 		bus->pdata = msm_bus_pdata_from_node(pdev, child_node);
 		if (IS_ERR_OR_NULL(bus->pdata)) {
@@ -334,9 +295,8 @@ static int msm_vidc_load_bus_vectors(struct msm_vidc_platform_resources *res)
 			break;
 		}
 
-		dprintk(VIDC_DBG, "Bus %s supports: %x, passive: %d\n",
-				bus->pdata->name, bus->sessions_supported,
-				passive);
+		dprintk(VIDC_DBG, "Bus %s supports: %x\n", bus->pdata->name,
+				bus->sessions_supported);
 		++c;
 	}
 
@@ -484,7 +444,6 @@ static int msm_vidc_load_regulator_table(
 	struct regulator_set *regulators = &res->regulator_set;
 	struct device_node *domains_parent_node = NULL;
 	struct property *domains_property = NULL;
-	int reg_count = 0;
 
 	regulators->count = 0;
 	regulators->regulator_tbl = NULL;
@@ -494,43 +453,18 @@ static int msm_vidc_load_regulator_table(
 		const char *search_string = "-supply";
 		char *supply;
 		bool matched = false;
+		struct device_node *regulator_node = NULL;
+		struct regulator_info *rinfo = NULL;
+		void *temp = NULL;
 
-		/* check if current property is possibly a regulator */
+		/* 1) check if current property is possibly a regulator */
 		supply = strnstr(domains_property->name, search_string,
 				strlen(domains_property->name) + 1);
 		matched = supply && (*(supply + strlen(search_string)) == '\0');
 		if (!matched)
 			continue;
 
-		reg_count++;
-	}
-
-	regulators->regulator_tbl = devm_kzalloc(&pdev->dev,
-			sizeof(*regulators->regulator_tbl) *
-			reg_count, GFP_KERNEL);
-
-	if (!regulators->regulator_tbl) {
-		rc = -ENOMEM;
-		dprintk(VIDC_ERR,
-			"Failed to alloc memory for regulator table\n");
-		goto err_reg_tbl_alloc;
-	}
-
-	for_each_property_of_node(domains_parent_node, domains_property) {
-		const char *search_string = "-supply";
-		char *supply;
-		bool matched = false;
-		struct device_node *regulator_node = NULL;
-		struct regulator_info *rinfo = NULL;
-
-		/* check if current property is possibly a regulator */
-		supply = strnstr(domains_property->name, search_string,
-				strlen(domains_property->name) + 1);
-		matched = supply && (supply[strlen(search_string)] == '\0');
-		if (!matched)
-			continue;
-
-		/* make sure prop isn't being misused */
+		/* 2) make sure prop isn't being misused */
 		regulator_node = of_parse_phandle(domains_parent_node,
 				domains_property->name, 0);
 		if (IS_ERR(regulator_node)) {
@@ -538,20 +472,31 @@ static int msm_vidc_load_regulator_table(
 					domains_property->name);
 			continue;
 		}
+
+		/* 3) expand our table */
+		temp = krealloc(regulators->regulator_tbl,
+				sizeof(*regulators->regulator_tbl) *
+				(regulators->count + 1), GFP_KERNEL);
+		if (!temp) {
+			rc = -ENOMEM;
+			dprintk(VIDC_ERR,
+					"Failed to alloc memory for regulator table\n");
+			goto err_reg_tbl_alloc;
+		}
+
+		regulators->regulator_tbl = temp;
 		regulators->count++;
 
-		/* populate regulator info */
+		/* 4) populate regulator info */
 		rinfo = &regulators->regulator_tbl[regulators->count - 1];
-		rinfo->name = devm_kzalloc(&pdev->dev,
-			(supply - domains_property->name) + 1, GFP_KERNEL);
+		rinfo->name = kstrndup(domains_property->name,
+				supply - domains_property->name, GFP_KERNEL);
 		if (!rinfo->name) {
 			rc = -ENOMEM;
 			dprintk(VIDC_ERR,
 					"Failed to alloc memory for regulator name\n");
 			goto err_reg_name_alloc;
 		}
-		strlcpy(rinfo->name, domains_property->name,
-			(supply - domains_property->name) + 1);
 
 		rinfo->has_hw_power_collapse = of_property_read_bool(
 			regulator_node, "qcom,support-hw-trigger");
@@ -581,7 +526,7 @@ static int msm_vidc_load_clock_table(
 	struct clock_set *clocks = &res->clock_set;
 
 	num_clocks = of_property_count_strings(pdev->dev.of_node,
-				"clock-names");
+				"qcom,clock-names");
 	if (num_clocks <= 0) {
 		/* Devices such as Q6 might not have any control over clocks
 		 * hence have none specified, which is ok. */
@@ -622,7 +567,7 @@ static int msm_vidc_load_clock_table(
 		struct clock_info *vc = &res->clock_set.clock_tbl[c];
 
 		of_property_read_string_index(pdev->dev.of_node,
-				"clock-names", c, &vc->name);
+				"qcom,clock-names", c, &vc->name);
 
 		if (clock_props[c] & CLOCK_PROP_HAS_SCALING) {
 			vc->count = res->load_freq_tbl_size;
@@ -644,11 +589,6 @@ static int msm_vidc_load_clock_table(
 					"qcom,sw-power-collapse");
 	dprintk(VIDC_DBG, "Power collapse supported = %s\n",
 		res->sw_power_collapsible ? "yes" : "no");
-
-	res->early_fw_load = of_property_read_bool(pdev->dev.of_node,
-				"qcom,early-fw-load");
-	dprintk(VIDC_DBG, "Early fw load = %s\n",
-				res->early_fw_load ? "yes" : "no");
 
 	return 0;
 
@@ -680,29 +620,27 @@ int read_platform_resources_from_dt(
 	res->irq = kres ? kres->start : -1;
 
 	of_property_read_u32(pdev->dev.of_node,
-			"qcom,ocmem-size", &res->ocmem_size);
+			"qcom,imem-size", &res->imem_size);
+	res->imem_type = read_imem_type(pdev);
 
 	res->dynamic_bw_update = of_property_read_bool(pdev->dev.of_node,
 			"qcom,use-dynamic-bw-update");
 	res->sys_idle_indicator = of_property_read_bool(pdev->dev.of_node,
 			"qcom,enable-idle-indicator");
 
+	res->minimum_vote = of_property_read_bool(pdev->dev.of_node,
+			"qcom,enable-minimum-voting");
+
 	rc = msm_vidc_load_freq_table(res);
 	if (rc) {
 		dprintk(VIDC_ERR, "Failed to load freq table: %d\n", rc);
 		goto err_load_freq_table;
 	}
-
-	rc = msm_vidc_load_qdss_table(res);
-	if (rc)
-		dprintk(VIDC_WARN, "Failed to load qdss reg table: %d\n", rc);
-
 	rc = msm_vidc_load_reg_table(res);
 	if (rc) {
 		dprintk(VIDC_ERR, "Failed to load reg table: %d\n", rc);
 		goto err_load_reg_table;
 	}
-
 	rc = msm_vidc_load_bus_vectors(res);
 	if (rc) {
 		dprintk(VIDC_ERR, "Failed to load bus vectors: %d\n", rc);
@@ -745,10 +683,6 @@ int read_platform_resources_from_dt(
 		dprintk(VIDC_DBG,
 				"Using fw-bias : %pa", &res->firmware_base);
 	}
-
-	of_property_read_u32(pdev->dev.of_node,
-			"qcom,pm-qos-latency-us", &res->pm_qos_latency_us);
-
 	return rc;
 err_load_max_hw_load:
 	msm_vidc_free_clock_table(res);

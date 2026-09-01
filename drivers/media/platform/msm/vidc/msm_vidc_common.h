@@ -18,9 +18,6 @@ struct vb2_buf_entry {
 	struct list_head list;
 	struct vb2_buffer *vb;
 };
-
-extern const char *const mpeg_video_vidc_extradata[];
-
 struct msm_vidc_core *get_vidc_core(int core_id);
 const struct msm_vidc_format *msm_comm_get_pixel_fmt_index(
 	const struct msm_vidc_format fmt[], int size, int index, int fmt_type);
@@ -60,7 +57,7 @@ struct hal_buffer_requirements *get_buff_req_buffer(
 #define IS_PRIV_CTRL(idx) (\
 		(V4L2_CTRL_ID2CLASS(idx) == V4L2_CTRL_CLASS_MPEG) && \
 		V4L2_CTRL_DRIVER_PRIV(idx))
-void msm_comm_session_clean(struct msm_vidc_inst *inst);
+
 int msm_comm_kill_session(struct msm_vidc_inst *inst);
 enum multi_stream msm_comm_get_stream_output_mode(struct msm_vidc_inst *inst);
 enum hal_buffer msm_comm_get_hal_output_buffer(struct msm_vidc_inst *inst);
@@ -76,6 +73,4 @@ int msm_comm_smem_get_domain_partition(struct msm_vidc_inst *inst,
 			u32 flags, enum hal_buffer buffer_type,
 			int *domain_num, int *partition_num);
 enum hal_video_codec get_hal_codec_type(int fourcc);
-int msm_comm_load_fw(struct msm_vidc_core *core);
-int msm_comm_check_core_init(struct msm_vidc_core *core);
 #endif
