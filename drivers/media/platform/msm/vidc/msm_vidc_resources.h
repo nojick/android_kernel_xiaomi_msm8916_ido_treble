@@ -41,11 +41,6 @@ struct addr_range {
 	u32 size;
 };
 
-struct addr_set {
-	struct addr_range *addr_tbl;
-	int count;
-};
-
 struct context_bank_info {
 	struct list_head list;
 	const char *name;
@@ -117,7 +112,6 @@ struct msm_vidc_platform_resources {
 	struct load_freq_table *load_freq_tbl;
 	uint32_t load_freq_tbl_size;
 	struct reg_set reg_set;
-	struct addr_set qdss_addr_set;
 	struct buffer_usage_set buffer_usage_set;
 	uint32_t imem_size;
 	enum imem_type imem_type;
