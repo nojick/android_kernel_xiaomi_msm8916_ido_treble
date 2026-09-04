@@ -1663,7 +1663,6 @@ static inline int start_streaming(struct msm_vidc_inst *inst)
 	struct vb2_buf_entry *temp;
 	struct hfi_device *hdev;
 	struct list_head *ptr, *next;
-	bool slave_side_cp = inst->core->resources.slave_side_cp;
 	struct hal_buffer_size_minimum b;
 	unsigned int buffer_size;
 	struct msm_vidc_format *fmt = NULL;
@@ -1690,8 +1689,7 @@ static inline int start_streaming(struct msm_vidc_inst *inst)
 		dprintk(VIDC_ERR, "H/w scaling is not in valid range\n");
 		return -EINVAL;
 	}
-	if ((inst->flags & VIDC_SECURE) && !inst->in_reconfig &&
-		!slave_side_cp) {
+	if ((inst->flags & VIDC_SECURE) && !inst->in_reconfig) {
 		rc = set_max_internal_buffers_size(inst);
 		if (rc) {
 			dprintk(VIDC_ERR,
