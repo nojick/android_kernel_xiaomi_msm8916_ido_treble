@@ -179,9 +179,7 @@ nodes to be present and contain the properties described below.
 			# On ARM v8 64-bit this property is required and must
 			  be one of:
 			     "spin-table"
-			     "psci"
-			     "qcom,arm-cortex-acc"
-			     "qcom,8994-arm-cortex-acc"
+			     "qcom,msm8996-acc"
 			# On ARM 32-bit systems this property is optional and
 			  can be one of:
 			    "qcom,gcc-msm8660"
