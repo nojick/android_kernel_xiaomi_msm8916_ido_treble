@@ -1,4 +1,4 @@
-/* Copyright (c) 2014, 2015, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2014, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -55,7 +55,6 @@ struct lpm_cluster_level {
 	struct cpumask num_cpu_votes;
 	struct power_params pwr;
 	bool notify_rpm;
-	bool disable_dynamic_routing;
 	bool sync_level;
 	bool last_core_only;
 	struct lpm_level_avail available;
@@ -72,7 +71,6 @@ struct lpm_cluster {
 	struct list_head child;
 	const char *cluster_name;
 	const char **name;
-	unsigned long aff_level; /* Affinity level of the node */
 	struct low_power_ops *lpm_dev;
 	int ndevices;
 	struct lpm_cluster_level levels[NR_LPM_LEVELS];
@@ -92,8 +90,7 @@ struct lpm_cluster {
 };
 
 int set_l2_mode(struct low_power_ops *ops, int mode, bool notify_rpm);
-int set_system_mode(struct low_power_ops *ops, int mode, bool notify_rpm);
-int set_l3_mode(struct low_power_ops *ops, int mode, bool notify_rpm);
+int set_cci_mode(struct low_power_ops *ops, int mode, bool notify_rpm);
 
 struct lpm_cluster *lpm_of_parse_cluster(struct platform_device *pdev);
 void free_cluster_node(struct lpm_cluster *cluster);

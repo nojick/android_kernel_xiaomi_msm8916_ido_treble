@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2015, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2014, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -40,76 +40,70 @@ struct saw2_data {
 };
 
 static uint32_t msm_spm_reg_offsets_saw2_v2_1[MSM_SPM_REG_NR] = {
-	[MSM_SPM_REG_SAW_SECURE]		= 0x00,
-	[MSM_SPM_REG_SAW_ID]			= 0x04,
-	[MSM_SPM_REG_SAW_CFG]			= 0x08,
-	[MSM_SPM_REG_SAW_SPM_STS]		= 0x0C,
-	[MSM_SPM_REG_SAW_AVS_STS]		= 0x10,
-	[MSM_SPM_REG_SAW_PMIC_STS]		= 0x14,
-	[MSM_SPM_REG_SAW_RST]			= 0x18,
-	[MSM_SPM_REG_SAW_VCTL]			= 0x1C,
-	[MSM_SPM_REG_SAW_AVS_CTL]		= 0x20,
-	[MSM_SPM_REG_SAW_AVS_LIMIT]		= 0x24,
-	[MSM_SPM_REG_SAW_AVS_DLY]		= 0x28,
-	[MSM_SPM_REG_SAW_AVS_HYSTERESIS]	= 0x2C,
-	[MSM_SPM_REG_SAW_SPM_CTL]		= 0x30,
-	[MSM_SPM_REG_SAW_SPM_DLY]		= 0x34,
-	[MSM_SPM_REG_SAW_PMIC_DATA_0]		= 0x40,
-	[MSM_SPM_REG_SAW_PMIC_DATA_1]		= 0x44,
-	[MSM_SPM_REG_SAW_PMIC_DATA_2]		= 0x48,
-	[MSM_SPM_REG_SAW_PMIC_DATA_3]		= 0x4C,
-	[MSM_SPM_REG_SAW_PMIC_DATA_4]		= 0x50,
-	[MSM_SPM_REG_SAW_PMIC_DATA_5]		= 0x54,
-	[MSM_SPM_REG_SAW_PMIC_DATA_6]		= 0x58,
-	[MSM_SPM_REG_SAW_PMIC_DATA_7]		= 0x5C,
-	[MSM_SPM_REG_SAW_SEQ_ENTRY]		= 0x80,
-	[MSM_SPM_REG_SAW_VERSION]		= 0xFD0,
+	[MSM_SPM_REG_SAW2_SECURE]		= 0x00,
+	[MSM_SPM_REG_SAW2_ID]			= 0x04,
+	[MSM_SPM_REG_SAW2_CFG]			= 0x08,
+	[MSM_SPM_REG_SAW2_SPM_STS]		= 0x0C,
+	[MSM_SPM_REG_SAW2_AVS_STS]		= 0x10,
+	[MSM_SPM_REG_SAW2_PMIC_STS]		= 0x14,
+	[MSM_SPM_REG_SAW2_RST]			= 0x18,
+	[MSM_SPM_REG_SAW2_VCTL]			= 0x1C,
+	[MSM_SPM_REG_SAW2_AVS_CTL]		= 0x20,
+	[MSM_SPM_REG_SAW2_AVS_LIMIT]		= 0x24,
+	[MSM_SPM_REG_SAW2_AVS_DLY]		= 0x28,
+	[MSM_SPM_REG_SAW2_AVS_HYSTERESIS]	= 0x2C,
+	[MSM_SPM_REG_SAW2_SPM_CTL]		= 0x30,
+	[MSM_SPM_REG_SAW2_SPM_DLY]		= 0x34,
+	[MSM_SPM_REG_SAW2_PMIC_DATA_0]		= 0x40,
+	[MSM_SPM_REG_SAW2_PMIC_DATA_1]		= 0x44,
+	[MSM_SPM_REG_SAW2_PMIC_DATA_2]		= 0x48,
+	[MSM_SPM_REG_SAW2_PMIC_DATA_3]		= 0x4C,
+	[MSM_SPM_REG_SAW2_PMIC_DATA_4]		= 0x50,
+	[MSM_SPM_REG_SAW2_PMIC_DATA_5]		= 0x54,
+	[MSM_SPM_REG_SAW2_PMIC_DATA_6]		= 0x58,
+	[MSM_SPM_REG_SAW2_PMIC_DATA_7]		= 0x5C,
+	[MSM_SPM_REG_SAW2_SEQ_ENTRY]		= 0x80,
+	[MSM_SPM_REG_SAW2_VERSION]		= 0xFD0,
 };
 
 static uint32_t msm_spm_reg_offsets_saw2_v3_0[MSM_SPM_REG_NR] = {
-	[MSM_SPM_REG_SAW_SECURE]		= 0x00,
-	[MSM_SPM_REG_SAW_ID]			= 0x04,
-	[MSM_SPM_REG_SAW_CFG]			= 0x08,
-	[MSM_SPM_REG_SAW_SPM_STS]		= 0x0C,
-	[MSM_SPM_REG_SAW_AVS_STS]		= 0x10,
-	[MSM_SPM_REG_SAW_PMIC_STS]		= 0x14,
-	[MSM_SPM_REG_SAW_RST]			= 0x18,
-	[MSM_SPM_REG_SAW_VCTL]			= 0x1C,
-	[MSM_SPM_REG_SAW_AVS_CTL]		= 0x20,
-	[MSM_SPM_REG_SAW_AVS_LIMIT]		= 0x24,
-	[MSM_SPM_REG_SAW_AVS_DLY]		= 0x28,
-	[MSM_SPM_REG_SAW_AVS_HYSTERESIS]	= 0x2C,
-	[MSM_SPM_REG_SAW_SPM_CTL]		= 0x30,
-	[MSM_SPM_REG_SAW_SPM_DLY]		= 0x34,
-	[MSM_SPM_REG_SAW_STS2]			= 0x38,
-	[MSM_SPM_REG_SAW_PMIC_DATA_0]		= 0x40,
-	[MSM_SPM_REG_SAW_PMIC_DATA_1]		= 0x44,
-	[MSM_SPM_REG_SAW_PMIC_DATA_2]		= 0x48,
-	[MSM_SPM_REG_SAW_PMIC_DATA_3]		= 0x4C,
-	[MSM_SPM_REG_SAW_PMIC_DATA_4]		= 0x50,
-	[MSM_SPM_REG_SAW_PMIC_DATA_5]		= 0x54,
-	[MSM_SPM_REG_SAW_PMIC_DATA_6]		= 0x58,
-	[MSM_SPM_REG_SAW_PMIC_DATA_7]		= 0x5C,
-	[MSM_SPM_REG_SAW_SEQ_ENTRY]		= 0x400,
-	[MSM_SPM_REG_SAW_VERSION]		= 0xFD0,
+	[MSM_SPM_REG_SAW2_SECURE]		= 0x00,
+	[MSM_SPM_REG_SAW2_ID]			= 0x04,
+	[MSM_SPM_REG_SAW2_CFG]			= 0x08,
+	[MSM_SPM_REG_SAW2_SPM_STS]		= 0x0C,
+	[MSM_SPM_REG_SAW2_AVS_STS]		= 0x10,
+	[MSM_SPM_REG_SAW2_PMIC_STS]		= 0x14,
+	[MSM_SPM_REG_SAW2_RST]			= 0x18,
+	[MSM_SPM_REG_SAW2_VCTL]			= 0x1C,
+	[MSM_SPM_REG_SAW2_AVS_CTL]		= 0x20,
+	[MSM_SPM_REG_SAW2_AVS_LIMIT]		= 0x24,
+	[MSM_SPM_REG_SAW2_AVS_DLY]		= 0x28,
+	[MSM_SPM_REG_SAW2_AVS_HYSTERESIS]	= 0x2C,
+	[MSM_SPM_REG_SAW2_SPM_CTL]		= 0x30,
+	[MSM_SPM_REG_SAW2_SPM_DLY]		= 0x34,
+	[MSM_SPM_REG_SAW2_STS2]			= 0x38,
+	[MSM_SPM_REG_SAW2_PMIC_DATA_0]		= 0x40,
+	[MSM_SPM_REG_SAW2_PMIC_DATA_1]		= 0x44,
+	[MSM_SPM_REG_SAW2_PMIC_DATA_2]		= 0x48,
+	[MSM_SPM_REG_SAW2_PMIC_DATA_3]		= 0x4C,
+	[MSM_SPM_REG_SAW2_PMIC_DATA_4]		= 0x50,
+	[MSM_SPM_REG_SAW2_PMIC_DATA_5]		= 0x54,
+	[MSM_SPM_REG_SAW2_PMIC_DATA_6]		= 0x58,
+	[MSM_SPM_REG_SAW2_PMIC_DATA_7]		= 0x5C,
+	[MSM_SPM_REG_SAW2_SEQ_ENTRY]		= 0x400,
+	[MSM_SPM_REG_SAW2_VERSION]		= 0xFD0,
 };
 
 static struct saw2_data saw2_info[] = {
 	[0] = {
-		"SAW_v2.1",
+		"SAW2_v2.1",
 		0x2,
 		0x1,
 		msm_spm_reg_offsets_saw2_v2_1,
 	},
 	[1] = {
-		"SAW_v2.3",
+		"SAW2_v3.0",
 		0x3,
-		0x0,
-		msm_spm_reg_offsets_saw2_v3_0,
-	},
-	[2] = {
-		"SAW_v3.0",
-		0x1,
 		0x0,
 		msm_spm_reg_offsets_saw2_v3_0,
 	},
@@ -136,20 +130,30 @@ static inline uint32_t msm_spm_drv_get_num_spm_entry(
 		struct msm_spm_driver_data *dev)
 {
 	BUG_ON(!dev);
-	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW_ID);
-	return (dev->reg_shadow[MSM_SPM_REG_SAW_ID] >> 24) & 0xFF;
+	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW2_ID);
+	return (dev->reg_shadow[MSM_SPM_REG_SAW2_ID] >> 24) & 0xFF;
 }
 
 static inline void msm_spm_drv_set_start_addr(
-		struct msm_spm_driver_data *dev, uint32_t ctl)
+		struct msm_spm_driver_data *dev, uint32_t addr, bool pc_mode)
 {
-	dev->reg_shadow[MSM_SPM_REG_SAW_SPM_CTL] = ctl;
+	addr &= 0x7F;
+	addr <<= 4;
+	dev->reg_shadow[MSM_SPM_REG_SAW2_SPM_CTL] &= 0xFFFFF80F;
+	dev->reg_shadow[MSM_SPM_REG_SAW2_SPM_CTL] |= addr;
+
+	if (dev->major != 0x3)
+		return;
+
+	dev->reg_shadow[MSM_SPM_REG_SAW2_SPM_CTL] &= 0xFFFEFFFF;
+	if (pc_mode)
+		dev->reg_shadow[MSM_SPM_REG_SAW2_SPM_CTL] |= 0x00010000;
 }
 
 static inline bool msm_spm_pmic_arb_present(struct msm_spm_driver_data *dev)
 {
-	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW_ID);
-	return (dev->reg_shadow[MSM_SPM_REG_SAW_ID] >> 2) & 0x1;
+	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW2_ID);
+	return (dev->reg_shadow[MSM_SPM_REG_SAW2_ID] >> 2) & 0x1;
 }
 
 static inline void msm_spm_drv_set_vctl2(struct msm_spm_driver_data *dev,
@@ -166,37 +170,37 @@ static inline void msm_spm_drv_set_vctl2(struct msm_spm_driver_data *dev,
 	pmic_data |= vlevel;
 	pmic_data |= (dev->vctl_port & 0x7) << 16;
 
-	dev->reg_shadow[MSM_SPM_REG_SAW_VCTL] &= ~0x700FF;
-	dev->reg_shadow[MSM_SPM_REG_SAW_VCTL] |= pmic_data;
+	dev->reg_shadow[MSM_SPM_REG_SAW2_VCTL] &= ~0x700FF;
+	dev->reg_shadow[MSM_SPM_REG_SAW2_VCTL] |= pmic_data;
 
-	dev->reg_shadow[MSM_SPM_REG_SAW_PMIC_DATA_3] &= ~0x700FF;
-	dev->reg_shadow[MSM_SPM_REG_SAW_PMIC_DATA_3] |= pmic_data;
+	dev->reg_shadow[MSM_SPM_REG_SAW2_PMIC_DATA_3] &= ~0x700FF;
+	dev->reg_shadow[MSM_SPM_REG_SAW2_PMIC_DATA_3] |= pmic_data;
 
-	msm_spm_drv_flush_shadow(dev, MSM_SPM_REG_SAW_VCTL);
-	msm_spm_drv_flush_shadow(dev, MSM_SPM_REG_SAW_PMIC_DATA_3);
+	msm_spm_drv_flush_shadow(dev, MSM_SPM_REG_SAW2_VCTL);
+	msm_spm_drv_flush_shadow(dev, MSM_SPM_REG_SAW2_PMIC_DATA_3);
 }
 
 static inline uint32_t msm_spm_drv_get_num_pmic_data(
 		struct msm_spm_driver_data *dev)
 {
-	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW_ID);
+	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW2_ID);
 	mb();
-	return (dev->reg_shadow[MSM_SPM_REG_SAW_ID] >> 4) & 0x7;
+	return (dev->reg_shadow[MSM_SPM_REG_SAW2_ID] >> 4) & 0x7;
 }
 
 static inline uint32_t msm_spm_drv_get_sts_pmic_state(
 		struct msm_spm_driver_data *dev)
 {
-	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW_PMIC_STS);
-	return (dev->reg_shadow[MSM_SPM_REG_SAW_PMIC_STS] >> 16) &
+	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW2_PMIC_STS);
+	return (dev->reg_shadow[MSM_SPM_REG_SAW2_PMIC_STS] >> 16) &
 				0x03;
 }
 
 uint32_t msm_spm_drv_get_sts_curr_pmic_data(
 		struct msm_spm_driver_data *dev)
 {
-	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW_PMIC_STS);
-	return dev->reg_shadow[MSM_SPM_REG_SAW_PMIC_STS] & 0xFF;
+	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW2_PMIC_STS);
+	return dev->reg_shadow[MSM_SPM_REG_SAW2_PMIC_STS] & 0xFF;
 }
 
 static inline void msm_spm_drv_get_saw2_ver(struct msm_spm_driver_data *dev,
@@ -204,10 +208,10 @@ static inline void msm_spm_drv_get_saw2_ver(struct msm_spm_driver_data *dev,
 {
 	uint32_t val = 0;
 
-	dev->reg_shadow[MSM_SPM_REG_SAW_VERSION] =
+	dev->reg_shadow[MSM_SPM_REG_SAW2_VERSION] =
 			__raw_readl(dev->reg_base_addr + dev->ver_reg);
 
-	val = dev->reg_shadow[MSM_SPM_REG_SAW_VERSION];
+	val = dev->reg_shadow[MSM_SPM_REG_SAW2_VERSION];
 
 	*major = (val >> 28) & 0xF;
 	*minor = (val >> 16) & 0xFFF;
@@ -221,12 +225,12 @@ inline int msm_spm_drv_set_spm_enable(
 	if (!dev)
 		return -EINVAL;
 
-	if ((dev->reg_shadow[MSM_SPM_REG_SAW_SPM_CTL] & 0x01) ^ value) {
+	if ((dev->reg_shadow[MSM_SPM_REG_SAW2_SPM_CTL] & 0x01) ^ value) {
 
-		dev->reg_shadow[MSM_SPM_REG_SAW_SPM_CTL] &= ~0x1;
-		dev->reg_shadow[MSM_SPM_REG_SAW_SPM_CTL] |= value;
+		dev->reg_shadow[MSM_SPM_REG_SAW2_SPM_CTL] &= ~0x1;
+		dev->reg_shadow[MSM_SPM_REG_SAW2_SPM_CTL] |= value;
 
-		msm_spm_drv_flush_shadow(dev, MSM_SPM_REG_SAW_SPM_CTL);
+		msm_spm_drv_flush_shadow(dev, MSM_SPM_REG_SAW2_SPM_CTL);
 		wmb();
 	}
 	return 0;
@@ -244,7 +248,7 @@ void msm_spm_drv_flush_seq_entry(struct msm_spm_driver_data *dev)
 	for (i = 0; i < num_spm_entry; i++) {
 		__raw_writel(dev->reg_seq_entry_shadow[i],
 			dev->reg_base_addr
-			+ dev->reg_offsets[MSM_SPM_REG_SAW_SEQ_ENTRY]
+			+ dev->reg_offsets[MSM_SPM_REG_SAW2_SEQ_ENTRY]
 			+ 4 * i);
 	}
 	mb();
@@ -252,14 +256,14 @@ void msm_spm_drv_flush_seq_entry(struct msm_spm_driver_data *dev)
 
 void dump_regs(struct msm_spm_driver_data *dev, int cpu)
 {
-	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW_SPM_STS);
+	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW2_SPM_STS);
 	mb();
-	pr_err("CPU%d: spm register MSM_SPM_REG_SAW_SPM_STS: 0x%x\n", cpu,
-			dev->reg_shadow[MSM_SPM_REG_SAW_SPM_STS]);
-	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW_SPM_CTL);
+	pr_err("CPU%d: spm register MSM_SPM_REG_SAW2_SPM_STS: 0x%x\n", cpu,
+			dev->reg_shadow[MSM_SPM_REG_SAW2_SPM_STS]);
+	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW2_SPM_CTL);
 	mb();
-	pr_err("CPU%d: spm register MSM_SPM_REG_SAW_SPM_CTL: 0x%x\n", cpu,
-			dev->reg_shadow[MSM_SPM_REG_SAW_SPM_CTL]);
+	pr_err("CPU%d: spm register MSM_SPM_REG_SAW2_SPM_CTL: 0x%x\n", cpu,
+			dev->reg_shadow[MSM_SPM_REG_SAW2_SPM_CTL]);
 }
 
 int msm_spm_drv_write_seq_data(struct msm_spm_driver_data *dev,
@@ -295,7 +299,7 @@ int msm_spm_drv_write_seq_data(struct msm_spm_driver_data *dev,
 }
 
 int msm_spm_drv_set_low_power_mode(struct msm_spm_driver_data *dev,
-		uint32_t ctl)
+		uint32_t addr, bool pc_mode)
 {
 
 	/* SPM is configured to reset start address to zero after end of Program
@@ -303,9 +307,9 @@ int msm_spm_drv_set_low_power_mode(struct msm_spm_driver_data *dev,
 	if (!dev)
 		return -EINVAL;
 
-	msm_spm_drv_set_start_addr(dev, ctl);
+	msm_spm_drv_set_start_addr(dev, addr, pc_mode);
 
-	msm_spm_drv_flush_shadow(dev, MSM_SPM_REG_SAW_SPM_CTL);
+	msm_spm_drv_flush_shadow(dev, MSM_SPM_REG_SAW2_SPM_CTL);
 	wmb();
 
 	if (msm_spm_debug_mask & MSM_SPM_DEBUG_SHADOW) {
@@ -314,7 +318,7 @@ int msm_spm_drv_set_low_power_mode(struct msm_spm_driver_data *dev,
 			pr_info("%s: reg %02x = 0x%08x\n", __func__,
 				dev->reg_offsets[i], dev->reg_shadow[i]);
 	}
-	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW_SPM_STS);
+	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW2_SPM_STS);
 
 	return 0;
 }
@@ -322,31 +326,31 @@ int msm_spm_drv_set_low_power_mode(struct msm_spm_driver_data *dev,
 #ifdef CONFIG_MSM_AVS_HW
 static bool msm_spm_drv_is_avs_enabled(struct msm_spm_driver_data *dev)
 {
-	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW_AVS_CTL);
-	return dev->reg_shadow[MSM_SPM_REG_SAW_AVS_CTL] & BIT(0);
+	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW2_AVS_CTL);
+	return dev->reg_shadow[MSM_SPM_REG_SAW2_AVS_CTL] & BIT(0);
 }
 
 static void msm_spm_drv_disable_avs(struct msm_spm_driver_data *dev)
 {
-	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW_AVS_CTL);
-	dev->reg_shadow[MSM_SPM_REG_SAW_AVS_CTL] &= ~BIT(27);
-	msm_spm_drv_flush_shadow(dev, MSM_SPM_REG_SAW_AVS_CTL);
+	msm_spm_drv_load_shadow(dev, MSM_SPM_REG_SAW2_AVS_CTL);
+	dev->reg_shadow[MSM_SPM_REG_SAW2_AVS_CTL] &= ~BIT(27);
+	msm_spm_drv_flush_shadow(dev, MSM_SPM_REG_SAW2_AVS_CTL);
 }
 
 static void msm_spm_drv_enable_avs(struct msm_spm_driver_data *dev)
 {
-	dev->reg_shadow[MSM_SPM_REG_SAW_AVS_CTL] |= BIT(27);
-	msm_spm_drv_flush_shadow(dev, MSM_SPM_REG_SAW_AVS_CTL);
+	dev->reg_shadow[MSM_SPM_REG_SAW2_AVS_CTL] |= BIT(27);
+	msm_spm_drv_flush_shadow(dev, MSM_SPM_REG_SAW2_AVS_CTL);
 }
 
 static void msm_spm_drv_set_avs_vlevel(struct msm_spm_driver_data *dev,
 		unsigned int vlevel)
 {
 	vlevel &= 0x3f;
-	dev->reg_shadow[MSM_SPM_REG_SAW_AVS_CTL] &= ~0x7efc00;
-	dev->reg_shadow[MSM_SPM_REG_SAW_AVS_CTL] |= ((vlevel - 4) << 10);
-	dev->reg_shadow[MSM_SPM_REG_SAW_AVS_CTL] |= (vlevel << 17);
-	msm_spm_drv_flush_shadow(dev, MSM_SPM_REG_SAW_AVS_CTL);
+	dev->reg_shadow[MSM_SPM_REG_SAW2_AVS_CTL] &= ~0x7efc00;
+	dev->reg_shadow[MSM_SPM_REG_SAW2_AVS_CTL] |= ((vlevel - 4) << 10);
+	dev->reg_shadow[MSM_SPM_REG_SAW2_AVS_CTL] |= (vlevel << 17);
+	msm_spm_drv_flush_shadow(dev, MSM_SPM_REG_SAW2_AVS_CTL);
 }
 
 #else
@@ -383,8 +387,8 @@ int msm_spm_drv_set_vdd(struct msm_spm_driver_data *dev, unsigned int vlevel)
 		msm_spm_drv_disable_avs(dev);
 
 	/* Kick the state machine back to idle */
-	dev->reg_shadow[MSM_SPM_REG_SAW_RST] = 1;
-	msm_spm_drv_flush_shadow(dev, MSM_SPM_REG_SAW_RST);
+	dev->reg_shadow[MSM_SPM_REG_SAW2_RST] = 1;
+	msm_spm_drv_flush_shadow(dev, MSM_SPM_REG_SAW2_RST);
 
 	msm_spm_drv_set_vctl2(dev, vlevel);
 
@@ -461,9 +465,9 @@ int msm_spm_drv_set_pmic_data(struct msm_spm_driver_data *dev,
 	pmic_data |= data & 0xFF;
 	pmic_data |= (index & 0x7) << 16;
 
-	dev->reg_shadow[MSM_SPM_REG_SAW_VCTL] &= ~0x700FF;
-	dev->reg_shadow[MSM_SPM_REG_SAW_VCTL] |= pmic_data;
-	msm_spm_drv_flush_shadow(dev, MSM_SPM_REG_SAW_VCTL);
+	dev->reg_shadow[MSM_SPM_REG_SAW2_VCTL] &= ~0x700FF;
+	dev->reg_shadow[MSM_SPM_REG_SAW2_VCTL] |= pmic_data;
+	msm_spm_drv_flush_shadow(dev, MSM_SPM_REG_SAW2_VCTL);
 	mb();
 
 	timeout_us = dev->vctl_timeout_us;
@@ -494,18 +498,11 @@ void msm_spm_drv_reinit(struct msm_spm_driver_data *dev)
 {
 	int i;
 
-	msm_spm_drv_flush_seq_entry(dev);
-
-	for (i = 0; i < MSM_SPM_REG_SAW_PMIC_DATA_0 + num_pmic_data; i++)
+	for (i = 0; i < MSM_SPM_REG_SAW2_PMIC_DATA_0 + num_pmic_data; i++)
 		msm_spm_drv_flush_shadow(dev, i);
 
+	msm_spm_drv_flush_seq_entry(dev);
 	mb();
-
-	for (i = 0; i < MSM_SPM_REG_SAW_PMIC_DATA_0 + num_pmic_data; i++)
-		msm_spm_drv_load_shadow(dev, i);
-
-	for (i = MSM_SPM_REG_NR_INITIALIZE + 1; i < MSM_SPM_REG_NR; i++)
-		msm_spm_drv_load_shadow(dev, i);
 }
 
 int msm_spm_drv_init(struct msm_spm_driver_data *dev,
@@ -539,12 +536,26 @@ int msm_spm_drv_init(struct msm_spm_driver_data *dev,
 		}
 
 	if (!found) {
-		pr_err("%s: No SAW version found\n", __func__);
+		pr_err("%s: No SAW2 version found\n", __func__);
 		BUG_ON(!found);
 	}
 
 	if (!num_pmic_data)
 		num_pmic_data = msm_spm_drv_get_num_pmic_data(dev);
+
+	for (i = 0; i < MSM_SPM_REG_SAW2_PMIC_DATA_0 + num_pmic_data; i++)
+		msm_spm_drv_flush_shadow(dev, i);
+
+	/* barrier to ensure write completes before we update shadow
+	 * registers
+	 */
+	mb();
+
+	for (i = 0; i < MSM_SPM_REG_SAW2_PMIC_DATA_0 + num_pmic_data; i++)
+		msm_spm_drv_load_shadow(dev, i);
+
+	/* barrier to ensure read completes before we proceed further*/
+	mb();
 
 	num_spm_entry = msm_spm_drv_get_num_spm_entry(dev);
 

@@ -1,4 +1,4 @@
-/* Copyright (c) 2014-2015, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2014, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -277,9 +277,7 @@ static int parse_cluster_params(struct device_node *node, struct lpm_cluster *c)
 	};
 	struct lpm_match match_tbl[] = {
 		{"l2", set_l2_mode},
-		{"cci", set_system_mode},
-		{"l3", set_l3_mode},
-		{"cbf", set_system_mode},
+		{"cci", set_cci_mode},
 	};
 
 	key = "label";
@@ -356,7 +354,6 @@ static int parse_lpm_mode(const char *str)
 	int i;
 	struct lpm_lookup_table mode_lookup[] = {
 		{MSM_SPM_MODE_POWER_COLLAPSE, "pc"},
-		{MSM_SPM_MODE_FASTPC, "fpc"},
 		{MSM_SPM_MODE_GDHS, "gdhs"},
 		{MSM_SPM_MODE_RETENTION, "retention"},
 		{MSM_SPM_MODE_CLOCK_GATING, "wfi"},
@@ -444,8 +441,6 @@ static int parse_cluster_level(struct device_node *node,
 	}
 
 	level->notify_rpm = of_property_read_bool(node, "qcom,notify-rpm");
-	level->disable_dynamic_routing = of_property_read_bool(node,
-					"qcom,disable-dynamic-int-routing");
 	level->last_core_only = of_property_read_bool(node,
 					"qcom,last-core-only");
 
@@ -473,8 +468,6 @@ static int parse_cpu_mode(const char *mode_name)
 			"pc"},
 		{MSM_PM_SLEEP_MODE_RETENTION,
 			"retention"},
-		{MSM_PM_SLEEP_MODE_FASTPC,
-			"fpc"},
 	};
 	int i;
 	int ret = -EINVAL;
@@ -493,6 +486,7 @@ static int get_cpumask_for_node(struct device_node *node, struct cpumask *mask)
 	struct device_node *cpu_node;
 	int cpu;
 	int idx = 0;
+	bool found = false;
 
 	cpu_node = of_parse_phandle(node, "qcom,cpu", idx++);
 	if (!cpu_node) {
@@ -508,16 +502,24 @@ static int get_cpumask_for_node(struct device_node *node, struct cpumask *mask)
 	}
 
 	while (cpu_node) {
+		found = false;
 		for_each_possible_cpu(cpu) {
 			if (of_get_cpu_node(cpu, NULL) == cpu_node) {
 				cpumask_set_cpu(cpu, mask);
+				found = true;
 				break;
 			}
 		}
+		if (!found)
+			pr_crit("Unable to find CPU node for %s\n",
+					cpu_node->full_name);
+
 		cpu_node = of_parse_phandle(node, "qcom,cpu", idx++);
 	}
 
-	return 0;
+	if (!cpumask_empty(mask))
+		return 0;
+	return -EINVAL;
 }
 
 static int parse_cpu_levels(struct device_node *node, struct lpm_cluster *c)
@@ -651,7 +653,6 @@ struct lpm_cluster *parse_cluster(struct device_node *node,
 			list_add(&child->list, &c->child);
 			cpumask_or(&c->child_cpus, &c->child_cpus,
 					&child->child_cpus);
-			c->aff_level = child->aff_level + 1;
 			continue;
 		}
 
@@ -667,8 +668,6 @@ struct lpm_cluster *parse_cluster(struct device_node *node,
 
 			if (parse_cpu_levels(n, c))
 				goto failed_parse_cluster;
-
-			c->aff_level = 1;
 		}
 	}
 

@@ -1,6 +1,6 @@
 /* drivers/soc/qcom/smp2p_test_common.h
  *
- * Copyright (c) 2013-2014, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2013-2014,2016 The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -49,7 +49,8 @@
 	void *a_tmp = (a); \
 	void *b_tmp = (b); \
 	if (!((a_tmp)cmp(b_tmp))) { \
-		seq_printf(s, "%s:%d Fail: " #a "(%p) " #cmp " " #b "(%p)\n", \
+		seq_printf(s, "%s:%d Fail: " #a "(%pK) " #cmp \
+				" " #b "(%pK)\n", \
 				__func__, __LINE__, \
 				a_tmp, b_tmp); \
 		failed = 1; \
@@ -140,7 +141,7 @@ static inline int smp2p_test_notify(struct notifier_block *self,
  */
 static inline void mock_cb_data_reset(struct mock_cb_data *cb)
 {
-	reinit_completion(&cb->cb_completion);
+	INIT_COMPLETION(cb->cb_completion);
 	cb->cb_count = 0;
 	cb->event_open = 0;
 	cb->event_entry_update = 0;

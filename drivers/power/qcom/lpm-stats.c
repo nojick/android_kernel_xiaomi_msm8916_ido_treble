@@ -180,6 +180,8 @@ static void level_stats_print_all(struct seq_file *m, struct lpm_stats *stats)
 	list_for_each_entry(pos, centry, sibling) {
 		level_stats_print_all(m, pos);
 	}
+
+	level_stats_print(m, &suspend_time_stats);
 }
 
 static void level_stats_reset(struct level_stats *stats)
@@ -220,7 +222,6 @@ static int lpm_stats_file_show(struct seq_file *m, void *v)
 	}
 
 	level_stats_print_all(m, stats);
-	level_stats_print(m, &suspend_time_stats);
 
 	return 0;
 }
