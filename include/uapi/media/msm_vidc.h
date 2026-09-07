@@ -235,7 +235,6 @@ enum msm_vidc_userdata_type {
 	MSM_VIDC_USERDATA_TYPE_TOP_FIELD = 0x2,
 	MSM_VIDC_USERDATA_TYPE_BOTTOM_FIELD = 0x3,
 };
-
 /* See colour_primaries of ISO/IEC 14496 for significance */
 enum msm_vidc_h264_color_primaries_values {
 	MSM_VIDC_RESERVED_1 = 0,
@@ -310,11 +309,5 @@ enum msm_vidc_video_format {
 enum msm_vidc_color_desc_flag {
 	MSM_VIDC_COLOR_DESC_NOT_PRESENT,
 	MSM_VIDC_COLOR_DESC_PRESENT,
-};
-
-enum msm_vidc_pixel_depth {
-	MSM_VIDC_BIT_DEPTH_8,
-	MSM_VIDC_BIT_DEPTH_10,
-	MSM_VIDC_BIT_DEPTH_UNSUPPORTED = 0XFFFFFFFF,
 };
 #endif
