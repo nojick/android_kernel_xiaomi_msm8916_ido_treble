@@ -2686,8 +2686,6 @@ static bool reuse_scratch_buffers(struct msm_vidc_inst *inst,
 			break;
 		}
 		reused = true;
-		dprintk(VIDC_DBG,
-			"Re-using internal buffer type : %d\n", buffer_type);
 	}
 	mutex_unlock(&inst->internalbufs.lock);
 	return reused;
