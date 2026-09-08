@@ -268,8 +268,7 @@ struct buffer_info *get_registered_buf(struct msm_vidc_inst *inst,
 			bool overlaps = OVERLAPS(buff_off, size,
 					temp->buff_off[i], temp->size[i]);
 
-			if (!temp->inactive &&
-				(fd_matches || device_addr_matches) &&
+			if ((fd_matches || device_addr_matches) &&
 				(contains_within || overlaps)) {
 				dprintk(VIDC_DBG,
 						"This memory region is already mapped\n");
