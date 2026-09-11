@@ -117,8 +117,8 @@ enum vidc_hw_reg {
 };
 
 enum bus_index {
-	BUS_IDX_ENC_IMEM,
-	BUS_IDX_DEC_IMEM,
+	BUS_IDX_ENC_OCMEM,
+	BUS_IDX_DEC_OCMEM,
 	BUS_IDX_ENC_DDR,
 	BUS_IDX_DEC_DDR,
 	BUS_IDX_MAX
@@ -203,22 +203,20 @@ struct hal_data {
 	u32 register_size;
 };
 
+struct venus_bus_info {
+	u32 ddr_handle[MSM_VIDC_MAX_DEVICES];
+	u32 ocmem_handle[MSM_VIDC_MAX_DEVICES];
+};
+
 struct on_chip_mem {
 	struct ocmem_buf *buf;
 	struct notifier_block vidc_ocmem_nb;
 	void *handle;
 };
 
-struct imem {
-	enum imem_type type;
-	union {
-		struct on_chip_mem ocmem;
-	};
-};
-
 struct venus_resources {
 	struct msm_vidc_fw fw;
-	struct imem imem;
+	struct on_chip_mem ocmem;
 };
 
 enum venus_hfi_state {

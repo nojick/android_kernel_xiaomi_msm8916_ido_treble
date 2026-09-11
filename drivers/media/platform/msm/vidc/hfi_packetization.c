@@ -280,7 +280,7 @@ int create_pkt_cmd_sys_set_resource(
 
 	pkt->packet_type = HFI_CMD_SYS_SET_RESOURCE;
 	pkt->size = sizeof(struct hfi_cmd_sys_set_resource_packet);
-	pkt->resource_handle = hash32_ptr(resource_hdr->resource_handle);
+	pkt->resource_handle = resource_hdr->resource_handle;
 
 	switch (resource_hdr->resource_id) {
 	case VIDC_RESOURCE_OCMEM:
@@ -288,18 +288,19 @@ int create_pkt_cmd_sys_set_resource(
 		struct hfi_resource_ocmem *hfioc_mem =
 			(struct hfi_resource_ocmem *)
 			&pkt->rg_resource_data[0];
-		phys_addr_t imem_addr = (phys_addr_t)resource_value;
+		struct ocmem_buf *ocmem =
+			(struct ocmem_buf *) resource_value;
 
 		pkt->resource_type = HFI_RESOURCE_OCMEM;
 		pkt->size += sizeof(struct hfi_resource_ocmem) - sizeof(u32);
-		hfioc_mem->size = (u32)resource_hdr->size;
-		hfioc_mem->mem = imem_addr;
+		hfioc_mem->size = (u32)ocmem->len;
+		hfioc_mem->mem = (u32)ocmem->addr;
 		break;
 	}
 	default:
 		dprintk(VIDC_ERR, "Invalid resource_id %d\n",
 					resource_hdr->resource_id);
-		rc = -ENOTSUPP;
+		rc = -EINVAL;
 	}
 
 	return rc;
@@ -315,17 +316,8 @@ int create_pkt_cmd_sys_release_resource(
 
 	pkt->size = sizeof(struct hfi_cmd_sys_release_resource_packet);
 	pkt->packet_type = HFI_CMD_SYS_RELEASE_RESOURCE;
-	pkt->resource_handle = hash32_ptr(resource_hdr->resource_handle);
-
-	switch (resource_hdr->resource_id) {
-	case VIDC_RESOURCE_OCMEM:
-		pkt->resource_type = HFI_RESOURCE_OCMEM;
-		break;
-	default:
-		dprintk(VIDC_ERR, "Invalid resource_id %d\n",
-					resource_hdr->resource_id);
-		rc = -ENOTSUPP;
-	}
+	pkt->resource_type = resource_hdr->resource_id;
+	pkt->resource_handle = resource_hdr->resource_handle;
 
 	return rc;
 }

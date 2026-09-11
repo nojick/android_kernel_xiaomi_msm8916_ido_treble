@@ -960,14 +960,13 @@ struct hal_video_signal_info {
 };
 
 enum vidc_resource_id {
-	VIDC_RESOURCE_NONE,
-	VIDC_RESOURCE_OCMEM,
-	VIDC_UNUSED_RESOURCE = 0x10000000,
+	VIDC_RESOURCE_OCMEM = 0x00000001,
+	VIDC_UNUSED_RESORUCE = 0x10000000,
 };
 
 struct vidc_resource_hdr {
 	enum vidc_resource_id resource_id;
-	void *resource_handle;
+	u32 resource_handle;
 	u32 size;
 };
 
