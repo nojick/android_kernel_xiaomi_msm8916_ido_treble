@@ -64,6 +64,9 @@ Optional properties:
           supports hevc decoder = 0x0c000000
           supports hevc_hybrid encoder = 0x10000000
           supports hevc_hybrid decoder = 0x30000000
+- qcom,buffer-type-tz-usage-table : a key-value pair, mapping a buffer type
+  (enum hal_buffer) to its corresponding TZ usage. The TZ usages are defined
+  as "enum cp_mem_usage" in include/linux/msm_ion.h
 - qcom,ocmem-size: ocmem size required by hardware for optimum performance.
   If ocmem is not present then there is no need to specify this property.
 - qcom,vidc-iommu-domains: node containing individual domain nodes, each with:
