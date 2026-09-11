@@ -962,7 +962,6 @@ struct hal_video_signal_info {
 enum vidc_resource_id {
 	VIDC_RESOURCE_NONE,
 	VIDC_RESOURCE_OCMEM,
-	VIDC_RESOURCE_VMEM,
 	VIDC_UNUSED_RESOURCE = 0x10000000,
 };
 
