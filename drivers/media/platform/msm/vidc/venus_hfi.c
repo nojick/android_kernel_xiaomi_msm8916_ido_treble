@@ -3217,11 +3217,15 @@ static void venus_hfi_pm_hndlr(struct work_struct *work)
 
 	dprintk(VIDC_DBG, "Prepare for power collapse\n");
 
-	rc = __unset_free_ocmem(device);
-	if (rc) {
-		dprintk(VIDC_ERR,
-			"Failed to unset and free OCMEM for PC, rc : %d\n", rc);
-		return;
+	if (device->resources.imem.type) {
+		mutex_lock(&device->resource_lock);
+		rc = __unset_free_ocmem(device);
+		mutex_unlock(&device->resource_lock);
+		if (rc) {
+			dprintk(VIDC_ERR, "Failed to unset IMEM for PC: %d\n",
+					rc);
+			goto err_unset_imem;
+		}
 	}
 
 	rc = venus_hfi_prepare_pc(device);
