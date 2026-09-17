@@ -110,6 +110,7 @@ struct bus_set {
 enum imem_type {
 	IMEM_NONE,
 	IMEM_OCMEM,
+	IMEM_VMEM,
 	IMEM_MAX,
 };
 
