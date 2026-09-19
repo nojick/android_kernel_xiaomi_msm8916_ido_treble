@@ -35,7 +35,7 @@
 
 struct msm_vidc_drv *vidc_driver;
 
-uint32_t msm_vidc_pwr_collapse_delay = 10000;
+uint32_t msm_vidc_pwr_collapse_delay = 2000;
 
 static inline struct msm_vidc_inst *get_vidc_inst(struct file *filp, void *fh)
 {
@@ -427,17 +427,12 @@ static int msm_vidc_probe(struct platform_device *pdev)
 	struct device *dev;
 	int nr = BASE_DEVICE_NUMBER;
 
-	if (!vidc_driver) {
-		dprintk(VIDC_ERR, "Invalid vidc driver\n");
-		return -EINVAL;
-	}
-
-
 	core = kzalloc(sizeof(*core), GFP_KERNEL);
-	if (!core) {
+	if (!core || !vidc_driver) {
 		dprintk(VIDC_ERR,
 			"Failed to allocate memory for device core\n");
-		return -ENOMEM;
+		rc = -ENOMEM;
+		goto err_no_mem;
 	}
 	rc = msm_vidc_initialize_core(pdev, core);
 	if (rc) {
@@ -469,7 +464,7 @@ static int msm_vidc_probe(struct platform_device *pdev)
 	core->vdev[MSM_VIDC_DECODER].vdev.ioctl_ops = &msm_v4l2_ioctl_ops;
 	core->vdev[MSM_VIDC_DECODER].vdev.vfl_dir = VFL_DIR_M2M;
 	core->vdev[MSM_VIDC_DECODER].type = MSM_VIDC_DECODER;
-	//core->vdev[MSM_VIDC_DECODER].vdev.v4l2_dev = &core->v4l2_dev;
+	core->vdev[MSM_VIDC_DECODER].vdev.v4l2_dev = &core->v4l2_dev;
 	rc = video_register_device(&core->vdev[MSM_VIDC_DECODER].vdev,
 					VFL_TYPE_GRABBER, nr);
 	if (rc) {
@@ -491,7 +486,7 @@ static int msm_vidc_probe(struct platform_device *pdev)
 	core->vdev[MSM_VIDC_ENCODER].vdev.ioctl_ops = &msm_v4l2_ioctl_ops;
 	core->vdev[MSM_VIDC_ENCODER].vdev.vfl_dir = VFL_DIR_M2M;
 	core->vdev[MSM_VIDC_ENCODER].type = MSM_VIDC_ENCODER;
-	//core->vdev[MSM_VIDC_ENCODER].vdev.v4l2_dev = &core->v4l2_dev;
+	core->vdev[MSM_VIDC_ENCODER].vdev.v4l2_dev = &core->v4l2_dev;
 	rc = video_register_device(&core->vdev[MSM_VIDC_ENCODER].vdev,
 				VFL_TYPE_GRABBER, nr + 1);
 	if (rc) {
@@ -565,6 +560,7 @@ err_v4l2_register:
 	sysfs_remove_group(&pdev->dev.kobj, &msm_vidc_core_attr_group);
 err_core_init:
 	kfree(core);
+err_no_mem:
 	return rc;
 }
 
