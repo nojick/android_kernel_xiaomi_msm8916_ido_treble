@@ -148,12 +148,12 @@ static int ion_user_to_kernel(struct smem_client *client, int fd, u32 offset,
 	mem->device_addr = iova;
 	mem->size = buffer_size;
 	if ((u32)mem->device_addr != iova) {
-		dprintk(VIDC_ERR, "iova(0x%pa) truncated to 0x%x",
+		dprintk(VIDC_ERR, "iova(%pa) truncated to %#x",
 			&iova, (u32)mem->device_addr);
 		goto fail_device_address;
 	}
 	dprintk(VIDC_DBG,
-		"%s: ion_handle = 0x%p, fd = %d, device_addr = 0x%pa, size = %zx, kvaddr = 0x%p, buffer_type = %d, flags = 0x%lx\n",
+		"%s: ion_handle = %p, fd = %d, device_addr = %pa, size = %zx, kvaddr = %p, buffer_type = %d, flags = %#lx\n",
 		__func__, mem->smem_priv, fd, &mem->device_addr, mem->size,
 		mem->kvaddr, mem->buffer_type, mem->flags);
 	return rc;
@@ -198,7 +198,7 @@ static int alloc_ion_mem(struct smem_client *client, size_t size, u32 align,
 	hndl = ion_alloc(client->clnt, size, align, heap_mask, flags);
 	if (IS_ERR_OR_NULL(hndl)) {
 		dprintk(VIDC_ERR,
-		"Failed to allocate shared memory = %p, %zx, %d, 0x%x\n",
+		"Failed to allocate shared memory = %p, %zx, %d, %#x\n",
 		client, size, align, flags);
 		rc = -ENOMEM;
 		goto fail_shared_mem_alloc;
@@ -230,13 +230,13 @@ static int alloc_ion_mem(struct smem_client *client, size_t size, u32 align,
 	}
 	mem->device_addr = iova;
 	if ((u32)mem->device_addr != iova) {
-		dprintk(VIDC_ERR, "iova(0x%pa) truncated to 0x%x",
+		dprintk(VIDC_ERR, "iova(%pa) truncated to %#x",
 			&iova, (u32)mem->device_addr);
 		goto fail_device_address;
 	}
 	mem->size = size;
 	dprintk(VIDC_DBG,
-		"%s: ion_handle = 0x%p, device_addr = 0x%pa, size = 0x%zx, kvaddr = 0x%p, buffer_type = 0x%x, flags = 0x%lx\n",
+		"%s: ion_handle = %p, device_addr = %pa, size = %#zx, kvaddr = %p, buffer_type = %#x, flags = %#lx\n",
 		__func__, mem->smem_priv, &mem->device_addr,
 		mem->size, mem->kvaddr,
 		mem->buffer_type, mem->flags);
@@ -254,7 +254,7 @@ static void free_ion_mem(struct smem_client *client, struct msm_smem *mem)
 	int domain, partition, rc;
 
 	dprintk(VIDC_DBG,
-		"%s: ion_handle = 0x%p, device_addr = 0x%pa, size = 0x%zx, kvaddr = 0x%p, buffer_type = 0x%x\n",
+		"%s: ion_handle = %p, device_addr = %pa, size = %#zx, kvaddr = %p, buffer_type = %#x\n",
 		__func__, mem->smem_priv, &mem->device_addr,
 		mem->size, mem->kvaddr, mem->buffer_type);
 	rc = msm_smem_get_domain_partition((void *)client, mem->flags,
