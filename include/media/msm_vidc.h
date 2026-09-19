@@ -77,12 +77,6 @@ enum session_type {
 	MSM_VIDC_DECODER,
 	MSM_VIDC_MAX_DEVICES,
 };
-
-union msm_v4l2_cmd {
-	struct v4l2_decoder_cmd dec;
-	struct v4l2_encoder_cmd enc;
-};
-
 void *msm_vidc_open(int core_id, int session_type);
 int msm_vidc_close(void *instance);
 int msm_vidc_suspend(int core_id);
@@ -100,7 +94,8 @@ int msm_vidc_qbuf(void *instance, struct v4l2_buffer *b);
 int msm_vidc_dqbuf(void *instance, struct v4l2_buffer *b);
 int msm_vidc_streamon(void *instance, enum v4l2_buf_type i);
 int msm_vidc_streamoff(void *instance, enum v4l2_buf_type i);
-int msm_vidc_comm_cmd(void *instance, union msm_v4l2_cmd *cmd);
+int msm_vidc_decoder_cmd(void *instance, struct v4l2_decoder_cmd *dec);
+int msm_vidc_encoder_cmd(void *instance, struct v4l2_encoder_cmd *enc);
 int msm_vidc_poll(void *instance, struct file *filp,
 		struct poll_table_struct *pt);
 int msm_vidc_get_iommu_domain_partition(void *instance, u32 flags,
